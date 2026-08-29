@@ -10,8 +10,7 @@ O **Rota Vital** é uma aplicação web desenvolvida para apoiar a gestão e dis
 
 A solução busca garantir que o componente sanguíneo correto esteja disponível para o hospital correto, no momento adequado e respeitando requisitos como compatibilidade sanguínea, validade dos componentes, rotas de distribuição e controle da cadeia fria.
 
-O projeto é inspirado no fluxo da **Hemorrede/SUS**, considerando o processo entre centros de coleta e doação, hemocentros de processamento e controle, estoques e hospitais. Todos os dados utilizados no sistema são **sintéticos**, sem utilização de informações reais de pacientes ou doadores. :contentReference[oaicite:1]{index=1}
-
+O projeto é inspirado no fluxo da **Hemorrede/SUS**, considerando o processo entre centros de coleta e doação, hemocentros de processamento e controle, estoques e hospitais. Todos os dados utilizados no sistema são **sintéticos**, sem utilização de informações reais de pacientes ou doadores.
 ---
 
 # 🎯 Objetivo
@@ -26,7 +25,6 @@ Desenvolver uma plataforma integrada capaz de:
 - Calcular rotas de distribuição considerando cadeia fria e janelas de tempo;
 - Monitorar indicadores de estoque, demanda, temperatura e comunicação.
 
-:contentReference[oaicite:2]{index=2}
 
 ---
 
@@ -43,7 +41,7 @@ Falhas nesse processo podem causar:
 - Atrasos na distribuição;
 - Riscos ao atendimento dos pacientes.
 
-O projeto propõe uma solução integrada para conectar estoque, compatibilidade, roteirização e monitoramento da cadeia fria. :contentReference[oaicite:3]{index=3}
+O projeto propõe uma solução integrada para conectar estoque, compatibilidade, roteirização e monitoramento da cadeia fria.
 
 ---
 
@@ -67,7 +65,7 @@ Responsável pelo controle de:
 
 Implementação das regras de compatibilidade **ABO/Rh** para identificar quais bolsas podem atender determinada solicitação hospitalar.
 
-O sistema utiliza regras didáticas de compatibilidade, não substituindo protocolos clínicos oficiais. :contentReference[oaicite:4]{index=4}
+O sistema utiliza regras didáticas de compatibilidade, não substituindo protocolos clínicos oficiais.
 
 ---
 
@@ -84,8 +82,6 @@ Funcionalidades:
 Algoritmo utilizado:
 
 - Dijkstra (caminho mínimo).
-
-:contentReference[oaicite:5]{index=5}
 
 ---
 
@@ -111,8 +107,7 @@ Simulação de telemetria para acompanhamento de:
 - Comunicação entre unidades;
 - Métricas de rede.
 
-Os dados de telemetria são simulados para fins acadêmicos. :contentReference[oaicite:7]{index=7}
-
+Os dados de telemetria são simulados para fins acadêmicos. 
 ---
 
 # 🛠️ Tecnologias Utilizadas
@@ -147,7 +142,6 @@ Os dados de telemetria são simulados para fins acadêmicos. :contentReference[o
 - Probabilidade
 - Indicadores operacionais
 
-:contentReference[oaicite:8]{index=8}
 
 ---
 
@@ -194,8 +188,6 @@ rota-vital/
 - [ ] Monitoramento de telemetria
 - [ ] Pipeline CI/CD completo
 
-:contentReference[oaicite:9]{index=9}
-
 ---
 
 # 🔒 Segurança e Privacidade
@@ -207,7 +199,6 @@ O projeto segue as seguintes restrições:
 - A compatibilidade sanguínea possui finalidade educacional;
 - Não existe integração com sistemas oficiais da Hemorrede.
 
-:contentReference[oaicite:10]{index=10}
 
 ---
 
@@ -223,8 +214,6 @@ O projeto integra conhecimentos de:
 | Infraestrutura de Software | Cloud, CI/CD e concorrência |
 | Infraestrutura de Comunicação | Redes, APIs e telemetria |
 | Projeto Integrador | Organização e integração da equipe |
-
-:contentReference[oaicite:11]{index=11}
 
 ---
 

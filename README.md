@@ -244,16 +244,16 @@ O projeto integra conhecimentos de:
 
 # 👨‍💻 Equipe
 
-| Nome | Função |
-|---|---|
-| Allan Max de Jesus Rodrigues de Lima | Desenvolvimento |
-| Boniek Araujo dos Santos Junior| Desenvolvimento |
-| Caio Cesar Leandro Amorim | Desenvolvimento |
-| Luan Ventura Ferreira de Moura | Desenvolvimento |
-| Miguel Victor Lussac Barboza | Desenvolvimento |
-| Pedro Augusto Carvalho Araujo | Desenvolvimento |
-| Vinicius Pessoa de Albuquerque | Desenvolvimento |
-| Wesley Yuri da Silva | Desenvolvimento |
+| Nome | Email | Função |
+|---|---|---|
+| Allan Max de Jesus Rodrigues de Lima | amjrl@cesar.school | Desenvolvimento |
+| Boniek Araujo dos Santos Junior| basj@cesar.school | Desenvolvimento |
+| Caio Cesar Leandro Amorim | ccla@cesar.school | Desenvolvimento |
+| Luan Ventura Ferreira de Moura | lvfm2@cesar.school | Desenvolvimento |
+| Miguel Victor Lussac Barboza | mvlb@cesar.school | Desenvolvimento |
+| Pedro Augusto Carvalho Araujo | paca@cesar.school | Desenvolvimento |
+| Vinicius Pessoa de Albuquerque | vpa@cesar.school | Desenvolvimento |
+| Wesley Yuri da Silva | wys@cesar.school | Desenvolvimento |
 
 ---
 

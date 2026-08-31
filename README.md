@@ -95,7 +95,7 @@ O sistema apresenta informações para apoiar decisões:
 - Probabilidade de desabastecimento;
 - Taxa de descarte por vencimento.
 
-Os indicadores utilizam análises estatísticas aplicadas ao domínio do projeto. :contentReference[oaicite:6]{index=6}
+Os indicadores utilizam análises estatísticas aplicadas ao domínio do projeto.
 
 ---
 
@@ -214,6 +214,50 @@ O projeto integra conhecimentos de:
 | Infraestrutura de Software | Cloud, CI/CD e concorrência |
 | Infraestrutura de Comunicação | Redes, APIs e telemetria |
 | Projeto Integrador | Organização e integração da equipe |
+
+---
+
+# 📦 Entrega 01
+
+## 📖 Histórias de Usuário
+
+Foram definidas **7 histórias de usuário**, documentadas com descrição da necessidade de negócio, critérios de discussão, cenários de validação em **BDD (Behavior-Driven Development)**, avaliação pelos critérios **INVEST** e diagramas de atividades.
+
+1. **Cadastro de bolsa de hemocomponente**
+2. **Alocação de bolsa compatível priorizando validade (FEFO)**
+3. **Cálculo de rota de distribuição**
+4. **Solicitação hospitalar de hemocomponentes**
+5. **Alerta e baixa de bolsas próximas do vencimento**
+6. **Monitoramento da cadeia fria durante o transporte**
+7. **Painel de indicadores da rede de sangue**
+
+🔗 **[Acessar Histórias de Usuário](./docs/rota-vital-historias-usuario.md)**
+
+---
+
+## 🎨 Protótipo Lo-Fi
+
+O protótipo de baixa fidelidade da aplicação está disponível no Figma.
+
+🔗 **[Acessar Protótipo Lo-Fi no Figma](https://www.figma.com/design/LGNH0CWyaNMfClKrTKIotp/Rota-Vital?node-id=0-1&p=f&t=X0556s3iPCew6liI-0)**
+
+---
+
+## 🎥 Screencast
+
+O screencast apresenta o protótipo desenvolvido e as histórias de usuário contempladas nesta etapa do projeto.
+
+🔗 **[Assistir ao Screencast no YouTube](COLOCAR_LINK_DO_YOUTUBE_AQUI)**
+
+---
+
+## 📎 Artefatos
+
+| Artefato | Acesso |
+|---|---|
+| Histórias de Usuário | [Visualizar](./docs/rota-vital-historias-usuario.md) |
+| Protótipo Lo-Fi | [Acessar Figma](https://www.figma.com/design/LGNH0CWyaNMfClKrTKIotp/Rota-Vital?node-id=0-1&p=f&t=X0556s3iPCew6liI-0) |
+| Screencast | [Assistir no YouTube](COLOCAR_LINK_DO_YOUTUBE_AQUI) |
 
 ---
 

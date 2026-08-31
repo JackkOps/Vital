@@ -247,7 +247,7 @@ O protótipo de baixa fidelidade da aplicação está disponível no Figma.
 
 O screencast apresenta o protótipo desenvolvido e as histórias de usuário contempladas nesta etapa do projeto.
 
-🔗 **[Assistir ao Screencast no YouTube](COLOCAR_LINK_DO_YOUTUBE_AQUI)**
+🔗 **[Assistir ao Screencast no YouTube](https://youtu.be/ahV21_baUUQ)**
 
 ---
 

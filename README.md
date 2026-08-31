@@ -257,7 +257,7 @@ O screencast apresenta o protótipo desenvolvido e as histórias de usuário con
 |---|---|
 | Histórias de Usuário | [Visualizar](./docs/rota-vital-historias-usuario.md) |
 | Protótipo Lo-Fi | [Acessar Figma](https://www.figma.com/design/LGNH0CWyaNMfClKrTKIotp/Rota-Vital?node-id=0-1&p=f&t=X0556s3iPCew6liI-0) |
-| Screencast | [Assistir no YouTube](COLOCAR_LINK_DO_YOUTUBE_AQUI) |
+| Screencast | [Assistir no YouTube](https://youtu.be/ahV21_baUUQ) |
 
 ---
 

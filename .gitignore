@@ -27,3 +27,4 @@ desktop.ini
 node_modules/
 target/
 dist/
+tmp/

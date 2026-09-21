@@ -310,6 +310,40 @@ flowchart TD
 
 ---
 
+## Implementação de Entrega 02 - Álocação compatível com FEFO
+
+### Regra aplicada
+- Compatibilidade ABO/Rh: o receptor recebe apenas bolsas compatíveis com seu tipo sanguíneo e fator Rh.
+- O sistema ignora bolsas fora do estoque disponível, expiradas, alocadas ou incompatíveis.
+- Para as bolsas elegíveis, aplica-se FEFO: a bolsa cuja validade está mais próxima da data atual é priorizada.
+- A bolsa selecionada recebe status "ALOCADA".
+
+### Endpoint implementado
+- Método: POST
+- URL: /api/allocations/requests/{requestId}/allocate
+- Resposta de sucesso: retorna o id da bolsa, flag allocated=true e mensagem de confirmação.
+- Resposta sem estoque compatível: retorna allocated=false e mensagem indicando ausência de bolsa disponível.
+
+### Exemplo de uso
+```http
+POST /api/allocations/requests/1/allocate
+```
+
+Exemplo de resposta:
+```json
+{
+  "bagId": 7,
+  "allocated": true,
+  "message": "Bolsa alocada com sucesso conforme compatibilidade ABO/Rh e regra FEFO."
+}
+```
+
+### Observações
+- A implementação foi mantida no padrão Spring MVC do projeto: controller → service → repository.
+- Como o projeto ainda não possuía a modelagem completa de estoque e solicitações no início da entrega, foi criada a camada mínima compatível com a arquitetura já proposta em Spring Boot.
+
+---
+
 ## 6. Monitoramento da cadeia fria durante o transporte
 
 ### Card

@@ -48,7 +48,7 @@ public class AlocacaoBolsaService {
             );
         }
 
-        Bolsa bolsaSelecionada = bolsasCandidatas.getFirst();
+        Bolsa bolsaSelecionada = bolsasCandidatas.get(0);
         bolsaSelecionada.setStatus(StatusBolsa.ALOCADA);
         bolsaRepository.save(bolsaSelecionada);
 

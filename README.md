@@ -261,6 +261,51 @@ O screencast apresenta o protótipo desenvolvido e as histórias de usuário con
 
 ---
 
+# 📦 Entrega 02
+
+## Histórias implementadas
+
+> **História 1 - Cadastro de bolsa de hemocomponente**
+>
+> Como operador do banco de sangue, quero registrar uma bolsa no estoque para que ela fique disponível para alocação e rastreamento.
+> **Critérios entregues:** identificador único de negócio; campos obrigatórios e volume positivo; bloqueio de duplicidade; validade igual ou posterior à coleta; status inicial `DISPONIVEL`; cadastro e consulta de estoque pela API.
+
+> **História 2 - Alocação de bolsa compatível priorizando validade (FEFO)**
+>
+> Como operador, quero que o sistema selecione a bolsa compatível que vence primeiro para reduzir descarte.
+> **Critérios entregues:** compatibilidade ABO/Rh acadêmica; filtro de bolsas disponíveis e não vencidas; mesmo componente da solicitação; ordenação FEFO; alteração do status para `ALOCADA`; retorno claro quando não há estoque compatível.
+
+## Como executar e demonstrar
+
+No terminal, entre em `backend/rotavital` e execute `./mvnw.cmd spring-boot:run`. A API ficará disponível em `http://localhost:8080`.
+
+Endpoints usados na demonstração:
+
+| Ação | Método e URL |
+|---|---|
+| Cadastrar bolsa | `POST /api/bolsas` |
+| Consultar estoque | `GET /api/bolsas` |
+| Criar solicitação de apoio | `POST /api/solicitacoes` |
+| Alocar por FEFO | `POST /api/alocacoes/solicitacoes/{solicitacaoId}/alocar` |
+
+Os testes automatizados podem ser executados com `./mvnw.cmd test`.
+
+## Issue / Bug Tracker
+
+> **Espaço reservado para o print do GitHub Issues**
+>
+> Adicione aqui a captura de tela das issues usadas na Entrega 02 (cadastro de bolsa, validação de datas, compatibilidade ABO/Rh, FEFO e correções).
+
+![Print do GitHub Issues](docs/images/github-issues-entrega-02.png)
+
+## Screencasts
+
+- Vídeo 1 - Uso do sistema: **[adicionar link do YouTube](https://www.youtube.com/)**
+- Vídeo 2 - Explicação do código: **[adicionar link do YouTube](https://www.youtube.com/)**
+- Roteiros curtos: [docs/roteiros-videos-entrega-02.md](./docs/roteiros-videos-entrega-02.md)
+
+---
+
 # 📈 Roadmap
 
 ## Fase 1 — Modelagem e Base do Sistema

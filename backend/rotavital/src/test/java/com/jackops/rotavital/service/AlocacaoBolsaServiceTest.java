@@ -38,6 +38,7 @@ class AlocacaoBolsaServiceTest {
         SolicitacaoSangue solicitacao = criarSolicitacao(TipoSanguineo.O_POSITIVO);
 
         Bolsa bolsa = bolsaRepository.save(Bolsa.builder()
+                .identificador("BOLSA-TESTE-PRINCIPAL")
                 .tipoSanguineo(TipoSanguineo.O_POSITIVO)
                 .tipoComponente(TipoComponente.HEMACIAS)
                 .dataColeta(LocalDate.now().minusDays(10))
@@ -148,6 +149,7 @@ class AlocacaoBolsaServiceTest {
 
     private Bolsa criarBolsa(TipoSanguineo tipoSanguineo, LocalDate dataValidade, StatusBolsa status) {
         return bolsaRepository.save(Bolsa.builder()
+                .identificador("BOLSA-TESTE-" + java.util.UUID.randomUUID())
                 .tipoSanguineo(tipoSanguineo)
                 .tipoComponente(TipoComponente.HEMACIAS)
                 .dataColeta(LocalDate.now().minusDays(20))

@@ -23,6 +23,9 @@ public class Bolsa {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, unique = true, updatable = false)
+    private String identificador;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private TipoSanguineo tipoSanguineo;
@@ -47,9 +50,10 @@ public class Bolsa {
     public Bolsa() {
     }
 
-    public Bolsa(Long id, TipoSanguineo tipoSanguineo, TipoComponente tipoComponente,
+    public Bolsa(Long id, String identificador, TipoSanguineo tipoSanguineo, TipoComponente tipoComponente,
                  LocalDate dataColeta, LocalDate dataValidade, Integer volume, StatusBolsa status) {
         this.id = id;
+        this.identificador = identificador;
         this.tipoSanguineo = tipoSanguineo;
         this.tipoComponente = tipoComponente;
         this.dataColeta = dataColeta;
@@ -68,6 +72,14 @@ public class Bolsa {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getIdentificador() {
+        return identificador;
+    }
+
+    public void setIdentificador(String identificador) {
+        this.identificador = identificador;
     }
 
     public TipoSanguineo getTipoSanguineo() {
@@ -120,6 +132,7 @@ public class Bolsa {
 
     public static class BolsaBuilder {
         private Long id;
+        private String identificador;
         private TipoSanguineo tipoSanguineo;
         private TipoComponente tipoComponente;
         private LocalDate dataColeta;
@@ -129,6 +142,11 @@ public class Bolsa {
 
         public BolsaBuilder id(Long id) {
             this.id = id;
+            return this;
+        }
+
+        public BolsaBuilder identificador(String identificador) {
+            this.identificador = identificador;
             return this;
         }
 
@@ -163,7 +181,7 @@ public class Bolsa {
         }
 
         public Bolsa build() {
-            return new Bolsa(id, tipoSanguineo, tipoComponente, dataColeta, dataValidade, volume, status);
+            return new Bolsa(id, identificador, tipoSanguineo, tipoComponente, dataColeta, dataValidade, volume, status);
         }
     }
 }

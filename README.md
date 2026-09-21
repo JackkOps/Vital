@@ -300,7 +300,7 @@ Os testes automatizados podem ser executados com `./mvnw.cmd test`.
 
 ## Screencasts
 
-- Vídeo 1 - Uso do sistema: **[assistir no YouTube](https://youtu.be/9267SZKO2ms)**
+- Vídeo 1 - Uso do sistema: **[assistir no YouTube](https://youtu.be/awFqNrnNcWk)**
 - Vídeo 2 - Explicação do código: **[assistir no YouTube](https://youtu.be/HQX0xPfTYAI)**
 - Roteiros curtos: [docs/roteiros-videos-entrega-02.md](./docs/roteiros-videos-entrega-02.md)
 

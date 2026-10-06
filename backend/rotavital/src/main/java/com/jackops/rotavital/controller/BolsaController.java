@@ -4,12 +4,16 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.jackops.rotavital.dto.AtualizacaoBolsaRequest;
 import com.jackops.rotavital.dto.BolsaResponse;
 import com.jackops.rotavital.dto.CadastroBolsaRequest;
 import com.jackops.rotavital.service.BolsaService;
@@ -33,5 +37,23 @@ public class BolsaController {
     @GetMapping
     public List<BolsaResponse> listarEstoque() {
         return bolsaService.listarEstoque();
+    }
+
+    @GetMapping("/{id}")
+    public BolsaResponse buscarPorId(@PathVariable Long id){
+        return bolsaService.buscarPorId(id);
+    }
+
+    @PutMapping("/{id}")
+    public BolsaResponse atualizar(
+        @PathVariable Long id,
+        @Valid @RequestBody AtualizacaoBolsaRequest request){
+        return bolsaService.atualizar(id, request);
+        }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> excluir(@PathVariable Long id){
+        bolsaService.excluir(id);
+        return ResponseEntity.noContent().build();
     }
 }

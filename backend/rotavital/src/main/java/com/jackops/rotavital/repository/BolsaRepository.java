@@ -12,6 +12,7 @@ import com.jackops.rotavital.model.enums.StatusBolsa;
 @Repository
 public interface BolsaRepository extends JpaRepository<Bolsa, Long> {
     List<Bolsa> findByStatus(StatusBolsa status);
+    List<Bolsa> findAllByOrderByIdAsc();
     Optional<Bolsa> findByIdentificador(String identificador);
     boolean existsByIdentificador(String identificador);
 }

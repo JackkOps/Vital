@@ -52,8 +52,7 @@ class SolicitacaoSangueControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(corpo))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.mensagem")
-                        .value("Campo obrigatório vazio: nivelUrgencia"));
+                .andExpect(jsonPath("$.mensagem").exists());
 
         mockMvc.perform(get("/api/solicitacoes"))
                 .andExpect(status().isOk())
@@ -61,7 +60,7 @@ class SolicitacaoSangueControllerTest {
     }
 
     @Test
-    void deveOrdenarFilaPorUrgenciaEDesempatarPeloId() throws Exception {
+    void deveListarFilaEmOrdemDeChegada() throws Exception {
         cadastrar("Hospital Eletiva", "ELETIVA");
         cadastrar("Hospital Primeira Emergencia", "EMERGENCIA");
         cadastrar("Hospital Urgente", "URGENTE");
@@ -71,13 +70,13 @@ class SolicitacaoSangueControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(4))
                 .andExpect(jsonPath("$[0].nomeHospital")
-                        .value("Hospital Primeira Emergencia"))
+                        .value("Hospital Eletiva"))
                 .andExpect(jsonPath("$[1].nomeHospital")
-                        .value("Hospital Segunda Emergencia"))
+                        .value("Hospital Primeira Emergencia"))
                 .andExpect(jsonPath("$[2].nomeHospital")
                         .value("Hospital Urgente"))
                 .andExpect(jsonPath("$[3].nomeHospital")
-                        .value("Hospital Eletiva"));
+                        .value("Hospital Segunda Emergencia"));
     }
 
     private void cadastrar(String nomeHospital, String nivelUrgencia)

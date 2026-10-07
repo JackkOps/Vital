@@ -100,10 +100,43 @@ flowchart TB
 | Broker → API | MQTT | 1883 | Rede interna |
 | API → Banco | JDBC (PostgreSQL) | 5432 | Rede interna |
 
-A API continua na porta 8080, como já está hoje. O PostgreSQL entra no lugar do H2 (o driver já está
-no `pom.xml`). Para a telemetria foi escolhido **MQTT**: é leve, funciona por publicação/assinatura e
-aguenta melhor a conexão instável da rede móvel do que abrir uma requisição HTTPS a cada leitura.
-A decisão final depende do contrato de API (W02).
+A API continua na porta 8080, como já está hoje. Para a telemetria foi escolhido **MQTT**: é leve,
+funciona por publicação/assinatura e aguenta melhor a conexão instável da rede móvel do que abrir uma
+requisição HTTPS a cada leitura.
+
+### Evolução por entrega
+
+A topologia proposta não entra de uma vez. O que muda em cada etapa:
+
+| Etapa | Banco | Telemetria | O que muda na rede |
+|---|---|---|---|
+| Entrega 02 (atual) | H2 em memória | — | Nada: API e banco no mesmo processo, acesso direto na porta 8080 |
+| Entrega U1 — primeiro deploy (W04/W06 SO) | PostgreSQL | — | Banco sai do processo da API e passa para a zona de dados (TCP 5432); entra o proxy com HTTPS |
+| Unidade 2 — cadeia fria (História 6) | PostgreSQL | MQTT | Entram o broker e a ligação com os veículos (TCP 8883) |
+
+O PostgreSQL entra junto com o primeiro deploy porque, no ambiente publicado, os dados precisam
+sobreviver a um reinício, o que o H2 em memória não garante (`ddl-auto=create-drop`). O driver já está
+no `pom.xml`. O H2 continua sendo usado nos testes e no desenvolvimento local. A data exata depende do
+pipeline de SO (PI3E7-15 e PI3E7-21).
+
+### MQTT: tópicos e QoS
+
+As leituras de temperatura usam **QoS 1 (pelo menos uma vez)**:
+
+- **QoS 0** não serve: se o sinal cair no meio do envio, a leitura se perde sem aviso, e a História 6 exige histórico completo da remessa.
+- **QoS 2** garante entrega exatamente uma vez, mas exige quatro mensagens por leitura, o que pesa na rede móvel.
+- **QoS 1** garante a entrega com confirmação (`PUBACK`). Se a confirmação não chegar, o sensor reenvia. A duplicata é descartada pela API, porque cada leitura tem um `leituraId` único.
+
+| Tópico | Quem publica | QoS | Conteúdo |
+|---|---|---|---|
+| `rotavital/remessas/{remessaId}/temperatura` | Sensor do veículo | 1 | `leituraId`, `sensorId`, `sequencia`, `temperatura`, `dataHora` |
+| `rotavital/sensores/{sensorId}/status` | Broker (mensagem de última vontade) | 1, retida | `offline` quando o sensor cai sem se desconectar |
+
+Comportamento em conexão instável:
+
+- **Sessão persistente** (`cleanSession=false`): o broker guarda o que foi publicado para a API enquanto ela estiver reconectando.
+- **Buffer no sensor:** sem sinal, o sensor guarda as leituras e envia em ordem quando a conexão volta.
+- **Keep-alive de 30 s + mensagem de última vontade:** o broker avisa quando um sensor some, o que alimenta o alerta de "sensor indisponível" da História 6.
 
 ### Camadas TCP/IP
 
@@ -164,9 +197,11 @@ sequenceDiagram
     participant L as Central de logística
 
     loop Intervalo regular de leitura
-        V->>B: PUBLISH leitura (remessa, temperatura, horário)
-        B->>A: entrega da leitura (assinatura)
-        A->>D: INSERT leitura no histórico da remessa
+        V->>B: PUBLISH QoS 1 (leituraId, sequencia, temperatura, dataHora)
+        B-->>V: PUBACK
+        B->>A: entrega da leitura (assinatura QoS 1)
+        A->>D: INSERT leitura (ignora leituraId repetido)
+        A-->>B: PUBACK
         alt Temperatura fora da faixa do componente
             A->>D: UPDATE remessa (SOB RISCO)
             A-->>L: alerta de excursão térmica
@@ -189,7 +224,36 @@ sequenceDiagram
 
 ---
 
-## 6. Premissas
+## 6. Observabilidade
+
+### Logs
+
+- Logs em JSON, com o mesmo `leituraId` em todas as etapas (broker → API → banco). Assim dá para buscar uma leitura e ver por onde ela passou.
+- Requisições REST recebem um `X-Request-Id` no proxy, repassado para a API e gravado em todos os logs daquela requisição.
+- Eventos registrados por leitura: `leitura_recebida`, `leitura_duplicada`, `leitura_rejeitada` (com o motivo), `leitura_gravada`, `excursao_termica`.
+
+### Métricas
+
+| Métrica | Para que serve |
+|---|---|
+| Leituras recebidas por minuto (por remessa) | Ver se os sensores estão enviando no ritmo esperado |
+| Leituras rejeitadas e duplicadas | Detectar sensor com defeito ou reenvio excessivo por sinal ruim |
+| Atraso entre `dataHora` da leitura e a gravação | Medir a latência da rede móvel até a plataforma |
+| Sensores sem leitura além do intervalo máximo | Alimentar o alerta de sensor indisponível |
+| Tempo de resposta e erros por endpoint REST | Acompanhar a saúde da API |
+
+A API expõe as métricas e o health check pelo Spring Boot Actuator (`/actuator/health` e `/actuator/prometheus`),
+acessíveis só pela rede interna. Esses dados alimentam o painel de rede da W12.
+
+### Rastreando uma leitura que falhou
+
+1. **A leitura nunca chegou:** a API compara a `sequencia` recebida com a anterior do mesmo sensor. Um salto (por exemplo, 41 → 44) registra as leituras 42 e 43 como perdidas no log da remessa.
+2. **Chegou, mas foi rejeitada** (temperatura fora do intervalo físico, remessa inexistente, JSON inválido): a leitura vai para a tabela `leitura_rejeitada` com o motivo e o `leituraId`, sem travar as próximas.
+3. **O sensor caiu:** o broker publica `offline` em `rotavital/sensores/{sensorId}/status`. A API registra a falha de comunicação e dispara o alerta da História 6.
+
+---
+
+## 7. Premissas
 
 - Rede nacional simulada com 3.000 unidades de armazenamento e 5.000 hospitais (mesma massa usada no relatório de cobertura).
 - Uma unidade atende hospitais a até 150 km.
@@ -197,10 +261,20 @@ sequenceDiagram
 
 ---
 
-## 7. Próximos passos
+## 8. Próximos passos
 
-- **W02 — Contratos de API (RSD):** formalizar os endpoints e fechar o protocolo da telemetria.
-- **W04/W06 — Pipeline e CI/CD (SO):** definir onde a plataforma roda.
-- **W06 — Topologia (RSD):** detalhar a topologia física com o ambiente real de deploy.
-- **W06 — Grafo/FEFO (AED):** habilitar o fluxo de rotas (História 3).
-- **W12 — Benchmarking/painel de rede (RSD):** medir latência e vazão das ligações.
+Antes de a topologia sair do papel, o contrato de API (W02 — PI3E7-14) precisa cobrir:
+
+| Endpoint / tópico | Situação | Necessário para |
+|---|---|---|
+| `POST/GET /api/bolsas`, `GET/PUT/DELETE /api/bolsas/{id}` | Implementado | Histórias 1 e 5 |
+| `POST/GET /api/solicitacoes`, `GET /api/solicitacoes/fila`, `GET/PUT/DELETE /api/solicitacoes/{id}` | Implementado | História 4 |
+| `POST /api/alocacoes/solicitacoes/{solicitacaoId}/alocar` | Implementado | História 2 |
+| `GET /api/indicadores` | Implementado | História 7 |
+| `GET /actuator/health` | A criar | Proxy e deploy saberem se a API está no ar |
+| `GET /api/remessas/{id}` e `GET /api/remessas/{id}/leituras` | A criar | História 6 (status e histórico da remessa) |
+| Tópico `rotavital/remessas/{remessaId}/temperatura` (formato da leitura) | A criar | História 6 |
+| `POST /api/rotas` | A criar | História 3 (depende do grafo da AED) |
+
+Os endpoints já implementados só precisam ser documentados. Os novos entram no contrato antes do
+código, para que telemetria, rotas e frontend sigam o mesmo formato.

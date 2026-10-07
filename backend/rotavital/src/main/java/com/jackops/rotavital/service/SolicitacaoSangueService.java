@@ -26,12 +26,12 @@ public class SolicitacaoSangueService {
 
     @Transactional
     public SolicitacaoResponse cadastrar(CadastroSolicitacaoRequest request) {
-        SolicitacaoSangue solicitacao = solicitacaoRepository.save(SolicitacaoSangue.builder()
+        SolicitacaoSangue solicitacao = SolicitacaoSangue.builder()
                 .nomeHospital(request.nomeHospital())
                 .tipoSanguineo(request.tipoSanguineo())
                 .tipoComponente(request.tipoComponente())
                 .quantidade(request.quantidade())
-                .build());
+                .build();
 
         solicitacao.setNivelUrgencia(request.nivelUrgencia());
 

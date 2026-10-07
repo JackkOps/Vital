@@ -10,8 +10,11 @@ import com.jackops.rotavital.dto.SolicitacaoResponse;
 import com.jackops.rotavital.model.SolicitacaoSangue;
 import com.jackops.rotavital.repository.SolicitacaoSangueRepository;
 import com.jackops.rotavital.dto.AtualizacaoSolicitacaoRequest;
+import com.jackops.rotavital.model.enums.NivelUrgencia;
+import com.jackops.rotavital.model.enums.StatusSolicitacao;
 
 import java.util.List;
+import java.util.Comparator;
 
 @Service
 public class SolicitacaoSangueService {
@@ -23,14 +26,25 @@ public class SolicitacaoSangueService {
 
     @Transactional
     public SolicitacaoResponse cadastrar(CadastroSolicitacaoRequest request) {
-        SolicitacaoSangue solicitacao = solicitacaoRepository.save(SolicitacaoSangue.builder()
+        SolicitacaoSangue solicitacao = SolicitacaoSangue.builder()
                 .nomeHospital(request.nomeHospital())
                 .tipoSanguineo(request.tipoSanguineo())
                 .tipoComponente(request.tipoComponente())
                 .quantidade(request.quantidade())
-                .build());
-        return new SolicitacaoResponse(solicitacao.getId(), solicitacao.getNomeHospital(),
-                solicitacao.getTipoSanguineo(), solicitacao.getTipoComponente(), solicitacao.getQuantidade());
+                .build();
+
+        solicitacao.setNivelUrgencia(request.nivelUrgencia());
+
+        SolicitacaoSangue salva = solicitacaoRepository.save(solicitacao);
+
+        return new SolicitacaoResponse(
+            solicitacao.getId(),
+            solicitacao.getNomeHospital(),
+            solicitacao.getTipoSanguineo(),
+            solicitacao.getTipoComponente(),
+            solicitacao.getQuantidade(),
+            solicitacao.getNivelUrgencia(),
+            solicitacao.getStatus());
     }
 
     @Transactional(readOnly = true)
@@ -41,7 +55,9 @@ public class SolicitacaoSangueService {
                 solicitacao.getNomeHospital(),
                 solicitacao.getTipoSanguineo(),
                 solicitacao.getTipoComponente(),
-                solicitacao.getQuantidade()))
+                solicitacao.getQuantidade(),
+                solicitacao.getNivelUrgencia(),
+                solicitacao.getStatus()))
             .toList();
     }
 
@@ -56,7 +72,9 @@ public class SolicitacaoSangueService {
             solicitacao.getNomeHospital(),
             solicitacao.getTipoSanguineo(),
             solicitacao.getTipoComponente(),
-            solicitacao.getQuantidade());
+            solicitacao.getQuantidade(),
+            solicitacao.getNivelUrgencia(),
+            solicitacao.getStatus());
     }  
 
     @Transactional
@@ -79,7 +97,9 @@ public SolicitacaoResponse atualizar(
             atualizada.getNomeHospital(),
             atualizada.getTipoSanguineo(),
             atualizada.getTipoComponente(),
-            atualizada.getQuantidade());
+            atualizada.getQuantidade(),
+            solicitacao.getNivelUrgencia(),
+            solicitacao.getStatus());
     }
 
     @Transactional
@@ -89,5 +109,33 @@ public SolicitacaoResponse atualizar(
                 HttpStatus.NOT_FOUND, "Solicitacao não encontrada"));
 
         solicitacaoRepository.delete(solicitacao);
+    }
+
+    @Transactional(readOnly = true)
+    public List<SolicitacaoResponse> listarFila(){
+        return solicitacaoRepository.findAll().stream()
+            .filter(solicitacao ->
+                solicitacao.getStatus() == StatusSolicitacao.PENDENTE)
+            .sorted(Comparator
+                .comparingInt((SolicitacaoSangue solicitacao) ->
+                    prioridade(solicitacao.getNivelUrgencia()))
+                .thenComparing(SolicitacaoSangue::getId))
+            .map(solicitacao -> new SolicitacaoResponse(
+                solicitacao.getId(),
+                solicitacao.getNomeHospital(),
+                solicitacao.getTipoSanguineo(),
+                solicitacao.getTipoComponente(),
+                solicitacao.getQuantidade(),
+                solicitacao.getNivelUrgencia(),
+                solicitacao.getStatus()))
+            .toList();
+    }
+
+    private int prioridade(NivelUrgencia nivelUrgencia){
+        return switch(nivelUrgencia){
+            case EMERGENCIA -> 0;
+            case URGENTE -> 1;
+            case ELETIVA -> 2;
+        };
     }
 }

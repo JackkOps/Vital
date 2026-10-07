@@ -2,6 +2,8 @@ package com.jackops.rotavital.model;
 
 import com.jackops.rotavital.model.enums.TipoComponente;
 import com.jackops.rotavital.model.enums.TipoSanguineo;
+import com.jackops.rotavital.model.enums.NivelUrgencia;
+import com.jackops.rotavital.model.enums.StatusSolicitacao;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -33,6 +35,14 @@ public class SolicitacaoSangue {
 
     @Column(nullable = false)
     private Integer quantidade;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable=false)
+    private NivelUrgencia nivelUrgencia = NivelUrgencia.ELETIVA;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable=false)
+    private StatusSolicitacao status = StatusSolicitacao.PENDENTE;
 
     public SolicitacaoSangue() {
     }
@@ -88,6 +98,22 @@ public class SolicitacaoSangue {
 
     public void setQuantidade(Integer quantidade) {
         this.quantidade = quantidade;
+    }
+
+    public NivelUrgencia getNivelUrgencia(){
+        return nivelUrgencia;
+    }
+
+    public void setNivelUrgencia(NivelUrgencia nivelUrgencia){
+        this.nivelUrgencia = nivelUrgencia;
+    }
+
+    public StatusSolicitacao getStatus(){
+        return status;
+    }
+
+    public void setStatus(StatusSolicitacao status){
+        this.status = status;
     }
 
     public static class SolicitacaoSangueBuilder {

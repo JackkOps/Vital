@@ -44,6 +44,11 @@ public class SolicitacaoSangueController {
         return solicitacaoService.buscarPorId(id);
     }
 
+    @GetMapping("/fila")
+    public List<SolicitacaoResponse> listarFila(){
+        return solicitacaoService.listarFila();
+    }
+
     @PutMapping("/{id}")
     public SolicitacaoResponse atualizar(
         @PathVariable Long id,

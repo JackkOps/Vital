@@ -1,6 +1,6 @@
 package com.jackops.rotavital.exception;
 
-import java.util.LinkedHashMap;
+import java.util.Collections;
 import java.util.Map;
 
 import org.springframework.http.HttpStatus;
@@ -23,8 +23,7 @@ public class ApiExceptionHandler {
     }
 
     private ResponseEntity<Map<String, String>> resposta(HttpStatus status, String mensagem) {
-        Map<String, String> corpo = new LinkedHashMap<>();
-        corpo.put("mensagem", mensagem);
+        Map<String, String> corpo = Collections.singletonMap("mensagem", mensagem);
         return ResponseEntity.status(status).body(corpo);
     }
 }

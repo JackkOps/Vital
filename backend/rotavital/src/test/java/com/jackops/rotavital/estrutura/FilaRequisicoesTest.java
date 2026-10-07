@@ -13,25 +13,53 @@ import com.jackops.rotavital.model.enums.TipoSanguineo;
 class FilaRequisicoesTest {
 
     @Test
-    void deveManterOrdemFifoECasosDeFilaVazia() {
-        FilaRequisicoes fila = new FilaRequisicoes();
+    void deveManterOrdemFifo() {
+        FilaRequisicoes fila = filaComTresSolicitacoes();
 
-        assertTrue(fila.vazia());
-        assertNull(fila.frente());
-        assertNull(fila.desenfileirar());
-
-        fila.enfileirar(solicitacao("Hospital 1"));
-        fila.enfileirar(solicitacao("Hospital 2"));
-        fila.enfileirar(solicitacao("Hospital 3"));
-
-        assertEquals("Hospital 1", fila.frente().getNomeHospital());
         assertEquals("Hospital 1", fila.desenfileirar().getNomeHospital());
         assertEquals("Hospital 2", fila.desenfileirar().getNomeHospital());
         assertEquals("Hospital 3", fila.desenfileirar().getNomeHospital());
+    }
+
+    @Test
+    void deveIndicarFilaVazia() {
+        FilaRequisicoes fila = new FilaRequisicoes();
+
         assertTrue(fila.vazia());
+        assertNull(fila.desenfileirar());
+    }
+
+    @Test
+    void deveConsultarFrenteSemRemover() {
+        FilaRequisicoes fila = filaComTresSolicitacoes();
+
+        assertEquals("Hospital 1", fila.frente().getNomeHospital());
+        assertEquals("Hospital 1", fila.frente().getNomeHospital());
+        assertEquals("Hospital 1", fila.desenfileirar().getNomeHospital());
+    }
+
+    @Test
+    void deveRetornarNullQuandoFrenteVazia() {
+        FilaRequisicoes fila = new FilaRequisicoes();
+
+        assertNull(fila.frente());
+    }
+
+    @Test
+    void deveLimparFila() {
+        FilaRequisicoes fila = filaComTresSolicitacoes();
 
         fila.limpar();
+
         assertTrue(fila.vazia());
+    }
+
+    private FilaRequisicoes filaComTresSolicitacoes() {
+        FilaRequisicoes fila = new FilaRequisicoes();
+        fila.enfileirar(solicitacao("Hospital 1"));
+        fila.enfileirar(solicitacao("Hospital 2"));
+        fila.enfileirar(solicitacao("Hospital 3"));
+        return fila;
     }
 
     private SolicitacaoSangue solicitacao(String hospital) {

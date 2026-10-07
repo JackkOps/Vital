@@ -34,7 +34,7 @@ public class BolsaService {
     }
 
     /**
-     * Recarrega o estoque persistido para a lista encadeada no inicio da aplicacao.
+     * Recarrega o estoque persistido para a lista encadeada no início da aplicação.
      */
     @PostConstruct
     public void iniciarLista() {
@@ -45,10 +45,10 @@ public class BolsaService {
     public BolsaResponse cadastrar(CadastroBolsaRequest request) {
         recarregarLista();
         if (listaEstoque.buscar(request.identificador()) != null) {
-            throw new RegraDeNegocioException("Bolsa ja existe");
+            throw new RegraDeNegocioException("Bolsa já existe");
         }
         if (request.dataValidade().isBefore(request.dataColeta())) {
-            throw new RegraDeNegocioException("Data de validade nao pode ser anterior a data de coleta");
+            throw new RegraDeNegocioException("Data de validade não pode ser anterior à data de coleta");
         }
         Bolsa bolsa = Bolsa.builder()
                 .identificador(request.identificador())
@@ -77,7 +77,7 @@ public class BolsaService {
         recarregarLista();
         Bolsa bolsa = listaEstoque.buscarPorId(id);
         if (bolsa == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Bolsa nao encontrada");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Bolsa não encontrada");
         }
 
         return paraResponse(bolsa);
@@ -88,11 +88,11 @@ public class BolsaService {
         recarregarLista();
         Bolsa bolsa = listaEstoque.buscarPorId(id);
         if (bolsa == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Bolsa nao encontrada");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Bolsa não encontrada");
         }
 
         if (request.dataValidade().isBefore(request.dataColeta())) {
-            throw new RegraDeNegocioException("Data de validade nao pode ser anterior a data de coleta");
+            throw new RegraDeNegocioException("Data de validade não pode ser anterior à data de coleta");
         }
 
         bolsa.setTipoSanguineo(request.tipoSanguineo());
@@ -103,7 +103,7 @@ public class BolsaService {
 
         Bolsa atualizada = bolsaRepository.save(bolsa);
         recarregarLista();
-        pilhaHistorico.empilhar("Atualizacao de bolsa " + atualizada.getIdentificador());
+        pilhaHistorico.empilhar("Atualização de bolsa " + atualizada.getIdentificador());
         return paraResponse(atualizada);
     }
 
@@ -112,18 +112,24 @@ public class BolsaService {
         recarregarLista();
         Bolsa bolsa = listaEstoque.buscarPorId(id);
         if (bolsa == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Bolsa nao encontrada");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Bolsa não encontrada");
         }
 
         if (bolsa.getStatus() != StatusBolsa.DISPONIVEL) {
-            throw new RegraDeNegocioException("Somente bolsas disponiveis podem ser excluidas");
+            throw new RegraDeNegocioException("Somente bolsas disponíveis podem ser excluídas");
         }
 
         bolsaRepository.delete(bolsa);
         listaEstoque.remover(bolsa.getIdentificador());
-        pilhaHistorico.empilhar("Exclusao de bolsa " + bolsa.getIdentificador());
+        pilhaHistorico.empilhar("Exclusão de bolsa " + bolsa.getIdentificador());
     }
 
+    /**
+     * Reconstrói a lista a partir do banco antes das operações públicas porque o
+     * componente Spring da estrutura vive entre chamadas, enquanto testes e cargas
+     * externas podem alterar a persistência. O repositório continua sendo usado
+     * apenas como persistência; as regras leem e manipulam a lista encadeada.
+     */
     private void recarregarLista() {
         listaEstoque.limpar();
         bolsaRepository.findAllByOrderByIdAsc().forEach(listaEstoque::inserir);

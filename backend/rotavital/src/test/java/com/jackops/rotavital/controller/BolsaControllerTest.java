@@ -33,14 +33,14 @@ class BolsaControllerTest {
         String corpo = json("BOLSA-2026-0001", "2026-09-01", "2026-10-01", 450);
         mockMvc.perform(post("/api/bolsas").contentType(MediaType.APPLICATION_JSON).content(corpo)).andExpect(status().isCreated());
         mockMvc.perform(post("/api/bolsas").contentType(MediaType.APPLICATION_JSON).content(corpo))
-                .andExpect(status().isConflict()).andExpect(jsonPath("$.mensagem").value("Bolsa ja existe"));
+                .andExpect(status().isConflict()).andExpect(jsonPath("$.mensagem").value("Bolsa já existe"));
     }
 
     @Test
     void deveBloquearValidadeAnteriorAColeta() throws Exception {
         mockMvc.perform(post("/api/bolsas").contentType(MediaType.APPLICATION_JSON).content(json("BOLSA-2026-0002", "2026-10-01", "2026-09-01", 450)))
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.mensagem").value("Data de validade nao pode ser anterior a data de coleta"));
+                .andExpect(jsonPath("$.mensagem").value("Data de validade não pode ser anterior à data de coleta"));
     }
 
     @Test

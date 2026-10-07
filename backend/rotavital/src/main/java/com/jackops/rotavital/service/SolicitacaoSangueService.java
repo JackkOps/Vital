@@ -33,7 +33,7 @@ public class SolicitacaoSangueService {
     }
 
     /**
-     * Recarrega as requisicoes pendentes para a fila FIFO no inicio da aplicacao.
+     * Recarrega as requisições pendentes para a fila FIFO no início da aplicação.
      */
     @PostConstruct
     public void iniciarFila() {
@@ -53,7 +53,7 @@ public class SolicitacaoSangueService {
 
         SolicitacaoSangue salva = solicitacaoRepository.save(solicitacao);
         filaRequisicoes.enfileirar(salva);
-        pilhaHistorico.empilhar("Cadastro de solicitacao " + salva.getId());
+        pilhaHistorico.empilhar("Cadastro de solicitação " + salva.getId());
 
         return paraResponse(salva);
     }
@@ -67,9 +67,15 @@ public class SolicitacaoSangueService {
 
     @Transactional(readOnly = true)
     public SolicitacaoResponse buscarPorId(Long id) {
+        recarregarFila();
+        SolicitacaoSangue solicitacaoNaFila = buscarNaFila(id);
+        if (solicitacaoNaFila != null) {
+            return paraResponse(solicitacaoNaFila);
+        }
+
         SolicitacaoSangue solicitacao = solicitacaoRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Solicitacao nao encontrada"));
+                        HttpStatus.NOT_FOUND, "Solicitação não encontrada"));
 
         return paraResponse(solicitacao);
     }
@@ -78,7 +84,7 @@ public class SolicitacaoSangueService {
     public SolicitacaoResponse atualizar(Long id, AtualizacaoSolicitacaoRequest request) {
         SolicitacaoSangue solicitacao = solicitacaoRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Solicitacao nao encontrada"));
+                        HttpStatus.NOT_FOUND, "Solicitação não encontrada"));
 
         solicitacao.setNomeHospital(request.nomeHospital());
         solicitacao.setTipoSanguineo(request.tipoSanguineo());
@@ -87,7 +93,7 @@ public class SolicitacaoSangueService {
 
         SolicitacaoSangue atualizada = solicitacaoRepository.save(solicitacao);
         recarregarFila();
-        pilhaHistorico.empilhar("Atualizacao de solicitacao " + atualizada.getId());
+        pilhaHistorico.empilhar("Atualização de solicitação " + atualizada.getId());
 
         return paraResponse(atualizada);
     }
@@ -96,11 +102,13 @@ public class SolicitacaoSangueService {
     public void excluir(Long id) {
         SolicitacaoSangue solicitacao = solicitacaoRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Solicitacao nao encontrada"));
+                        HttpStatus.NOT_FOUND, "Solicitação não encontrada"));
 
+        if (solicitacao.getStatus() == StatusSolicitacao.PENDENTE) {
+            removerDaFila(id);
+        }
         solicitacaoRepository.delete(solicitacao);
-        recarregarFila();
-        pilhaHistorico.empilhar("Exclusao de solicitacao " + solicitacao.getId());
+        pilhaHistorico.empilhar("Exclusão de solicitação " + solicitacao.getId());
     }
 
     @Transactional(readOnly = true)
@@ -109,6 +117,44 @@ public class SolicitacaoSangueService {
         return Arrays.stream(filaRequisicoes.listar())
                 .map(this::paraResponse)
                 .toList();
+    }
+
+    @Transactional
+    public SolicitacaoResponse chamarProximaDaFila() {
+        recarregarFila();
+        SolicitacaoSangue solicitacao = filaRequisicoes.desenfileirar();
+        if (solicitacao == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Fila de solicitações vazia");
+        }
+
+        solicitacao.setStatus(StatusSolicitacao.EM_ATENDIMENTO);
+        SolicitacaoSangue salva = solicitacaoRepository.save(solicitacao);
+        pilhaHistorico.empilhar("Chamada de solicitação " + salva.getId());
+        return paraResponse(salva);
+    }
+
+    private SolicitacaoSangue buscarNaFila(Long id) {
+        return Arrays.stream(filaRequisicoes.listar())
+                .filter(solicitacao -> solicitacao.getId() != null && solicitacao.getId().equals(id))
+                .findFirst()
+                .orElse(null);
+    }
+
+    private void removerDaFila(Long id) {
+        FilaRequisicoes auxiliar = new FilaRequisicoes();
+        SolicitacaoSangue solicitacao = filaRequisicoes.desenfileirar();
+        while (solicitacao != null) {
+            if (solicitacao.getId() == null || !solicitacao.getId().equals(id)) {
+                auxiliar.enfileirar(solicitacao);
+            }
+            solicitacao = filaRequisicoes.desenfileirar();
+        }
+
+        solicitacao = auxiliar.desenfileirar();
+        while (solicitacao != null) {
+            filaRequisicoes.enfileirar(solicitacao);
+            solicitacao = auxiliar.desenfileirar();
+        }
     }
 
     private void recarregarFila() {

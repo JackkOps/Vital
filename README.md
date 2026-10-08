@@ -1,225 +1,171 @@
-# 🩸 Rota Vital
+# Rota Vital
 
-## Gestão e Distribuição de Hemocomponentes na Rede de Sangue
+Sistema acadêmico para gestão de estoque de hemocomponentes e requisições hospitalares.
 
-![Status](https://img.shields.io/badge/status-em%20desenvolvimento-orange)
+Esta branch está organizada para a entrega do Projeto Integrador da Unidade 1. O foco da entrega é demonstrar estruturas de dados implementadas manualmente em C e reimplementadas em Java para consumo pela aplicação Spring Boot.
 
-## 📌 Sobre o Projeto
+## Entrega do Projeto Integrador — Unidade 1
 
-O **Rota Vital** é uma aplicação web desenvolvida para apoiar a gestão e distribuição de hemocomponentes dentro de uma rede de sangue.
+Funcionalidades contempladas nesta entrega:
 
-A solução busca garantir que o componente sanguíneo correto esteja disponível para o hospital correto, no momento adequado e respeitando requisitos como compatibilidade sanguínea, validade dos componentes, rotas de distribuição e controle da cadeia fria.
+- CRUD de bolsas de hemocomponentes.
+- CRUD de solicitações hospitalares.
+- Estoque implementado como lista encadeada.
+- Requisições hospitalares implementadas como fila FIFO.
+- Histórico de operações implementado como pilha LIFO.
+- Código C com ponteiros, `malloc` e `free`.
+- Reimplementação Java das mesmas estruturas, sem coleções prontas dentro das estruturas.
+- Documento de tradução comentada entre C e Java.
 
-O projeto é inspirado no fluxo da **Hemorrede/SUS**, considerando o processo entre centros de coleta e doação, hemocentros de processamento e controle, estoques e hospitais. Todos os dados utilizados no sistema são **sintéticos**, sem utilização de informações reais de pacientes ou doadores.
----
+Funcionalidades de etapas futuras foram isoladas na branch [`unidade-2`](https://github.com/Vini-palb/Vital/tree/unidade-2), publicada no remoto `origin` em 07/10/2026.
 
-# 🎯 Objetivo
-
-Desenvolver uma plataforma integrada capaz de:
-
-- Gerenciar estoque de hemocomponentes;
-- Controlar validade e disponibilidade das bolsas;
-- Receber solicitações hospitalares;
-- Realizar alocação de bolsas compatíveis;
-- Priorizar componentes utilizando o conceito **FEFO (First Expire, First Out)**;
-- Calcular rotas de distribuição considerando cadeia fria e janelas de tempo;
-- Monitorar indicadores de estoque, demanda, temperatura e comunicação.
-
-
----
-
-# 🚨 Problema
-
-A rede de sangue precisa garantir:
-
-> O componente certo, compatível e dentro da validade, no lugar certo, no tempo certo e na temperatura certa.
-
-Falhas nesse processo podem causar:
-
-- Desabastecimento;
-- Descarte de bolsas por vencimento;
-- Atrasos na distribuição;
-- Riscos ao atendimento dos pacientes.
-
-O projeto propõe uma solução integrada para conectar estoque, compatibilidade, roteirização e monitoramento da cadeia fria.
-
----
-
-# 🏗️ Arquitetura da Solução
-
-O sistema será composto por módulos responsáveis por diferentes áreas:
-
-## 📦 Gestão de Estoque
-
-Responsável pelo controle de:
-
-- Hemocomponentes disponíveis;
-- Tipos sanguíneos;
-- Validade das bolsas;
-- Entrada e saída de estoque;
-- Solicitações hospitalares.
-
----
-
-## 🧬 Compatibilidade Sanguínea
-
-Implementação das regras de compatibilidade **ABO/Rh** para identificar quais bolsas podem atender determinada solicitação hospitalar.
-
-O sistema utiliza regras didáticas de compatibilidade, não substituindo protocolos clínicos oficiais.
-
----
-
-## 🚚 Roteirização
-
-Responsável pelo cálculo das melhores rotas entre unidades da rede utilizando algoritmos de grafos.
-
-Funcionalidades:
-
-- Representação da malha de transporte;
-- Cálculo de caminhos mínimos;
-- Otimização da distribuição.
-
-Algoritmo utilizado:
-
-- Dijkstra (caminho mínimo).
-
----
-
-## 📊 Indicadores e Análises
-
-O sistema apresenta informações para apoiar decisões:
-
-- Estoque por componente;
-- Demanda por hospital;
-- Tempo de atendimento;
-- Probabilidade de desabastecimento;
-- Taxa de descarte por vencimento.
-
-Os indicadores utilizam análises estatísticas aplicadas ao domínio do projeto.
-
----
-
-## 🌡️ Monitoramento da Cadeia Fria
-
-Simulação de telemetria para acompanhamento de:
-
-- Temperatura durante transporte;
-- Comunicação entre unidades;
-- Métricas de rede.
-
-Os dados de telemetria são simulados para fins acadêmicos. 
----
-
-# 🛠️ Tecnologias Utilizadas
-
-## Backend
-
-- Java
-- Spring Boot
-- API REST
-
-## Banco de Dados
-
-- *(Definir tecnologia utilizada pelo grupo)*
-
-## Infraestrutura
-
-- CI/CD
-- Cloud
-- Containers *(caso aplicável)*
-
-## Algoritmos e Estruturas de Dados
-
-- Grafos
-- Dijkstra
-- Hash
-- Filas de prioridade
-- Matching de compatibilidade
-
-## Estatística
-
-- Estatística descritiva
-- Probabilidade
-- Indicadores operacionais
-
-
----
-
-# 📂 Estrutura do Projeto
+## Estrutura de Pastas
 
 ```text
-rota-vital/
-│
-├── backend/
-│   ├── src/
-│   └── pom.xml
-│
-├── frontend/
-│   └── ...
-│
-├── docs/
-│
-├── README.md
-└── docker-compose.yml
+.
+|-- backend/
+|   `-- rotavital/
+|       |-- src/main/java/com/jackops/rotavital/
+|       |   |-- controller/
+|       |   |-- dto/
+|       |   |-- estrutura/
+|       |   |-- model/
+|       |   |-- repository/
+|       |   `-- service/
+|       |-- src/test/java/com/jackops/rotavital/
+|       `-- pom.xml
+|-- docs/
+|   `-- traducao-c-java.md
+|-- estruturas-c/
+|   |-- bolsa.h
+|   |-- lista_estoque.h
+|   |-- lista_estoque.c
+|   |-- fila_requisicoes.h
+|   |-- fila_requisicoes.c
+|   |-- pilha_historico.h
+|   |-- pilha_historico.c
+|   |-- testes.c
+|   `-- Makefile
+|-- frontend/
+|-- scripts/
+|   |-- verificar-citacoes.ps1
+|   `-- citacoes-c-java.json
+`-- README.md
 ```
-*(Estrutura pode variar conforme implementação final.)*
 
----
+## Estruturas de Dados
 
-# 🚀 Funcionalidades
+| Estrutura | Domínio | Arquivos C | Arquivos Java |
+|---|---|---|---|
+| Lista encadeada | Estoque de bolsas | `estruturas-c/lista_estoque.c` | `ListaEstoque.java` |
+| Fila FIFO | Requisições hospitalares | `estruturas-c/fila_requisicoes.c` | `FilaRequisicoes.java` |
+| Pilha LIFO | Histórico de operações | `estruturas-c/pilha_historico.c` | `PilhaHistorico.java` |
 
-## Unidade 1
+A tradução comentada está em [docs/traducao-c-java.md](docs/traducao-c-java.md).
 
-- [ ] Modelagem do domínio da rede de sangue
-- [ ] CRUD das entidades principais
-- [ ] Controle de validade dos componentes
-- [ ] Grafo da malha de transporte
-- [ ] Algoritmo de caminho mínimo
-- [ ] Estrutura de estoque utilizando hash
-- [ ] Priorização FEFO
-- [ ] Primeiro deploy da aplicação
+## Como Compilar e Testar o C
 
-## Unidade 2
+Entre na pasta das estruturas:
 
-- [ ] Compatibilidade ABO/Rh
-- [ ] Matching entre requisição e bolsa
-- [ ] Integração entre rota, validade e compatibilidade
-- [ ] Painéis estatísticos
-- [ ] Monitoramento de telemetria
-- [ ] Pipeline CI/CD completo
+```bash
+cd estruturas-c
+```
 
----
+Compile:
 
-# 🔒 Segurança e Privacidade
+```bash
+make
+```
 
-O projeto segue as seguintes restrições:
+Rode os testes:
 
-- Utilização exclusiva de dados sintéticos;
-- Nenhum dado real de pacientes ou doadores é armazenado;
-- A compatibilidade sanguínea possui finalidade educacional;
-- Não existe integração com sistemas oficiais da Hemorrede.
+```bash
+make test
+```
 
+Verifique vazamentos de memória:
 
----
+```bash
+make valgrind
+```
 
-# 👥 Disciplinas Envolvidas
+O alvo `valgrind` requer o Valgrind instalado em Linux ou WSL. No Windows com MinGW, substitua `make` por `mingw32-make` para compilar e testar; o Valgrind precisa de um ambiente Linux.
 
-O projeto integra conhecimentos de:
+## Como Rodar o Backend Java
 
-| Disciplina | Contribuição |
+Entre no backend:
+
+```bash
+cd backend/rotavital
+```
+
+No Linux/macOS:
+
+```bash
+./mvnw spring-boot:run
+```
+
+No Windows:
+
+```powershell
+.\mvnw.cmd spring-boot:run
+```
+
+Requisitos: Java 21. O backend usa Spring Boot, JPA e H2.
+
+A API sobe em `http://localhost:8080`.
+
+## Como Rodar os Testes Java
+
+No Linux/macOS:
+
+```bash
+cd backend/rotavital
+./mvnw test
+```
+
+No Windows:
+
+```powershell
+cd backend\rotavital
+.\mvnw.cmd test
+```
+
+## Endpoints Principais
+
+| Ação | Método e URL |
 |---|---|
-| Programação Orientada a Objetos | Aplicação Java/Spring Boot e regras de negócio |
-| Algoritmos e Estruturas de Dados | Rotas, compatibilidade e priorização |
-| Estatística e Probabilidade | Indicadores e análises |
-| Infraestrutura de Software | Cloud, CI/CD e concorrência |
-| Infraestrutura de Comunicação | Redes, APIs e telemetria |
-| Projeto Integrador | Organização e integração da equipe |
+| Listar bolsas | `GET /api/bolsas` |
+| Cadastrar bolsa | `POST /api/bolsas` |
+| Buscar bolsa | `GET /api/bolsas/{id}` |
+| Atualizar bolsa | `PUT /api/bolsas/{id}` |
+| Excluir bolsa | `DELETE /api/bolsas/{id}` |
+| Listar solicitações | `GET /api/solicitacoes` |
+| Cadastrar solicitação | `POST /api/solicitacoes` |
+| Buscar solicitação | `GET /api/solicitacoes/{id}` |
+| Atualizar solicitação | `PUT /api/solicitacoes/{id}` |
+| Excluir solicitação | `DELETE /api/solicitacoes/{id}` |
+| Consultar fila FIFO | `GET /api/solicitacoes/fila` |
+| Chamar próxima solicitação | `POST /api/solicitacoes/fila/proxima` |
+| Consultar histórico (topo primeiro) | `GET /api/historico` |
+| Remover última operação do histórico | `DELETE /api/historico/ultima` |
+| Consultar indicadores estatísticos | `GET /api/indicadores` |
 
----
+## Verificar a Tradução Comentada
 
-# 📦 Entrega 01
+Na raiz do repositório:
 
-## 📖 Histórias de Usuário
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verificar-citacoes.ps1
+```
+
+## Histórico das Entregas
+
+Os registros abaixo preservam o conteúdo das entregas anteriores. As funcionalidades de compatibilidade, FEFO e roteirização citadas nesses registros pertencem às etapas futuras na branch `unidade-2`; os endpoints históricos de alocação não estão disponíveis nesta entrega da Unidade 1.
+
+## 📦 Entrega 01
+
+### 📖 Histórias de Usuário
 
 Foram definidas **7 histórias de usuário**, documentadas com descrição da necessidade de negócio, critérios de discussão, cenários de validação em **BDD (Behavior-Driven Development)**, avaliação pelos critérios **INVEST** e diagramas de atividades.
 
@@ -235,7 +181,7 @@ Foram definidas **7 histórias de usuário**, documentadas com descrição da ne
 
 ---
 
-## 🎨 Protótipo Lo-Fi
+### 🎨 Protótipo Lo-Fi
 
 O protótipo de baixa fidelidade da aplicação está disponível no Figma.
 
@@ -243,7 +189,7 @@ O protótipo de baixa fidelidade da aplicação está disponível no Figma.
 
 ---
 
-## 🎥 Screencast
+### 🎥 Screencast
 
 O screencast apresenta o protótipo desenvolvido e as histórias de usuário contempladas nesta etapa do projeto.
 
@@ -251,7 +197,7 @@ O screencast apresenta o protótipo desenvolvido e as histórias de usuário con
 
 ---
 
-## 📎 Artefatos
+### 📎 Artefatos
 
 | Artefato | Acesso |
 |---|---|
@@ -261,9 +207,9 @@ O screencast apresenta o protótipo desenvolvido e as histórias de usuário con
 
 ---
 
-# 📦 Entrega 02
+## 📦 Entrega 02
 
-## Histórias implementadas
+### Histórias implementadas
 
 > **História 1 - Cadastro de bolsa de hemocomponente**
 >
@@ -275,7 +221,7 @@ O screencast apresenta o protótipo desenvolvido e as histórias de usuário con
 > Como operador, quero que o sistema selecione a bolsa compatível que vence primeiro para reduzir descarte.
 > **Critérios entregues:** compatibilidade ABO/Rh acadêmica; filtro de bolsas disponíveis e não vencidas; mesmo componente da solicitação; ordenação FEFO; alteração do status para `ALOCADA`; retorno claro quando não há estoque compatível.
 
-## Como executar e demonstrar
+### Como executar e demonstrar
 
 No terminal, entre em `backend/rotavital` e execute `./mvnw.cmd spring-boot:run`. A API ficará disponível em `http://localhost:8080`.
 
@@ -290,39 +236,39 @@ Endpoints usados na demonstração:
 
 Os testes automatizados podem ser executados com `./mvnw.cmd test`.
 
-## Issue / Bug Tracker
+### Issue / Bug Tracker
 
 > **Espaço reservado para o print do GitHub Issues**
 >
 > Adicione aqui a captura de tela das issues usadas na Entrega 02 (cadastro de bolsa, validação de datas, compatibilidade ABO/Rh, FEFO e correções).
 
-![Print do GitHub Issues](docs/images/github-issues-entrega-02.png)
+Referência histórica do print: `docs/images/github-issues-entrega-02.png`. A imagem não consta no histórico consultado e permanece pendente.
 
-## Screencasts
+### Screencasts
 
 - Vídeo 1 - Uso do sistema: **[assistir no YouTube](https://youtu.be/awFqNrnNcWk)**
 - Vídeo 2 - Explicação do código: **[assistir no YouTube](https://youtu.be/HQX0xPfTYAI)**
-- Roteiros curtos: [docs/roteiros-videos-entrega-02.md](./docs/roteiros-videos-entrega-02.md)
+- Roteiros curtos: `docs/roteiros-videos-entrega-02.md` (referência histórica; arquivo não encontrado no histórico consultado).
 
 ---
 
-# 📈 Roadmap
+## 📈 Roadmap
 
-## Fase 1 — Modelagem e Base do Sistema
+### Fase 1 — Modelagem e Base do Sistema
 
 - Definição do domínio;
 - Estrutura inicial do backend;
 - Implementação das estruturas de dados;
 - Configuração inicial de infraestrutura.
 
-## Fase 2 — Integração
+### Fase 2 — Integração
 
 - Compatibilidade sanguínea;
 - Roteirização;
 - Painéis;
 - Telemetria.
 
-## Fase 3 — Finalização
+### Fase 3 — Finalização
 
 - Testes;
 - Deploy;
@@ -331,7 +277,7 @@ Os testes automatizados podem ser executados com `./mvnw.cmd test`.
 
 ---
 
-# 👨‍💻 Equipe
+## 👨‍💻 Equipe
 
 | Nome | Email | Função |
 |---|---|---|
@@ -346,6 +292,6 @@ Os testes automatizados podem ser executados com `./mvnw.cmd test`.
 
 ---
 
-# 📄 Licença
+## 📄 Licença
 
 Projeto desenvolvido para fins acadêmicos no curso de **Análise e Desenvolvimento de Sistemas — CESAR School (2026.2)**.

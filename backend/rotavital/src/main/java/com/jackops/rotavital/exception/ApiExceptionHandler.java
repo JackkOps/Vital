@@ -1,6 +1,6 @@
 package com.jackops.rotavital.exception;
 
-import java.util.LinkedHashMap;
+import java.util.Collections;
 import java.util.Map;
 
 import org.springframework.http.HttpStatus;
@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
@@ -22,9 +23,14 @@ public class ApiExceptionHandler {
         return resposta(HttpStatus.CONFLICT, exception.getMessage());
     }
 
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<Map<String, String>> tratarStatus(ResponseStatusException exception) {
+        return ResponseEntity.status(exception.getStatusCode())
+                .body(Collections.singletonMap("mensagem", exception.getReason()));
+    }
+
     private ResponseEntity<Map<String, String>> resposta(HttpStatus status, String mensagem) {
-        Map<String, String> corpo = new LinkedHashMap<>();
-        corpo.put("mensagem", mensagem);
+        Map<String, String> corpo = Collections.singletonMap("mensagem", mensagem);
         return ResponseEntity.status(status).body(corpo);
     }
 }

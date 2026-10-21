@@ -4,8 +4,10 @@ import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.jackops.rotavital.dto.RespostaAlocacaoBolsa;
 import com.jackops.rotavital.model.Bolsa;
@@ -30,7 +32,8 @@ public class AlocacaoBolsaService {
     @Transactional
     public RespostaAlocacaoBolsa alocarBolsaCompativel(Long solicitacaoId) {
         SolicitacaoSangue solicitacao = solicitacaoSangueRepository.findById(solicitacaoId)
-                .orElseThrow(() -> new IllegalArgumentException("Solicitação não encontrada."));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Solicitação não encontrada"));
 
         List<Bolsa> bolsasCandidatas = bolsaRepository.findAll().stream()
                 .filter(bolsa -> bolsa.getStatus() == StatusBolsa.DISPONIVEL)

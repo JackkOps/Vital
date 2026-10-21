@@ -21,15 +21,10 @@ public class AlocacaoBolsaController {
 
     @PostMapping("/solicitacoes/{solicitacaoId}/alocar")
     public ResponseEntity<RespostaAlocacaoBolsa> alocar(@PathVariable Long solicitacaoId) {
-        try {
-            RespostaAlocacaoBolsa resposta = alocacaoBolsaService.alocarBolsaCompativel(solicitacaoId);
-            if (resposta.isAlocada()) {
-                return ResponseEntity.ok(resposta);
-            }
-            return ResponseEntity.accepted().body(resposta);
-        } catch (IllegalArgumentException excecao) {
-            return ResponseEntity.badRequest()
-                    .body(new RespostaAlocacaoBolsa(null, false, excecao.getMessage()));
+        RespostaAlocacaoBolsa resposta = alocacaoBolsaService.alocarBolsaCompativel(solicitacaoId);
+        if (resposta.isAlocada()) {
+            return ResponseEntity.ok(resposta);
         }
+        return ResponseEntity.accepted().body(resposta);
     }
 }

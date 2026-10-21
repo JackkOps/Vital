@@ -1,6 +1,8 @@
 package com.jackops.rotavital.exception;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -43,5 +45,26 @@ class ApiExceptionHandlerTest {
         mockMvc.perform(post("/api/validade/bolsas/{id}/baixa", "abc"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.mensagem").value("Valor inválido para o parâmetro: bolsaId"));
+    }
+
+    @Test
+    void deveRetornar404ComMensagemParaRotaInexistente() throws Exception {
+        mockMvc.perform(get("/api/rota-inexistente"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.mensagem").value("Recurso não encontrado"));
+    }
+
+    @Test
+    void deveRetornar405ComMensagemParaMetodoNaoSuportado() throws Exception {
+        mockMvc.perform(put("/api/validade/alertas"))
+                .andExpect(status().isMethodNotAllowed())
+                .andExpect(jsonPath("$.mensagem").value("Método HTTP não suportado para este endereço"));
+    }
+
+    @Test
+    void deveRetornar415ComMensagemParaTipoDeConteudoNaoSuportado() throws Exception {
+        mockMvc.perform(post("/api/bolsas").contentType(MediaType.TEXT_PLAIN).content("bolsa"))
+                .andExpect(status().isUnsupportedMediaType())
+                .andExpect(jsonPath("$.mensagem").value("Tipo de conteúdo não suportado: envie application/json"));
     }
 }

@@ -95,6 +95,28 @@ class ValidadeBolsaControllerTest {
                 .andExpect(jsonPath("$.mensagem").value("Bolsa não encontrada"));
     }
 
+    @Test
+    void deveRetornar409AoDarBaixaEmBolsaJaDescartada() throws Exception {
+        Bolsa vencida = criarBolsa("BOLSA-DESCARTADA", TipoComponente.HEMACIAS, LocalDate.now().minusDays(1),
+                StatusBolsa.DISPONIVEL);
+        mockMvc.perform(post("/api/validade/bolsas/{id}/baixa", vencida.getId()))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(post("/api/validade/bolsas/{id}/baixa", vencida.getId()))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.mensagem").value("Bolsa já foi descartada"));
+    }
+
+    @Test
+    void deveRetornar409AoDarBaixaEmBolsaDentroDaValidade() throws Exception {
+        Bolsa valida = criarBolsa("BOLSA-VALIDA", TipoComponente.HEMACIAS, LocalDate.now().plusDays(10),
+                StatusBolsa.DISPONIVEL);
+
+        mockMvc.perform(post("/api/validade/bolsas/{id}/baixa", valida.getId()))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.mensagem").value("Bolsa ainda está dentro da validade"));
+    }
+
     private Bolsa criarBolsa(String identificador, TipoComponente tipoComponente, LocalDate dataValidade,
             StatusBolsa status) {
         return bolsaRepository.save(Bolsa.builder()

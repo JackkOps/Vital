@@ -19,6 +19,19 @@ Funcionalidades contempladas nesta entrega:
 
 Funcionalidades de etapas futuras foram isoladas na branch [`unidade-2`](https://github.com/Vini-palb/Vital/tree/unidade-2), publicada no remoto `origin` em 07/10/2026.
 
+## Tecnologias Usadas
+
+| Área | Tecnologias |
+|---|---|
+| Backend | Java 21, Spring Boot 4.1.1 (Web MVC, Data JPA, Validation, DevTools) |
+| Banco de dados | H2 em memória (desenvolvimento) e driver PostgreSQL |
+| Interface web | HTML, CSS e JavaScript, servidos pelo próprio Spring Boot e consumindo a API REST |
+| Estruturas de dados | C (C11) com GCC, Make e Valgrind |
+| Testes | JUnit, Spring Boot Test e MockMvc |
+| Build | Maven (Maven Wrapper) |
+| Versionamento e gestão | Git, GitHub (código e issues) e Jira |
+| Documentação | Markdown, Mermaid e script PowerShell de verificação da tradução C → Java |
+
 ## Estrutura de Pastas
 
 ```text
@@ -114,6 +127,8 @@ No Windows:
 Requisitos: Java 21. O backend usa Spring Boot, JPA e H2.
 
 A API sobe em `http://localhost:8080`.
+
+A interface web fica disponível no navegador em `http://localhost:8080/`.
 
 ## Como Rodar os Testes Java
 
@@ -291,6 +306,8 @@ Endpoints usados na demonstração:
 | Verificar validade e dar baixa nas vencidas | `POST /api/validade/verificar` |
 | Dar baixa manual por vencimento | `POST /api/validade/bolsas/{bolsaId}/baixa` |
 | Listar baixas registradas | `GET /api/validade/baixas` |
+
+Todas essas ações também podem ser feitas pela interface web em `http://localhost:8080/`, nas áreas Estoque, Solicitações e Validade.
 
 Os testes automatizados podem ser executados com `./mvnw.cmd test`.
 

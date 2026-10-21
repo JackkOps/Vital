@@ -166,7 +166,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verificar-citacoes.p
 
 ## Histórico das Entregas
 
-Os registros abaixo preservam o conteúdo das entregas anteriores. A alocação compatível ABO/Rh com FEFO (Entrega 02) foi reintegrada ao `main` na Entrega 03; a roteirização continua prevista para as próximas etapas.
+Os registros abaixo preservam o conteúdo das entregas anteriores. As funcionalidades de compatibilidade, FEFO e roteirização citadas nesses registros pertencem às etapas futuras na branch `unidade-2`; os endpoints históricos de alocação não estão disponíveis nesta entrega da Unidade 1.
+
+Na Entrega 03 de POO, a alocação compatível ABO/Rh com FEFO (Entrega 02) foi reintegrada ao `main`.
 
 ## 📦 Entrega 01
 
@@ -298,8 +300,8 @@ Os testes automatizados podem ser executados com `./mvnw.cmd test`.
 
 ### Screencasts
 
-- Vídeo 1 - Uso do sistema: **[link do YouTube a adicionar]**
-- Vídeo 2 - Explicação do código: **[link do YouTube a adicionar]**
+- Vídeo 1 - Uso do sistema: **[assistir no YouTube](COLE_AQUI_O_LINK_DO_VIDEO_1)**
+- Vídeo 2 - Explicação do código: **[assistir no YouTube](COLE_AQUI_O_LINK_DO_VIDEO_2)**
 
 ---
 

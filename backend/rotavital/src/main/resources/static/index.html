@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Rota Vital</title>
+    <link rel="stylesheet" href="css/rotavital.css">
+</head>
+<body>
+    <a class="pular" href="#conteudo">Pular para o conteúdo</a>
+
+    <header class="topo">
+        <div class="marca">
+            <span class="marca-gota" aria-hidden="true"></span>
+            <div>
+                <p class="marca-nome">Rota Vital</p>
+                <p class="marca-sub">Estoque de hemocomponentes e requisições hospitalares</p>
+            </div>
+        </div>
+        <p class="data-hoje" id="data-hoje"></p>
+    </header>
+
+    <div class="estrutura">
+        <nav class="navegacao" aria-label="Áreas do sistema">
+            <a href="#estoque" data-area="estoque">Estoque</a>
+            <a href="#solicitacoes" data-area="solicitacoes">Solicitações</a>
+            <a href="#validade" data-area="validade">Validade</a>
+            <a href="#indicadores" data-area="indicadores">Indicadores</a>
+            <a href="#historico" data-area="historico">Histórico</a>
+        </nav>
+
+        <main id="conteudo" tabindex="-1">
+
+            <!-- Estoque de bolsas (História 1) -->
+            <section class="area" id="area-estoque" data-area="estoque" aria-labelledby="titulo-estoque">
+                <h1 id="titulo-estoque">Estoque de bolsas</h1>
+                <p class="area-descricao">Cadastre as bolsas recebidas e acompanhe o status de cada uma.</p>
+
+                <form class="formulario" id="form-bolsa">
+                    <h2 id="form-bolsa-titulo">Cadastrar bolsa</h2>
+                    <input type="hidden" name="id">
+                    <div class="campos">
+                        <label>Identificador
+                            <input name="identificador" required autocomplete="off" placeholder="BOLSA-2026-0001">
+                        </label>
+                        <label>Tipo sanguíneo
+                            <select name="tipoSanguineo" data-opcoes="tipoSanguineo" required></select>
+                        </label>
+                        <label>Componente
+                            <select name="tipoComponente" data-opcoes="tipoComponente" required></select>
+                        </label>
+                        <label>Data de coleta
+                            <input name="dataColeta" type="date" required>
+                        </label>
+                        <label>Validade
+                            <input name="dataValidade" type="date" required>
+                        </label>
+                        <label>Volume (mL)
+                            <input name="volume" type="number" min="1" step="1" required inputmode="numeric">
+                        </label>
+                    </div>
+                    <div class="acoes-form">
+                        <button type="submit" class="botao principal" id="form-bolsa-enviar">Cadastrar bolsa</button>
+                        <button type="button" class="botao" id="form-bolsa-cancelar" hidden>Cancelar edição</button>
+                    </div>
+                </form>
+
+                <div class="bloco">
+                    <div class="bloco-cabecalho">
+                        <h2>Bolsas cadastradas</h2>
+                        <button type="button" class="botao discreto" data-recarregar="estoque">Atualizar</button>
+                    </div>
+                    <div class="tabela-rolagem">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th scope="col">Identificador</th>
+                                    <th scope="col">Tipo</th>
+                                    <th scope="col">Componente</th>
+                                    <th scope="col">Coleta</th>
+                                    <th scope="col">Validade</th>
+                                    <th scope="col" class="num">Volume</th>
+                                    <th scope="col">Status</th>
+                                    <th scope="col"><span class="visualmente-oculto">Ações</span></th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabela-bolsas"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Solicitações, fila e alocação (Histórias 2 e 4) -->
+            <section class="area" id="area-solicitacoes" data-area="solicitacoes" aria-labelledby="titulo-solicitacoes" hidden>
+                <h1 id="titulo-solicitacoes">Solicitações hospitalares</h1>
+                <p class="area-descricao">Registre os pedidos dos hospitais, chame a fila de atendimento e aloque a bolsa compatível que vence primeiro.</p>
+
+                <form class="formulario" id="form-solicitacao">
+                    <h2 id="form-solicitacao-titulo">Registrar solicitação</h2>
+                    <input type="hidden" name="id">
+                    <div class="campos">
+                        <label class="largo">Hospital
+                            <input name="nomeHospital" required autocomplete="off" placeholder="Hospital da Restauração">
+                        </label>
+                        <label>Tipo sanguíneo
+                            <select name="tipoSanguineo" data-opcoes="tipoSanguineo" required></select>
+                        </label>
+                        <label>Componente
+                            <select name="tipoComponente" data-opcoes="tipoComponente" required></select>
+                        </label>
+                        <label>Quantidade
+                            <input name="quantidade" type="number" min="1" step="1" required inputmode="numeric">
+                        </label>
+                        <label id="campo-urgencia">Urgência
+                            <select name="nivelUrgencia" data-opcoes="nivelUrgencia" required></select>
+                        </label>
+                    </div>
+                    <div class="acoes-form">
+                        <button type="submit" class="botao principal" id="form-solicitacao-enviar">Registrar solicitação</button>
+                        <button type="button" class="botao" id="form-solicitacao-cancelar" hidden>Cancelar edição</button>
+                    </div>
+                </form>
+
+                <div class="bloco">
+                    <div class="bloco-cabecalho">
+                        <h2>Fila de atendimento</h2>
+                        <div class="grupo-botoes">
+                            <button type="button" class="botao discreto" data-recarregar="solicitacoes">Atualizar</button>
+                            <button type="button" class="botao principal" id="chamar-proxima">Chamar próxima</button>
+                        </div>
+                    </div>
+                    <p class="nota">Solicitações pendentes, na ordem de chegada.</p>
+                    <ol class="fila" id="lista-fila"></ol>
+                </div>
+
+                <div class="bloco">
+                    <div class="bloco-cabecalho">
+                        <h2>Todas as solicitações</h2>
+                    </div>
+                    <div class="tabela-rolagem">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th scope="col" class="num">Nº</th>
+                                    <th scope="col">Hospital</th>
+                                    <th scope="col">Tipo</th>
+                                    <th scope="col">Componente</th>
+                                    <th scope="col" class="num">Qtd.</th>
+                                    <th scope="col">Urgência</th>
+                                    <th scope="col">Status</th>
+                                    <th scope="col"><span class="visualmente-oculto">Ações</span></th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabela-solicitacoes"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Validade (História 5) -->
+            <section class="area" id="area-validade" data-area="validade" aria-labelledby="titulo-validade" hidden>
+                <h1 id="titulo-validade">Validade das bolsas</h1>
+                <p class="area-descricao">Veja as bolsas próximas do vencimento e dê baixa nas que já venceram. A verificação também roda sozinha todos os dias à 1h.</p>
+
+                <div class="bloco destaque">
+                    <div class="bloco-cabecalho">
+                        <h2>Verificar validade agora</h2>
+                        <button type="button" class="botao perigo" id="verificar-validade">Verificar e dar baixa nas vencidas</button>
+                    </div>
+                    <p class="nota">Bolsas disponíveis com validade anterior a hoje passam para descartada. Bolsas alocadas não são alteradas.</p>
+                    <div id="resultado-verificacao" aria-live="polite"></div>
+                </div>
+
+                <div class="bloco">
+                    <div class="bloco-cabecalho">
+                        <h2>Próximas do vencimento</h2>
+                        <button type="button" class="botao discreto" data-recarregar="validade">Atualizar</button>
+                    </div>
+                    <p class="nota">Bolsas disponíveis que entram na janela de alerta do seu componente, da que vence primeiro para a última.</p>
+                    <div class="tabela-rolagem">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th scope="col">Identificador</th>
+                                    <th scope="col">Tipo</th>
+                                    <th scope="col">Componente</th>
+                                    <th scope="col">Validade</th>
+                                    <th scope="col" class="num">Dias restantes</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabela-alertas"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="bloco">
+                    <div class="bloco-cabecalho">
+                        <h2>Baixas registradas</h2>
+                    </div>
+                    <div class="tabela-rolagem">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th scope="col" class="num">Nº</th>
+                                    <th scope="col">Bolsa</th>
+                                    <th scope="col">Motivo</th>
+                                    <th scope="col">Data</th>
+                                    <th scope="col">Origem</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabela-baixas"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Indicadores -->
+            <section class="area" id="area-indicadores" data-area="indicadores" aria-labelledby="titulo-indicadores" hidden>
+                <h1 id="titulo-indicadores">Indicadores</h1>
+                <p class="area-descricao" id="indicadores-referencia"></p>
+
+                <div class="bloco">
+                    <div class="bloco-cabecalho">
+                        <h2>Bolsas disponíveis por tipo e componente</h2>
+                        <button type="button" class="botao discreto" data-recarregar="indicadores">Atualizar</button>
+                    </div>
+                    <p class="nota" id="descricao-estoque"></p>
+                    <div class="tabela-rolagem">
+                        <table class="matriz" id="matriz-estoque"></table>
+                    </div>
+                </div>
+
+                <div class="bloco">
+                    <div class="bloco-cabecalho">
+                        <h2>Demanda em aberto por hospital</h2>
+                    </div>
+                    <p class="nota" id="descricao-demanda"></p>
+                    <div class="tabela-rolagem">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th scope="col">Hospital</th>
+                                    <th scope="col">Componente</th>
+                                    <th scope="col">Tipo</th>
+                                    <th scope="col" class="num">Bolsas em aberto</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabela-demanda"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Histórico de operações -->
+            <section class="area" id="area-historico" data-area="historico" aria-labelledby="titulo-historico" hidden>
+                <h1 id="titulo-historico">Histórico de operações</h1>
+                <p class="area-descricao">Operações registradas nesta execução do sistema, da mais recente para a mais antiga.</p>
+
+                <div class="bloco">
+                    <div class="bloco-cabecalho">
+                        <h2>Operações</h2>
+                        <div class="grupo-botoes">
+                            <button type="button" class="botao discreto" data-recarregar="historico">Atualizar</button>
+                            <button type="button" class="botao" id="remover-ultima">Remover última operação</button>
+                        </div>
+                    </div>
+                    <ol class="historico" id="lista-historico"></ol>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div class="avisos" id="avisos" role="status" aria-live="polite"></div>
+
+    <script src="js/rotavital.js"></script>
+</body>
+</html>

@@ -130,6 +130,22 @@ public class Bolsa {
         this.status = status;
     }
 
+    /**
+     * Uma bolsa está vencida quando sua validade é anterior à data informada.
+     */
+    public boolean estaVencidaEm(LocalDate data) {
+        return dataValidade.isBefore(data);
+    }
+
+    /**
+     * Uma bolsa está próxima do vencimento quando ainda está válida e sua validade
+     * cai dentro da janela de alerta do seu tipo de componente.
+     */
+    public boolean estaProximaDoVencimentoEm(LocalDate data) {
+        LocalDate limiteAlerta = data.plusDays(tipoComponente.getDiasAlertaVencimento());
+        return !estaVencidaEm(data) && !dataValidade.isAfter(limiteAlerta);
+    }
+
     public static class BolsaBuilder {
         private Long id;
         private String identificador;

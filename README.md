@@ -61,6 +61,14 @@ Para encerrar o ambiente preservando os dados persistidos:
 docker compose down
 ```
 
+#### Decisões do container (E1)
+* **Imagem base:** o estágio final usa `eclipse-temurin:21-jre-alpine`, que traz só o runtime Java (sem compilador nem Maven) sobre o Alpine. Resultado: imagem final de **392 MB em disco / 124 MB de conteúdo**, com menos pacotes instalados e, portanto, menos superfície para vulnerabilidades. A aplicação roda como usuário sem privilégios (`appuser`), não como root.
+* **Por que multi-stage:** o 1º estágio (`eclipse-temurin:21-jdk-alpine`) baixa as dependências, compila e **roda toda a suíte de testes** (`./mvnw clean package`); se um teste falhar, a imagem não é gerada. O 2º estágio copia apenas o `.jar`. JDK, Maven, código-fonte e cache de dependências ficam para trás e não vão para produção.
+* **Onde ficam os dados:** no volume nomeado `rotavital_postgres_data`, montado em `/var/lib/postgresql/data`. Ele é gerenciado pelo Docker e sobrevive a `docker compose down` (só é apagado com `down -v`), como mostra a evidência [04-persistencia-volume](docs/evidencias/e1/04-persistencia-volume.png).
+* **Como os serviços se encontram:** `api` e `db` estão na rede bridge `rotavital_network`, criada pelo Compose. Dentro dela o DNS do Docker resolve o nome do serviço, então a API acessa o banco por `jdbc:postgresql://db:5432/rotavital`, sem IP fixo.
+* **Ordem de subida:** o `db` tem healthcheck com `pg_isready` e a `api` só inicia com `depends_on: condition: service_healthy`. A `api` também tem healthcheck próprio (`GET /api/bolsas`), visível no `docker compose ps`.
+* **Configuração fora do código:** credenciais e portas vêm do `.env` (criado a partir do `.env.example` e ignorado pelo Git); o `compose.yaml` só tem valores padrão de desenvolvimento.
+
 ---
 
 ### 3. 🧪 Testes Automatizados e TDD (Entrega E2)
@@ -126,8 +134,11 @@ A esteira de integração e entrega contínua está implementada via **GitHub Ac
 
 | Decisão | O que escolhemos | Alternativas | Por quê? |
 |---|---|---|---|
-| **Imagem Base** | `eclipse-temurin:21-jre-alpine` (estágio 2) | Debian, Ubuntu, Node | Imagem mínima, reduzindo pacotes vulneráveis e superfície de ataque; o JDK completo fica isolado no 1º estágio. |
-| **Dados** | PostgreSQL 16 com volume nomeado (`postgres_data`) | Bind mount, SQLite | Volume nomeado gerenciado pelo Docker garante que os dados do banco sobrevivem a `docker compose down`. |
+| **Imagem Base** | `eclipse-temurin:21-jre-alpine` (estágio 2) | `eclipse-temurin:21-jdk`, `21-jre` (Ubuntu), `openjdk` | Só o JRE sobre Alpine: imagem final de 392 MB (124 MB de conteúdo), menos pacotes vulneráveis e execução como usuário não-root; o JDK fica isolado no 1º estágio. |
+| **Build da imagem** | Dockerfile multi-stage (build + testes → runtime) | Estágio único com JDK; copiar um `.jar` gerado fora do Docker | Os testes viram gate do build (teste vermelho = sem imagem) e a imagem final não carrega JDK, Maven nem código-fonte. |
+| **Dados** | PostgreSQL 16 com volume nomeado (`rotavital_postgres_data`) | Bind mount, H2 em memória | Volume nomeado gerenciado pelo Docker garante que os dados do banco sobrevivem a `docker compose down`, sem depender de caminhos da máquina do aluno. |
+| **Rede** | Rede bridge do Compose (`rotavital_network`) | `network_mode: host`, IP fixo | A API encontra o banco pelo nome do serviço (`db`) via DNS interno do Docker; funciona igual em qualquer máquina. |
+| **Saúde e ordem de subida** | Healthcheck em `db` (`pg_isready`) e `api` + `depends_on: service_healthy` | `depends_on` simples, scripts de espera | A API só sobe quando o banco aceita conexões, evitando falha de conexão na inicialização. |
 | **Testes** | Priorização da US-01 (`SANGUE_TOTAL` e datas) e compatibilidade | Testar cadastro cosmético | Uma bolsa com data de validade inconsistente ou tipo não reconhecido gera risco iminente de descarte ou erro transfusional. |
 | **Fluxo de Branch** | GitHub Flow (feature branches $\to$ PR $\to$ `main` protegida) | Git Flow clássico | Equipe ágil, entrega contínua com uma única versão em produção e deploy automático a cada merge aprovado na `main`. |
 | **CI/CD e Deploy** | GitHub Actions + Render / Railway | GitLab CI, Jenkins, AWS | Actions possui integração nativa com o repositório GitHub sem custo; Render oferece deploy automatizado via Webhook/Docker. |
@@ -157,7 +168,14 @@ O uso de Inteligência Artificial Generativa neste projeto foi ativo, supervisio
 ### 7. 📁 Evidências
 
 Todos os registros e logs comprobatórios são organizados na pasta [`docs/evidencias/`](docs/evidencias/):
-* **E1 (Docker):** `docs/evidencias/e1/` *(Configurado localmente via `compose.yaml`; aguardando execução local do Docker Desktop para captura de tela do `docker compose ps` e API respondendo)*.
+* **E1 (Docker):** [`docs/evidencias/e1/`](docs/evidencias/e1/)
+  1. [`docker compose ps` com os dois serviços healthy](docs/evidencias/e1/01-compose-ps.png)
+  2. [API respondendo `HTTP 200`](docs/evidencias/e1/02-api-respondendo.png)
+  3. [Subida do zero (`down -v` + `up -d --build`)](docs/evidencias/e1/03-sobe-do-zero.png)
+  4. [Dados persistem após `docker compose down`](docs/evidencias/e1/04-persistencia-volume.png)
+  5. [Volume nomeado e rede do Compose](docs/evidencias/e1/05-volume-rede.png)
+  6. [Tamanho da imagem e usuário não-root](docs/evidencias/e1/06-imagem-usuario.png)
+  7. [Testes rodando dentro do build multi-stage (`--no-cache`: 72 testes, `BUILD SUCCESS`)](docs/evidencias/e1/07-testes-no-build.png)
 * **E2 (TDD):** [`docs/evidencias/e2/README.md`](docs/evidencias/e2/README.md) *(Suíte local implementada com 72 testes verdes, logs duráveis e hashes SHA-256 versionados; execução na esteira remota do GitHub Actions aguarda push)*.
 * **E3 (Deploy):** `docs/evidencias/e3/` *(Workflow `.github/workflows/ci.yml` pronto; aguardando push para o GitHub para coleta de prints da execução vermelha que barra merge e verde que publica)*.
 

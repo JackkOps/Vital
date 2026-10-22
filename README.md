@@ -20,7 +20,7 @@ Sistema acadêmico para gestão de estoque de hemocomponentes e atendimento de r
 | Miguel Victor Lussac Barboza | mvlb@cesar.school | Desenvolvimento / DevOps |
 | Pedro Augusto Carvalho Araujo | paca@cesar.school | Desenvolvimento |
 | Vinicius Pessoa de Albuquerque | vpa@cesar.school | Desenvolvimento |
-| Wesley Yuri da Silva | wys@cesar.school | Desenvolvimento |
+| Wesley Yuri da Silva | wys@cesar.school | Desenvolvimento |.
 
 ---
 
@@ -29,7 +29,7 @@ Sistema acadêmico para gestão de estoque de hemocomponentes e atendimento de r
 O sistema sobe do zero com um único comando utilizando **Docker Compose**, orquestrando a API Spring Boot e o banco de dados PostgreSQL.
 
 #### Pré-requisitos
-* [Docker Desktop](https://www.docker.com/products/docker-desktop/) instalado e em execução (backend WSL2 recomendado no Windows).
+* [Docker Desktop](https://www.docker.com/products/docker-desktop/) instalado e em execução (backend WSL2 recomendado no Windows)..
 
 #### Passo a passo:
 1. Clone o repositório:

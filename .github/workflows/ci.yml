@@ -1,0 +1,56 @@
+name: CI/CD Pipeline - Rota Vital
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test-and-build:
+    name: Build & Testes Automatizados (TDD Gate)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Configurar Java 21 (Eclipse Temurin)
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Executar testes automatizados (CI Gate)
+        working-directory: backend/rotavital
+        run: |
+          chmod +x ./mvnw
+          ./mvnw test
+
+      - name: Compilar pacote JAR
+        working-directory: backend/rotavital
+        run: ./mvnw package -DskipTests=true
+
+      - name: Validar Build da Imagem Docker Multi-stage
+        run: |
+          docker build -t rotavital-api:latest -f Dockerfile .
+
+  deploy:
+    name: Deploy Automatizado (CD)
+    needs: test-and-build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@v4
+
+      - name: Disparar Deploy em Produção (Webhook / Render / Railway)
+        env:
+          DEPLOY_HOOK_URL: ${{ secrets.DEPLOY_HOOK_URL }}
+        run: |
+          if [ -z "$DEPLOY_HOOK_URL" ]; then
+            echo "Deploy hook não configurado em secrets.DEPLOY_HOOK_URL. Simulação de deploy contínuo concluída com sucesso (esteira verde)."
+          else
+            echo "Disparando deploy em produção..."
+            curl -X POST "$DEPLOY_HOOK_URL"
+          fi

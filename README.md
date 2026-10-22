@@ -103,7 +103,7 @@ A esteira de integração e entrega contínua está implementada via **GitHub Ac
 * **Trigger:** Executa a cada `push` e `pull request` em qualquer branch.
 * **Gates de Qualidade:**
   1. Configuração do ambiente Java 21 Temurin.
-  2. Execução dos testes automatizados (`./mvnw test`). Se qualquer teste falhar, o pipeline quebra (vermelho) e o merge é barrado.
+  2. Execução dos testes automatizados (`./mvnw test`). Se qualquer teste falhar, o pipeline falha (vermelho), impedindo o avanço para as etapas de empacotamento e deploy (bloqueio de merge aplicado via branch protection no GitHub).
   3. Compilação do pacote JAR.
   4. Build e validação do `Dockerfile` multi-stage.
 * **Deploy Contínuo (CD):** Disparado automaticamente após merge na branch `main` mediante aprovação de todos os gates.
@@ -158,7 +158,7 @@ O uso de Inteligência Artificial Generativa neste projeto foi ativo, supervisio
 
 Todos os registros e logs comprobatórios são organizados na pasta [`docs/evidencias/`](docs/evidencias/):
 * **E1 (Docker):** `docs/evidencias/e1/` *(Configurado localmente via `compose.yaml`; aguardando execução local do Docker Desktop para captura de tela do `docker compose ps` e API respondendo)*.
-* **E2 (TDD):** [`docs/evidencias/e2/README.md`](docs/evidencias/e2/README.md) *(100% Concluído e versionado com hashes SHA-256 e logs `red-us01.txt`, `revalidacao.txt` e `revalidacao-junit.xml`)*.
+* **E2 (TDD):** [`docs/evidencias/e2/README.md`](docs/evidencias/e2/README.md) *(Suíte local implementada com 72 testes verdes, logs duráveis e hashes SHA-256 versionados; execução na esteira remota do GitHub Actions aguarda push)*.
 * **E3 (Deploy):** `docs/evidencias/e3/` *(Workflow `.github/workflows/ci.yml` pronto; aguardando push para o GitHub para coleta de prints da execução vermelha que barra merge e verde que publica)*.
 
 ---

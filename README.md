@@ -19,7 +19,7 @@ Sistema acadêmico para gestão de estoque de hemocomponentes e atendimento de r
 | Luan Ventura Ferreira de Moura | lvfm2@cesar.school | Desenvolvimento |
 | Miguel Victor Lussac Barboza | mvlb@cesar.school | Desenvolvimento / DevOps |
 | Pedro Augusto Carvalho Araujo | paca@cesar.school | Desenvolvimento |
-| Vinicius Pessoa de Albuquerque | vpa@cesar.school | Desenvolvimento |
+| Vinicius Pessoa de Albuquerque | vpa@cesar.school | Desenvolvimento |.
 | Wesley Yuri da Silva | wys@cesar.school | Desenvolvimento |
 
 ---

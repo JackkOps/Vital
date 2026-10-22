@@ -4,12 +4,11 @@ import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import com.jackops.rotavital.dto.RespostaAlocacaoBolsa;
+import com.jackops.rotavital.exception.RecursoNaoEncontradoException;
 import com.jackops.rotavital.model.Bolsa;
 import com.jackops.rotavital.model.SolicitacaoSangue;
 import com.jackops.rotavital.model.enums.StatusBolsa;
@@ -32,8 +31,7 @@ public class AlocacaoBolsaService {
     @Transactional
     public RespostaAlocacaoBolsa alocarBolsaCompativel(Long solicitacaoId) {
         SolicitacaoSangue solicitacao = solicitacaoSangueRepository.findById(solicitacaoId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Solicitação não encontrada"));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Solicitação não encontrada"));
 
         List<Bolsa> bolsasCandidatas = bolsaRepository.findAll().stream()
                 .filter(bolsa -> bolsa.getStatus() == StatusBolsa.DISPONIVEL)

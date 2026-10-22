@@ -21,6 +21,16 @@ public class AlocacaoBolsaController {
         this.alocacaoBolsaService = alocacaoBolsaService;
     }
 
+    /**
+     * Aloca para a solicitação a bolsa compatível (ABO/Rh) que vence primeiro (FEFO).
+     *
+     * Respostas:
+     * 200 - bolsa alocada;
+     * 202 - nenhuma bolsa compatível disponível ({@code alocada = false});
+     * 400 - {@code solicitacaoId} zero, negativo ou não numérico;
+     * 404 - solicitação não encontrada ({@link com.jackops.rotavital.exception.RecursoNaoEncontradoException}).
+     * Os erros seguem o formato { "mensagem": "..." } do ApiExceptionHandler.
+     */
     @PostMapping("/solicitacoes/{solicitacaoId}/alocar")
     public ResponseEntity<RespostaAlocacaoBolsa> alocar(@PathVariable Long solicitacaoId) {
         if (solicitacaoId <= 0) {

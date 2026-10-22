@@ -45,6 +45,11 @@ public class ApiExceptionHandler {
         return resposta(HttpStatus.CONFLICT, exception.getMessage());
     }
 
+    @ExceptionHandler(RecursoNaoEncontradoException.class)
+    public ResponseEntity<Map<String, String>> tratarNaoEncontrado(RecursoNaoEncontradoException exception) {
+        return resposta(HttpStatus.NOT_FOUND, exception.getMessage());
+    }
+
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<Map<String, String>> tratarStatus(ResponseStatusException exception) {
         return ResponseEntity.status(exception.getStatusCode())

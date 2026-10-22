@@ -2,6 +2,7 @@ package com.jackops.rotavital.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDate;
@@ -13,6 +14,7 @@ import org.springframework.test.context.jdbc.Sql;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.jackops.rotavital.dto.RespostaAlocacaoBolsa;
+import com.jackops.rotavital.exception.RecursoNaoEncontradoException;
 import com.jackops.rotavital.model.Bolsa;
 import com.jackops.rotavital.model.SolicitacaoSangue;
 import com.jackops.rotavital.model.enums.StatusBolsa;
@@ -144,6 +146,14 @@ class AlocacaoBolsaServiceTest {
 
         assertFalse(resposta.isAlocada());
         assertEquals(StatusBolsa.ALOCADA, bolsaRepository.findById(bolsa.getId()).orElseThrow().getStatus());
+    }
+
+    @Test
+    void deveLancarNaoEncontradoParaSolicitacaoInexistente() {
+        RecursoNaoEncontradoException excecao = assertThrows(RecursoNaoEncontradoException.class,
+                () -> alocacaoBolsaService.alocarBolsaCompativel(999999L));
+
+        assertEquals("Solicitação não encontrada", excecao.getMessage());
     }
 
     private SolicitacaoSangue criarSolicitacao(TipoSanguineo tipoSanguineo) {

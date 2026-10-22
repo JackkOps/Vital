@@ -17,6 +17,17 @@ import com.jackops.rotavital.repository.BolsaRepository;
 import jakarta.validation.Validation;
 
 class BolsaValidationTest {
+    @Test
+    void aceitaSangueTotalNoEnumENoCadastro() {
+        var componente = TipoComponente.valueOf("SANGUE_TOTAL");
+        assertEquals(TipoComponente.SANGUE_TOTAL, componente);
+        try (var factory = Validation.buildDefaultValidatorFactory()) {
+            var request = new CadastroBolsaRequest("SANGUE-TOTAL", TipoSanguineo.O_POSITIVO,
+                    componente, LocalDate.of(2026, 10, 20), LocalDate.of(2026, 11, 20), 450);
+            assertTrue(factory.getValidator().validate(request).isEmpty());
+        }
+    }
+
     @ParameterizedTest
     @NullSource
     @ValueSource(ints = {0, -1})

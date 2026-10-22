@@ -11,6 +11,12 @@ com Java 25.0.4, Maven Wrapper e compilação configurada para Java 21 no POM.
 | RED | `6552fcb` — `test: evidencia RED da US-01 e automatiza BDD das tres historias` | 61 testes, 4 falhas, 0 erros, 0 ignorados; saída 1 |
 | GREEN | `dc2b990` — `feat: aceita sangue total e retorna 400 para validade anterior a coleta` | 61 testes, 0 falhas, 0 erros, 0 ignorados; saída 0 |
 
+Após a revisão independente, a execução `mvnw.cmd clean test -q` passou com
+72 testes, 0 falhas, 0 erros e 0 ignorados. Foram acrescentados um unitário de
+`SANGUE_TOTAL` e dez casos de validação do DTO de solicitação. Esses onze casos
+são cobertura posterior ao GREEN; o RED original do enum é demonstrado pelo BDD.
+O BDD da US03 agora declara explicitamente que o cadastro permanece no banco.
+
 As quatro falhas RED foram:
 
 - BDD: cadastro com `SANGUE_TOTAL` não retornava bolsa com status disponível,
@@ -45,7 +51,7 @@ Para executar somente os dez cenários BDD:
 Para unitários novos e integração de unicidade:
 
 ```powershell
-.\mvnw.cmd "-Dtest=BolsaValidationTest,HistoricoServiceTest,BolsaRepositoryIntegrationTest" test
+.\mvnw.cmd "-Dtest=BolsaValidationTest,SolicitacaoValidationTest,HistoricoServiceTest,BolsaRepositoryIntegrationTest" test
 ```
 
 O Maven copia diretamente `../../docs/bdd/*.feature` para os recursos de teste;
@@ -59,14 +65,16 @@ Relatórios gerados em `target/` (não versionados):
 - `surefire-reports/TEST-*.xml` e `surefire-reports/*.txt`: resultados JUnit e BDD.
 - `cucumber.html` e `cucumber.json`: relatório dos dez cenários.
 - `e2-red-us01.log` e `e2-green-us01.log`: saídas das execuções locais iniciais,
-  preservadas neste checkout até uma limpeza de `target/`.
+  inicialmente geradas em `target/`. Cópias duráveis em UTF-8 estão em
+  [`docs/evidencias/e2`](../../docs/evidencias/e2/README.md), junto do log de
+  revalidação e dos hashes SHA-256; sobrevivem a `mvnw.cmd clean`.
 
 ## Rastreabilidade
 
 | História | Unitário | Integração/aceitação |
 | --- | --- | --- |
-| US01 | `BolsaValidationTest`: campos obrigatórios, volume nulo/zero/negativo, datas inválidas sem gravação ou histórico | `BolsaRepositoryIntegrationTest`: restrição única no banco sem passar pelo service; `BolsaControllerTest`; 4 cenários BDD |
-| US02 | `FilaRequisicoesTest`: ordem FIFO da estrutura existente | `SolicitacaoSangueControllerTest`; 3 cenários BDD, incluindo status persistido `EM_ATENDIMENTO`, rejeição de quantidade zero sem inserir e fila vazia |
+| US01 | `BolsaValidationTest`: `SANGUE_TOTAL`, campos obrigatórios, volume nulo/zero/negativo, datas inválidas sem gravação ou histórico | `BolsaRepositoryIntegrationTest`: restrição única no banco sem passar pelo service; `BolsaControllerTest`; 4 cenários BDD |
+| US02 | `SolicitacaoValidationTest`: campos obrigatórios e quantidade; `FilaRequisicoesTest`: ordem FIFO da estrutura existente | `SolicitacaoSangueControllerTest`; 3 cenários BDD, incluindo status persistido `EM_ATENDIMENTO`, rejeição de quantidade zero sem inserir e fila vazia |
 | US03 | `PilhaHistoricoTest` e `HistoricoServiceTest`: LIFO, consulta preservando conteúdo e pop | `HistoricoControllerTest`; 3 cenários BDD, incluindo cadastro/atualização reais pela API e consulta do histórico resultante |
 
 ## Vocabulário dos cenários e contrato existente

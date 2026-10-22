@@ -232,7 +232,7 @@ public class RotaVitalSteps {
         assertEquals(ultimaDescricao, pilha.topo());
     }
 
-    @Quando("solicito a remoção ou reversão da última operação")
+    @Quando("solicito a remoção do último registro do histórico")
     @Quando("tento remover a última operação")
     public void removerUltima() throws Exception { resposta = mvc.perform(delete("/api/historico/ultima")); }
 
@@ -240,7 +240,12 @@ public class RotaVitalSteps {
     public void desempilhada(String operacao) throws Exception {
         assertEquals("CADASTRO_SOLICITACAO_10", operacao);
         resposta.andExpect(status().isOk()).andExpect(jsonPath("$.operacao").value(ultimaDescricao));
-        assertEquals(1, solicitacoes.count()); // pop do histórico não desfaz o cadastro
+    }
+
+    @Então("o cadastro da solicitação permanece no banco de dados")
+    public void cadastroPreservado() {
+        assertEquals(1, solicitacoes.count());
+        assertEquals("Hospital BDD", solicitacoes.findAll().getFirst().getNomeHospital());
     }
 
     @Então("a operação anterior passa a ocupar o topo da pilha")
@@ -252,7 +257,7 @@ public class RotaVitalSteps {
     @Dado("que o histórico de operações está vazio")
     public void historicoVazio() { assertTrue(pilha.vazia()); }
 
-    @Então("o sistema deve retornar status informando que não há operações a serem revertidas")
+    @Então("o sistema deve retornar status informando que não há registros a serem removidos")
     public void semOperacoes() throws Exception {
         resposta.andExpect(status().isNotFound()).andExpect(jsonPath("$.mensagem").value("Histórico vazio"));
     }

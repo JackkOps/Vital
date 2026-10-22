@@ -1,0 +1,566 @@
+14:43:22.598 [main] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [com.jackops.rotavital.bdd.CucumberSpringConfiguration]: CucumberSpringConfiguration does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+14:43:22.785 [main] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration com.jackops.rotavital.RotavitalApplication for test class com.jackops.rotavital.bdd.CucumberSpringConfiguration
+14:43:22.868 [main] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [com.jackops.rotavital.bdd.CucumberSpringConfiguration]: CucumberSpringConfiguration does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+14:43:22.872 [main] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration com.jackops.rotavital.RotavitalApplication for test class com.jackops.rotavital.bdd.CucumberSpringConfiguration
+14:43:22.961 [main] INFO org.springframework.boot.devtools.restart.RestartApplicationListener -- Restart disabled due to context in which it is running
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v4.1.1)
+
+2026-10-22T14:43:23.340-03:00  INFO 24072 --- [rotavital] [           main] c.j.r.bdd.CucumberSpringConfiguration    : Starting CucumberSpringConfiguration using Java 25.0.4 with PID 24072 (started by migue in C:\Users\migue\Vital\backend\rotavital)
+2026-10-22T14:43:23.342-03:00  INFO 24072 --- [rotavital] [           main] c.j.r.bdd.CucumberSpringConfiguration    : No active profile set, falling back to 1 default profile: "default"
+2026-10-22T14:43:24.280-03:00  INFO 24072 --- [rotavital] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-10-22T14:43:24.367-03:00  INFO 24072 --- [rotavital] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 71 ms. Found 2 JPA repository interfaces.
+2026-10-22T14:43:25.102-03:00  INFO 24072 --- [rotavital] [           main] org.hibernate.orm.jpa                    : HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-10-22T14:43:25.242-03:00  INFO 24072 --- [rotavital] [           main] org.hibernate.orm.core                   : HHH000001: Hibernate ORM core version 7.4.5.Final
+2026-10-22T14:43:26.349-03:00  INFO 24072 --- [rotavital] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-10-22T14:43:26.390-03:00  INFO 24072 --- [rotavital] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-10-22T14:43:26.654-03:00  INFO 24072 --- [rotavital] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection conn0: url=jdbc:h2:mem:rotavital user=SA
+2026-10-22T14:43:26.656-03:00  INFO 24072 --- [rotavital] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-10-22T14:43:26.740-03:00  INFO 24072 --- [rotavital] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [jdbc:h2:mem:rotavital]
+	Database driver: H2 JDBC Driver
+	Database dialect: H2Dialect
+	Database version: 2.4.240
+	Default catalog/schema: ROTAVITAL/PUBLIC
+	Autocommit mode: undefined/unknown
+	Isolation level: READ_COMMITTED [default READ_COMMITTED]
+	JDBC fetch size: 100
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-10-22T14:43:27.882-03:00  INFO 24072 --- [rotavital] [           main] org.hibernate.orm.core                   : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-10-22T14:43:27.939-03:00  INFO 24072 --- [rotavital] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-10-22T14:43:28.105-03:00  INFO 24072 --- [rotavital] [           main] o.s.d.j.r.query.QueryEnhancerFactories   : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-10-22T14:43:29.485-03:00  WARN 24072 --- [rotavital] [           main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-10-22T14:43:30.718-03:00  INFO 24072 --- [rotavital] [           main] o.s.b.h.a.H2ConsoleAutoConfiguration     : H2 console available at '/h2-console'. Database available at 'jdbc:h2:mem:rotavital'
+2026-10-22T14:43:31.002-03:00  INFO 24072 --- [rotavital] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-10-22T14:43:31.003-03:00  INFO 24072 --- [rotavital] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-10-22T14:43:31.010-03:00  INFO 24072 --- [rotavital] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 5 ms
+2026-10-22T14:43:31.069-03:00  INFO 24072 --- [rotavital] [           main] c.j.r.bdd.CucumberSpringConfiguration    : Started CucumberSpringConfiguration in 8.131 seconds (process running for 10.666)
+.\mvnw.cmd : Mockito is currently self-attaching to enable the inline-mock-maker. This will no longer work in future 
+releases of the JDK. Please add Mockito as an agent to your build as described in Mockito's documentation: 
+https://javadoc.io/doc/org.mockito/mockito-core/latest/org.mockito/org/mockito/Mockito.html#0.3
+No linha:2 caractere:1
++ .\mvnw.cmd test -q *> target/e2-red-us01.log; exit $LASTEXITCODE
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Mockito is curr...ockito.html#0.3:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+WARNING: A Java agent has been loaded dynamically 
+(C:\Users\migue\.m2\repository\net\bytebuddy\byte-buddy-agent\1.18.11\byte-buddy-agent-1.18.11.jar)
+WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
+WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
+WARNING: Dynamic loading of agents will be disallowed by default in a future release
+OpenJDK 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has 
+been appended
+
+Cen�rio: Cadastro de bolsa com dados v�lidos realizado com sucesso            # features/historia-1-cadastro-bolsa.feature:10
+  Dado que o sistema de hemocentro est� ativo e pronto para receber cadastros # com.jackops.rotavital.bdd.RotaVitalSteps.sistemaAtivo()
+  Dado que informo os dados da bolsa:                                         # com.jackops.rotavital.bdd.RotaVitalSteps.dadosBolsa(io.cucumber.datatable.DataTable)
+    | codigoIdentificador | BOLSA-2026-001 |
+    | tipoSanguineo       | O              |
+    | fatorRh             | POSITIVO       |
+    | tipoHemocomponente  | SANGUE_TOTAL   |
+    | volumeMl            | 450            |
+    | dataColeta          | 2026-10-20     |
+    | dataValidade        | 2026-11-24     |
+2026-10-22T14:43:32.271-03:00  WARN 24072 --- [rotavital] [           main] .w.s.m.s.DefaultHandlerExceptionResolver : Resolved [org.springframework.http.converter.HttpMessageNotReadableException: JSON parse error: Cannot deserialize value of type `com.jackops.rotavital.model.enums.TipoComponente` from String "SANGUE_TOTAL": not one of the values accepted for Enum class: [HEMACIAS, PLAQUETAS, PLASMA]]
+  Quando submeto o cadastro da bolsa                                          # com.jackops.rotavital.bdd.RotaVitalSteps.cadastrarBolsa()
+  Ent�o a bolsa � persistida com status "DISPONIVEL"                          # com.jackops.rotavital.bdd.RotaVitalSteps.bolsaPersistida(java.lang.String)
+      java.lang.AssertionError: No value at JSON path "$.status"
+	at org.springframework.test.util.JsonPathExpectationsHelper.evaluateJsonPath(JsonPathExpectationsHelper.java:350)
+	at org.springframework.test.util.JsonPathExpectationsHelper.assertValue(JsonPathExpectationsHelper.java:148)
+	at org.springframework.test.web.servlet.result.JsonPathResultMatchers.lambda$value$2(JsonPathResultMatchers.java:111)
+	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:212)
+	at com.jackops.rotavital.bdd.RotaVitalSteps.bolsaPersistida(RotaVitalSteps.java:91)
+	at ?.a bolsa � persistida com status "DISPONIVEL"(classpath:features/historia-1-cadastro-bolsa.feature:20)
+Caused by: java.lang.IllegalArgumentException: json can not be null or empty
+	at com.jayway.jsonpath.internal.Utils.notEmpty(Utils.java:401)
+	at com.jayway.jsonpath.JsonPath.read(JsonPath.java:390)
+	at org.springframework.test.util.JsonPathExpectationsHelper.evaluateJsonPath(JsonPathExpectationsHelper.java:347)
+	at org.springframework.test.util.JsonPathExpectationsHelper.assertValue(JsonPathExpectationsHelper.java:148)
+	at org.springframework.test.web.servlet.result.JsonPathResultMatchers.lambda$value$2(JsonPathResultMatchers.java:111)
+	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:212)
+	at com.jackops.rotavital.bdd.RotaVitalSteps.bolsaPersistida(RotaVitalSteps.java:91)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at io.cucumber.java.Invoker.doInvoke(Invoker.java:66)
+	at io.cucumber.java.Invoker.invoke(Invoker.java:24)
+	at io.cucumber.java.AbstractGlueDefinition.invokeMethod(AbstractGlueDefinition.java:47)
+	at io.cucumber.java.JavaStepDefinition.execute(JavaStepDefinition.java:29)
+	at io.cucumber.core.runner.CoreStepDefinition.execute(CoreStepDefinition.java:66)
+	at io.cucumber.core.runner.PickleStepDefinitionMatch.runStep(PickleStepDefinitionMatch.java:62)
+	at io.cucumber.core.runner.ExecutionMode$1.execute(ExecutionMode.java:10)
+	at io.cucumber.core.runner.TestStep.executeStep(TestStep.java:81)
+	at io.cucumber.core.runner.TestStep.run(TestStep.java:53)
+	at io.cucumber.core.runner.PickleStepTestStep.run(PickleStepTestStep.java:51)
+	at io.cucumber.core.runner.TestCase.run(TestCase.java:84)
+	at io.cucumber.core.runner.Runner.runPickle(Runner.java:75)
+	at io.cucumber.junit.platform.engine.CucumberEngineExecutionContext.lambda$runTestCase$4(CucumberEngineExecutionContext.java:114)
+	at io.cucumber.core.runtime.CucumberExecutionContext.lambda$runTestCase$5(CucumberExecutionContext.java:136)
+	at io.cucumber.core.runtime.RethrowingThrowableCollector.executeAndThrow(RethrowingThrowableCollector.java:23)
+	at io.cucumber.core.runtime.CucumberExecutionContext.runTestCase(CucumberExecutionContext.java:136)
+	at io.cucumber.junit.platform.engine.CucumberEngineExecutionContext.runTestCase(CucumberEngineExecutionContext.java:111)
+	at io.cucumber.junit.platform.engine.NodeDescriptor$PickleDescriptor.execute(NodeDescriptor.java:168)
+	at io.cucumber.junit.platform.engine.NodeDescriptor$PickleDescriptor.execute(NodeDescriptor.java:90)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$2(NodeTestTask.java:176)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$1(NodeTestTask.java:166)
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:138)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$0(NodeTestTask.java:164)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:163)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:116)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:42)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$2(NodeTestTask.java:180)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$1(NodeTestTask.java:166)
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:138)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$0(NodeTestTask.java:164)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:163)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:116)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:42)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$2(NodeTestTask.java:180)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$1(NodeTestTask.java:166)
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:138)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$0(NodeTestTask.java:164)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:163)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:116)
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.submit(SameThreadHierarchicalTestExecutorService.java:36)
+	at org.junit.platform.engine.support.hierarchical.HierarchicalTestExecutor.execute(HierarchicalTestExecutor.java:52)
+	at org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine.execute(HierarchicalTestEngine.java:58)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.executeEngine(EngineExecutionOrchestrator.java:246)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.failOrExecuteEngine(EngineExecutionOrchestrator.java:218)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:179)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:108)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:89)
+	at org.junit.platform.suite.engine.SuiteLauncher.execute(SuiteLauncher.java:65)
+	at org.junit.platform.suite.engine.SuiteTestDescriptor.executeTests(SuiteTestDescriptor.java:208)
+	at org.junit.platform.suite.engine.SuiteTestDescriptor.execute(SuiteTestDescriptor.java:173)
+	at org.junit.platform.suite.engine.SuiteTestEngine.lambda$execute$0(SuiteTestEngine.java:78)
+	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.accept(ForEachOps.java:186)
+	at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:214)
+	at java.base/java.util.Iterator.forEachRemaining(Iterator.java:133)
+	at java.base/java.util.Spliterators$IteratorSpliterator.forEachRemaining(Spliterators.java:1939)
+	at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:570)
+	at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:560)
+	at java.base/java.util.stream.ForEachOps$ForEachOp.evaluateSequential(ForEachOps.java:153)
+	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.evaluateSequential(ForEachOps.java:176)
+	at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:265)
+	at java.base/java.util.stream.ReferencePipeline.forEach(ReferencePipeline.java:632)
+	at org.junit.platform.suite.engine.SuiteTestEngine.execute(SuiteTestEngine.java:78)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.executeEngine(EngineExecutionOrchestrator.java:246)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.failOrExecuteEngine(EngineExecutionOrchestrator.java:218)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:179)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:108)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.lambda$execute$0(EngineExecutionOrchestrator.java:66)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.withInterceptedStreams(EngineExecutionOrchestrator.java:157)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:65)
+	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:125)
+	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:114)
+	at org.junit.platform.launcher.core.DelegatingLauncher.execute(DelegatingLauncher.java:58)
+	at org.junit.platform.launcher.core.InterceptingLauncher.lambda$execute$2(InterceptingLauncher.java:57)
+	at org.junit.platform.launcher.core.ClasspathAlignmentCheckingLauncherInterceptor.intercept(ClasspathAlignmentCheckingLauncherInterceptor.java:25)
+	at org.junit.platform.launcher.core.InterceptingLauncher.execute(InterceptingLauncher.java:56)
+	at org.junit.platform.launcher.core.DelegatingLauncher.execute(DelegatingLauncher.java:58)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at org.apache.maven.surefire.api.util.ReflectionUtils.invokeMethodWithArray(ReflectionUtils.java:125)
+	at org.apache.maven.surefire.junitplatform.LauncherAdapter.executeWithCancellationToken(LauncherAdapter.java:68)
+	at org.apache.maven.surefire.junitplatform.LauncherAdapter.execute(LauncherAdapter.java:54)
+	at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.execute(JUnitPlatformProvider.java:203)
+	at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invokeAllTests(JUnitPlatformProvider.java:168)
+	at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invoke(JUnitPlatformProvider.java:136)
+	at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:385)
+	at org.apache.maven.surefire.booter.ForkedBooter.execute(ForkedBooter.java:162)
+	at org.apache.maven.surefire.booter.ForkedBooter.run(ForkedBooter.java:507)
+	at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:495)
+
+  E o sistema retorna c�digo HTTP 201 Created                                 # com.jackops.rotavital.bdd.RotaVitalSteps.criada()
+2026-10-22T14:43:32.350-03:00  INFO 24072 --- [rotavital] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.jackops.rotavital.bdd.CucumberSpringConfiguration]: CucumberSpringConfiguration does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-10-22T14:43:32.353-03:00  INFO 24072 --- [rotavital] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.jackops.rotavital.RotavitalApplication for test class com.jackops.rotavital.bdd.CucumberSpringConfiguration
+2026-10-22T14:43:32.356-03:00  INFO 24072 --- [rotavital] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.jackops.rotavital.bdd.CucumberSpringConfiguration]: CucumberSpringConfiguration does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-10-22T14:43:32.360-03:00  INFO 24072 --- [rotavital] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.jackops.rotavital.RotavitalApplication for test class com.jackops.rotavital.bdd.CucumberSpringConfiguration
+
+Cen�rio: Bloqueio de cadastro de bolsa com c�digo identificador duplicado     # features/historia-1-cadastro-bolsa.feature:23
+  Dado que o sistema de hemocentro est� ativo e pronto para receber cadastros # com.jackops.rotavital.bdd.RotaVitalSteps.sistemaAtivo()
+  Dado que j� existe uma bolsa cadastrada com o c�digo "BOLSA-2026-001"       # com.jackops.rotavital.bdd.RotaVitalSteps.bolsaExistente(java.lang.String)
+  Quando tento cadastrar uma nova bolsa com o mesmo c�digo "BOLSA-2026-001"   # com.jackops.rotavital.bdd.RotaVitalSteps.duplicar(java.lang.String)
+  Ent�o o sistema deve rejeitar o cadastro com c�digo HTTP 409 Conflict       # com.jackops.rotavital.bdd.RotaVitalSteps.conflito()
+  E a mensagem de erro deve indicar duplicidade de identificador              # com.jackops.rotavital.bdd.RotaVitalSteps.mensagemDuplicidade()
+2026-10-22T14:43:32.613-03:00  INFO 24072 --- [rotavital] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.jackops.rotavital.bdd.CucumberSpringConfiguration]: CucumberSpringConfiguration does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-10-22T14:43:32.617-03:00  INFO 24072 --- [rotavital] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.jackops.rotavital.RotavitalApplication for test class com.jackops.rotavital.bdd.CucumberSpringConfiguration
+2026-10-22T14:43:32.618-03:00  INFO 24072 --- [rotavital] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.jackops.rotavital.bdd.CucumberSpringConfiguration]: CucumberSpringConfiguration does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-10-22T14:43:32.621-03:00  INFO 24072 --- [rotavital] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.jackops.rotavital.RotavitalApplication for test class com.jackops.rotavital.bdd.CucumberSpringConfiguration
+
+Cen�rio: Rejei��o de cadastro com data de validade anterior � data de coleta         # features/historia-1-cadastro-bolsa.feature:29
+  Dado que o sistema de hemocentro est� ativo e pronto para receber cadastros        # com.jackops.rotavital.bdd.RotaVitalSteps.sistemaAtivo()
+  Dado que informo uma bolsa com data de coleta "2026-10-20" e validade "2026-10-15" # com.jackops.rotavital.bdd.RotaVitalSteps.datas(java.lang.String,java.lang.String)
+  Quando submeto o cadastro da bolsa                                                 # com.jackops.rotavital.bdd.RotaVitalSteps.cadastrarBolsa()
+  Ent�o o sistema deve rejeitar a requisi��o com c�digo HTTP 400 Bad Request         # com.jackops.rotavital.bdd.RotaVitalSteps.bolsaInvalida()
+      java.lang.AssertionError: Status expected:<400> but was:<409>
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:62)
+	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:129)
+	at org.springframework.test.web.servlet.result.StatusResultMatchers.lambda$matcher$0(StatusResultMatchers.java:600)
+	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:212)
+	at com.jackops.rotavital.bdd.RotaVitalSteps.bolsaInvalida(RotaVitalSteps.java:130)
+	at ?.o sistema deve rejeitar a requisi��o com c�digo HTTP 400 Bad Request(classpath:features/historia-1-cadastro-bolsa.feature:32)
+
+  E deve retornar mensagem informando que a validade n�o pode ser anterior � coleta  # com.jackops.rotavital.bdd.RotaVitalSteps.mensagemDatas()
+2026-10-22T14:43:32.677-03:00  INFO 24072 --- [rotavital] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.jackops.rotavital.bdd.CucumberSpringConfiguration]: CucumberSpringConfiguration does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-10-22T14:43:32.679-03:00  INFO 24072 --- [rotavital] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.jackops.rotavital.RotavitalApplication for test class com.jackops.rotavital.bdd.CucumberSpringConfiguration
+2026-10-22T14:43:32.680-03:00  INFO 24072 --- [rotavital] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.jackops.rotavital.bdd.CucumberSpringConfiguration]: CucumberSpringConfiguration does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-10-22T14:43:32.681-03:00  INFO 24072 --- [rotavital] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.jackops.rotavital.RotavitalApplication for test class com.jackops.rotavital.bdd.CucumberSpringConfiguration
+
+Cen�rio: Rejei��o de cadastro com volume n�o positivo                         # features/historia-1-cadastro-bolsa.feature:35
+  Dado que o sistema de hemocentro est� ativo e pronto para receber cadastros # com.jackops.rotavital.bdd.RotaVitalSteps.sistemaAtivo()
+  Dado que informo uma bolsa com volumeMl menor ou igual a zero               # com.jackops.rotavital.bdd.RotaVitalSteps.volumeInvalido()
+  Quando submeto o cadastro da bolsa                                          # com.jackops.rotavital.bdd.RotaVitalSteps.cadastrarBolsa()
+  Ent�o o sistema deve rejeitar a requisi��o com c�digo HTTP 400 Bad Request  # com.jackops.rotavital.bdd.RotaVitalSteps.bolsaInvalida()
+  E deve apontar viola��o de valida��o no campo volumeMl                      # com.jackops.rotavital.bdd.RotaVitalSteps.mensagemVolume()
+2026-10-22T14:43:32.728-03:00  INFO 24072 --- [rotavital] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.jackops.rotavital.bdd.CucumberSpringConfiguration]: CucumberSpringConfiguration does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-10-22T14:43:32.730-03:00  INFO 24072 --- [rotavital] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.jackops.rotavital.RotavitalApplication for test class com.jackops.rotavital.bdd.CucumberSpringConfiguration
+2026-10-22T14:43:32.731-03:00  INFO 24072 --- [rotavital] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.jackops.rotavital.bdd.CucumberSpringConfiguration]: CucumberSpringConfiguration does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-10-22T14:43:32.733-03:00  INFO 24072 --- [rotavital] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.jackops.rotavital.RotavitalApplication for test class com.jackops.rotavital.bdd.CucumberSpringConfiguration
+
+Cen�rio: Enfileiramento e consumo na ordem de chegada (FIFO)                                        # features/historia-2-solicitacao-fila-fifo.feature:10
+  Dado que a fila de solicita��es hospitalares est� inicializada                                    # com.jackops.rotavital.bdd.RotaVitalSteps.sistemaAtivo()
+  Dado que o hospital "Hospital da Restauracao" submete uma solicita��o para "O+" com 2 unidades    # com.jackops.rotavital.bdd.RotaVitalSteps.pedido(java.lang.String,java.lang.String,int)
+  E em seguida o hospital "Hospital Jayme da Fonte" submete uma solicita��o para "A-" com 1 unidade # com.jackops.rotavital.bdd.RotaVitalSteps.pedido(java.lang.String,java.lang.String,int)
+  Quando o operador solicita a pr�xima solicita��o a ser atendida                                   # com.jackops.rotavital.bdd.RotaVitalSteps.proxima()
+  Ent�o a solicita��o retornada deve ser a do "Hospital da Restauracao"                             # com.jackops.rotavital.bdd.RotaVitalSteps.primeiroHospital(java.lang.String)
+  E a solicita��o do "Hospital Jayme da Fonte" deve passar a ser a primeira da fila                 # com.jackops.rotavital.bdd.RotaVitalSteps.hospitalSeguinte(java.lang.String)
+2026-10-22T14:43:32.818-03:00  INFO 24072 --- [rotavital] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.jackops.rotavital.bdd.CucumberSpringConfiguration]: CucumberSpringConfiguration does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-10-22T14:43:32.821-03:00  INFO 24072 --- [rotavital] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.jackops.rotavital.RotavitalApplication for test class com.jackops.rotavital.bdd.CucumberSpringConfiguration
+2026-10-22T14:43:32.823-03:00  INFO 24072 --- [rotavital] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.jackops.rotavital.bdd.CucumberSpringConfiguration]: CucumberSpringConfiguration does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-10-22T14:43:32.826-03:00  INFO 24072 --- [rotavital] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.jackops.rotavital.RotavitalApplication for test class com.jackops.rotavital.bdd.CucumberSpringConfiguration
+
+Cen�rio: Rejei��o de solicita��o com quantidade solicitada inv�lida                  # features/historia-2-solicitacao-fila-fifo.feature:17
+  Dado que a fila de solicita��es hospitalares est� inicializada                     # com.jackops.rotavital.bdd.RotaVitalSteps.sistemaAtivo()
+  Dado que um hospital envia solicita��o com quantidadeSolicitada menor ou igual a 0 # com.jackops.rotavital.bdd.RotaVitalSteps.quantidadeInvalida()
+  Quando submete a solicita��o                                                       # com.jackops.rotavital.bdd.RotaVitalSteps.cadastrarSolicitacao()
+  Ent�o o sistema deve recusar a solicita��o com c�digo HTTP 400 Bad Request         # com.jackops.rotavital.bdd.RotaVitalSteps.pedidoInvalido()
+  E nenhuma requisi��o deve ser adicionada � fila                                    # com.jackops.rotavital.bdd.RotaVitalSteps.filaSemPedidos()
+2026-10-22T14:43:32.869-03:00  INFO 24072 --- [rotavital] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.jackops.rotavital.bdd.CucumberSpringConfiguration]: CucumberSpringConfiguration does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-10-22T14:43:32.873-03:00  INFO 24072 --- [rotavital] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.jackops.rotavital.RotavitalApplication for test class com.jackops.rotavital.bdd.CucumberSpringConfiguration
+2026-10-22T14:43:32.876-03:00  INFO 24072 --- [rotavital] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.jackops.rotavital.bdd.CucumberSpringConfiguration]: CucumberSpringConfiguration does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-10-22T14:43:32.881-03:00  INFO 24072 --- [rotavital] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.jackops.rotavital.RotavitalApplication for test class com.jackops.rotavital.bdd.CucumberSpringConfiguration
+
+Cen�rio: Atendimento de fila vazia                                                                        # features/historia-2-solicitacao-fila-fifo.feature:23
+  Dado que a fila de solicita��es hospitalares est� inicializada                                          # com.jackops.rotavital.bdd.RotaVitalSteps.sistemaAtivo()
+  Dado que n�o existem solicita��es pendentes na fila                                                     # com.jackops.rotavital.bdd.RotaVitalSteps.filaVazia()
+  Quando o operador solicita a pr�xima solicita��o                                                        # com.jackops.rotavital.bdd.RotaVitalSteps.proxima()
+  Ent�o o sistema deve informar que n�o h� solicita��es para processamento com HTTP 204 No Content ou 404 # com.jackops.rotavital.bdd.RotaVitalSteps.semProxima()
+2026-10-22T14:43:32.915-03:00  INFO 24072 --- [rotavital] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.jackops.rotavital.bdd.CucumberSpringConfiguration]: CucumberSpringConfiguration does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-10-22T14:43:32.917-03:00  INFO 24072 --- [rotavital] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.jackops.rotavital.RotavitalApplication for test class com.jackops.rotavital.bdd.CucumberSpringConfiguration
+2026-10-22T14:43:32.918-03:00  INFO 24072 --- [rotavital] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.jackops.rotavital.bdd.CucumberSpringConfiguration]: CucumberSpringConfiguration does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-10-22T14:43:32.920-03:00  INFO 24072 --- [rotavital] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.jackops.rotavital.RotavitalApplication for test class com.jackops.rotavital.bdd.CucumberSpringConfiguration
+
+Cen�rio: Registro de opera��es e consulta em ordem cronol�gica reversa (LIFO)                 # features/historia-3-historico-pilha-lifo.feature:10
+  Dado que o m�dulo de auditoria e hist�rico de opera��es est� ativo                          # com.jackops.rotavital.bdd.RotaVitalSteps.sistemaAtivo()
+  Dado que foram executadas em sequ�ncia as a��es "CRIACAO_BOLSA_01" e "ATUALIZACAO_BOLSA_01" # com.jackops.rotavital.bdd.RotaVitalSteps.criarEAtualizar(java.lang.String,java.lang.String)
+  Quando consulto o hist�rico de opera��es                                                    # com.jackops.rotavital.bdd.RotaVitalSteps.historico()
+  Ent�o a primeira opera��o listada deve ser "ATUALIZACAO_BOLSA_01" (topo da pilha)           # com.jackops.rotavital.bdd.RotaVitalSteps.topoHistorico(java.lang.String)
+  E a opera��o seguinte deve ser "CRIACAO_BOLSA_01"                                           # com.jackops.rotavital.bdd.RotaVitalSteps.segundaOperacao(java.lang.String)
+2026-10-22T14:43:32.992-03:00  INFO 24072 --- [rotavital] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.jackops.rotavital.bdd.CucumberSpringConfiguration]: CucumberSpringConfiguration does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-10-22T14:43:32.994-03:00  INFO 24072 --- [rotavital] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.jackops.rotavital.RotavitalApplication for test class com.jackops.rotavital.bdd.CucumberSpringConfiguration
+2026-10-22T14:43:32.995-03:00  INFO 24072 --- [rotavital] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.jackops.rotavital.bdd.CucumberSpringConfiguration]: CucumberSpringConfiguration does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-10-22T14:43:32.996-03:00  INFO 24072 --- [rotavital] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.jackops.rotavital.RotavitalApplication for test class com.jackops.rotavital.bdd.CucumberSpringConfiguration
+
+Cen�rio: Desfazer a �ltima opera��o (pop da pilha)                             # features/historia-3-historico-pilha-lifo.feature:16
+  Dado que o m�dulo de auditoria e hist�rico de opera��es est� ativo           # com.jackops.rotavital.bdd.RotaVitalSteps.sistemaAtivo()
+  Dado que a �ltima opera��o registrada na pilha foi "CADASTRO_SOLICITACAO_10" # com.jackops.rotavital.bdd.RotaVitalSteps.cadastroSolicitacao(java.lang.String)
+  Quando solicito a remo��o ou revers�o da �ltima opera��o                     # com.jackops.rotavital.bdd.RotaVitalSteps.removerUltima()
+  Ent�o a opera��o "CADASTRO_SOLICITACAO_10" � desempilhada                    # com.jackops.rotavital.bdd.RotaVitalSteps.desempilhada(java.lang.String)
+  E a opera��o anterior passa a ocupar o topo da pilha                         # com.jackops.rotavital.bdd.RotaVitalSteps.topoAnterior()
+2026-10-22T14:43:33.036-03:00  INFO 24072 --- [rotavital] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.jackops.rotavital.bdd.CucumberSpringConfiguration]: CucumberSpringConfiguration does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-10-22T14:43:33.038-03:00  INFO 24072 --- [rotavital] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.jackops.rotavital.RotavitalApplication for test class com.jackops.rotavital.bdd.CucumberSpringConfiguration
+2026-10-22T14:43:33.040-03:00  INFO 24072 --- [rotavital] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.jackops.rotavital.bdd.CucumberSpringConfiguration]: CucumberSpringConfiguration does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-10-22T14:43:33.042-03:00  INFO 24072 --- [rotavital] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.jackops.rotavital.RotavitalApplication for test class com.jackops.rotavital.bdd.CucumberSpringConfiguration
+
+Cen�rio: Tentativa de remo��o em hist�rico vazio                                          # features/historia-3-historico-pilha-lifo.feature:22
+  Dado que o m�dulo de auditoria e hist�rico de opera��es est� ativo                      # com.jackops.rotavital.bdd.RotaVitalSteps.sistemaAtivo()
+  Dado que o hist�rico de opera��es est� vazio                                            # com.jackops.rotavital.bdd.RotaVitalSteps.historicoVazio()
+  Quando tento remover a �ltima opera��o                                                  # com.jackops.rotavital.bdd.RotaVitalSteps.removerUltima()
+  Ent�o o sistema deve retornar status informando que n�o h� opera��es a serem revertidas # com.jackops.rotavital.bdd.RotaVitalSteps.semOperacoes()
+[ERROR] Tests run: 10, Failures: 2, Errors: 0, Skipped: 0, Time elapsed: 11.22 s <<< FAILURE! -- in com.jackops.rotavital.bdd.RunCucumberTest
+[ERROR] com.jackops.rotavital.bdd.RunCucumberTest.Cadastro de bolsa com dados v�lidos realizado com sucesso -- Time elapsed: 9.931 s <<< FAILURE!
+java.lang.AssertionError: No value at JSON path "$.status"
+	at org.springframework.test.util.JsonPathExpectationsHelper.evaluateJsonPath(JsonPathExpectationsHelper.java:350)
+	at org.springframework.test.util.JsonPathExpectationsHelper.assertValue(JsonPathExpectationsHelper.java:148)
+	at org.springframework.test.web.servlet.result.JsonPathResultMatchers.lambda$value$2(JsonPathResultMatchers.java:111)
+	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:212)
+	at com.jackops.rotavital.bdd.RotaVitalSteps.bolsaPersistida(RotaVitalSteps.java:91)
+	at ?.a bolsa � persistida com status "DISPONIVEL"(classpath:features/historia-1-cadastro-bolsa.feature:20)
+Caused by: java.lang.IllegalArgumentException: json can not be null or empty
+	at com.jayway.jsonpath.internal.Utils.notEmpty(Utils.java:401)
+	at com.jayway.jsonpath.JsonPath.read(JsonPath.java:390)
+	at org.springframework.test.util.JsonPathExpectationsHelper.evaluateJsonPath(JsonPathExpectationsHelper.java:347)
+	at org.springframework.test.util.JsonPathExpectationsHelper.assertValue(JsonPathExpectationsHelper.java:148)
+	at org.springframework.test.web.servlet.result.JsonPathResultMatchers.lambda$value$2(JsonPathResultMatchers.java:111)
+	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:212)
+	at com.jackops.rotavital.bdd.RotaVitalSteps.bolsaPersistida(RotaVitalSteps.java:91)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at io.cucumber.java.Invoker.doInvoke(Invoker.java:66)
+	at io.cucumber.java.Invoker.invoke(Invoker.java:24)
+	at io.cucumber.java.AbstractGlueDefinition.invokeMethod(AbstractGlueDefinition.java:47)
+	at io.cucumber.java.JavaStepDefinition.execute(JavaStepDefinition.java:29)
+	at io.cucumber.core.runner.CoreStepDefinition.execute(CoreStepDefinition.java:66)
+	at io.cucumber.core.runner.PickleStepDefinitionMatch.runStep(PickleStepDefinitionMatch.java:62)
+	at io.cucumber.core.runner.ExecutionMode$1.execute(ExecutionMode.java:10)
+	at io.cucumber.core.runner.TestStep.executeStep(TestStep.java:81)
+	at io.cucumber.core.runner.TestStep.run(TestStep.java:53)
+	at io.cucumber.core.runner.PickleStepTestStep.run(PickleStepTestStep.java:51)
+	at io.cucumber.core.runner.TestCase.run(TestCase.java:84)
+	at io.cucumber.core.runner.Runner.runPickle(Runner.java:75)
+	at io.cucumber.junit.platform.engine.CucumberEngineExecutionContext.lambda$runTestCase$4(CucumberEngineExecutionContext.java:114)
+	at io.cucumber.core.runtime.CucumberExecutionContext.lambda$runTestCase$5(CucumberExecutionContext.java:136)
+	at io.cucumber.core.runtime.RethrowingThrowableCollector.executeAndThrow(RethrowingThrowableCollector.java:23)
+	at io.cucumber.core.runtime.CucumberExecutionContext.runTestCase(CucumberExecutionContext.java:136)
+	at io.cucumber.junit.platform.engine.CucumberEngineExecutionContext.runTestCase(CucumberEngineExecutionContext.java:111)
+	at io.cucumber.junit.platform.engine.NodeDescriptor$PickleDescriptor.execute(NodeDescriptor.java:168)
+	at io.cucumber.junit.platform.engine.NodeDescriptor$PickleDescriptor.execute(NodeDescriptor.java:90)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+
+[ERROR] com.jackops.rotavital.bdd.RunCucumberTest.Rejei��o de cadastro com data de validade anterior � data de coleta -- Time elapsed: 0.063 s <<< FAILURE!
+java.lang.AssertionError: Status expected:<400> but was:<409>
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:62)
+	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:129)
+	at org.springframework.test.web.servlet.result.StatusResultMatchers.lambda$matcher$0(StatusResultMatchers.java:600)
+	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:212)
+	at com.jackops.rotavital.bdd.RotaVitalSteps.bolsaInvalida(RotaVitalSteps.java:130)
+	at ?.o sistema deve rejeitar a requisi��o com c�digo HTTP 400 Bad Request(classpath:features/historia-1-cadastro-bolsa.feature:32)
+
+2026-10-22T14:43:33.196-03:00  INFO 24072 --- [rotavital] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.jackops.rotavital.controller.BolsaControllerTest]: BolsaControllerTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-10-22T14:43:33.215-03:00  INFO 24072 --- [rotavital] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.jackops.rotavital.RotavitalApplication for test class com.jackops.rotavital.controller.BolsaControllerTest
+2026-10-22T14:43:33.219-03:00  INFO 24072 --- [rotavital] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.jackops.rotavital.controller.BolsaControllerTest]: BolsaControllerTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-10-22T14:43:33.223-03:00  INFO 24072 --- [rotavital] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.jackops.rotavital.RotavitalApplication for test class com.jackops.rotavital.controller.BolsaControllerTest
+
+MockHttpServletRequest:
+      HTTP Method = POST
+      Request URI = /api/bolsas
+       Parameters = {}
+          Headers = [Content-Type:"application/json;charset=UTF-8", Content-Length:"159"]
+             Body = {"identificador":"BOLSA-2026-0002","tipoSanguineo":"O_POSITIVO","tipoComponente":"HEMACIAS","dataColeta":"2026-10-01","dataValidade":"2026-09-01","volume":450}
+    Session Attrs = {}
+
+Handler:
+             Type = com.jackops.rotavital.controller.BolsaController
+           Method = com.jackops.rotavital.controller.BolsaController#cadastrar(CadastroBolsaRequest)
+
+Async:
+    Async started = false
+     Async result = null
+
+Resolved Exception:
+             Type = com.jackops.rotavital.exception.RegraDeNegocioException
+
+ModelAndView:
+        View name = null
+             View = null
+            Model = null
+
+FlashMap:
+       Attributes = null
+
+MockHttpServletResponse:
+           Status = 409
+    Error message = null
+          Headers = [Content-Type:"application/json"]
+     Content type = application/json
+             Body = {"mensagem":"Data de validade n�o pode ser anterior � data de coleta"}
+    Forwarded URL = null
+   Redirected URL = null
+          Cookies = []
+[ERROR] Tests run: 5, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 0.267 s <<< FAILURE! -- in com.jackops.rotavital.controller.BolsaControllerTest
+[ERROR] com.jackops.rotavital.controller.BolsaControllerTest.deveBloquearValidadeAnteriorAColeta -- Time elapsed: 0.108 s <<< FAILURE!
+java.lang.AssertionError: Status expected:<400> but was:<409>
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:62)
+	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:129)
+	at org.springframework.test.web.servlet.result.StatusResultMatchers.lambda$matcher$0(StatusResultMatchers.java:600)
+	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:212)
+	at com.jackops.rotavital.controller.BolsaControllerTest.deveBloquearValidadeAnteriorAColeta(BolsaControllerTest.java:42)
+
+2026-10-22T14:43:33.452-03:00  INFO 24072 --- [rotavital] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.jackops.rotavital.controller.HistoricoControllerTest]: HistoricoControllerTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-10-22T14:43:33.457-03:00  INFO 24072 --- [rotavital] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.jackops.rotavital.RotavitalApplication for test class com.jackops.rotavital.controller.HistoricoControllerTest
+2026-10-22T14:43:33.459-03:00  INFO 24072 --- [rotavital] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.jackops.rotavital.controller.HistoricoControllerTest]: HistoricoControllerTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-10-22T14:43:33.463-03:00  INFO 24072 --- [rotavital] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.jackops.rotavital.RotavitalApplication for test class com.jackops.rotavital.controller.HistoricoControllerTest
+2026-10-22T14:43:33.539-03:00  INFO 24072 --- [rotavital] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.jackops.rotavital.controller.SolicitacaoSangueControllerTest]: SolicitacaoSangueControllerTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-10-22T14:43:33.544-03:00  INFO 24072 --- [rotavital] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.jackops.rotavital.RotavitalApplication for test class com.jackops.rotavital.controller.SolicitacaoSangueControllerTest
+2026-10-22T14:43:33.546-03:00  INFO 24072 --- [rotavital] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.jackops.rotavital.controller.SolicitacaoSangueControllerTest]: SolicitacaoSangueControllerTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-10-22T14:43:33.551-03:00  INFO 24072 --- [rotavital] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.jackops.rotavital.RotavitalApplication for test class com.jackops.rotavital.controller.SolicitacaoSangueControllerTest
+2026-10-22T14:43:33.837-03:00  INFO 24072 --- [rotavital] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.jackops.rotavital.repository.BolsaRepositoryIntegrationTest]: BolsaRepositoryIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-10-22T14:43:33.905-03:00  INFO 24072 --- [rotavital] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.jackops.rotavital.RotavitalApplication for test class com.jackops.rotavital.repository.BolsaRepositoryIntegrationTest
+2026-10-22T14:43:33.907-03:00  INFO 24072 --- [rotavital] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.jackops.rotavital.repository.BolsaRepositoryIntegrationTest]: BolsaRepositoryIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-10-22T14:43:33.934-03:00  INFO 24072 --- [rotavital] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.jackops.rotavital.RotavitalApplication for test class com.jackops.rotavital.repository.BolsaRepositoryIntegrationTest
+2026-10-22T14:43:33.946-03:00  INFO 24072 --- [rotavital] [           main] o.s.b.d.r.RestartApplicationListener     : Restart disabled due to context in which it is running
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v4.1.1)
+
+2026-10-22T14:43:34.009-03:00  INFO 24072 --- [rotavital] [           main] c.j.r.r.BolsaRepositoryIntegrationTest   : Starting BolsaRepositoryIntegrationTest using Java 25.0.4 with PID 24072 (started by migue in C:\Users\migue\Vital\backend\rotavital)
+2026-10-22T14:43:34.009-03:00  INFO 24072 --- [rotavital] [           main] c.j.r.r.BolsaRepositoryIntegrationTest   : No active profile set, falling back to 1 default profile: "default"
+2026-10-22T14:43:34.207-03:00  INFO 24072 --- [rotavital] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-10-22T14:43:34.232-03:00  INFO 24072 --- [rotavital] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 22 ms. Found 2 JPA repository interfaces.
+2026-10-22T14:43:34.262-03:00  INFO 24072 --- [rotavital] [           main] beddedDataSourceBeanFactoryPostProcessor : Replacing 'dataSource' DataSource bean with embedded version
+2026-10-22T14:43:34.292-03:00  INFO 24072 --- [rotavital] [           main] o.s.j.d.e.EmbeddedDatabaseFactory        : Starting embedded database: url='jdbc:h2:mem:8a31eacc-3b33-4560-9dfc-eea94497922b;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=false', username='sa'
+2026-10-22T14:43:34.320-03:00  INFO 24072 --- [rotavital] [           main] org.hibernate.orm.jpa                    : HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-10-22T14:43:34.350-03:00  INFO 24072 --- [rotavital] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-10-22T14:43:34.353-03:00  INFO 24072 --- [rotavital] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [jdbc:h2:mem:8a31eacc-3b33-4560-9dfc-eea94497922b]
+	Database driver: H2 JDBC Driver
+	Database dialect: H2Dialect
+	Database version: 2.4.240
+	Default catalog/schema: 8A31EACC-3B33-4560-9DFC-EEA94497922B/PUBLIC
+	Autocommit mode: undefined/unknown
+	Isolation level: READ_COMMITTED [default READ_COMMITTED]
+	JDBC fetch size: 100
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-10-22T14:43:34.444-03:00  INFO 24072 --- [rotavital] [           main] org.hibernate.orm.core                   : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+Hibernate: 
+    drop table if exists bolsa cascade 
+Hibernate: 
+    drop table if exists solicitacao_sangue cascade 
+Hibernate: 
+    create table bolsa (
+        data_coleta date not null,
+        data_validade date not null,
+        volume integer not null,
+        id bigint generated by default as identity,
+        identificador varchar(255) not null unique,
+        status enum ('ALOCADA','DISPONIVEL','INDISPONIVEL') not null,
+        tipo_componente enum ('HEMACIAS','PLAQUETAS','PLASMA') not null,
+        tipo_sanguineo enum ('AB_NEGATIVO','AB_POSITIVO','A_NEGATIVO','A_POSITIVO','B_NEGATIVO','B_POSITIVO','O_NEGATIVO','O_POSITIVO') not null,
+        primary key (id)
+    )
+Hibernate: 
+    create table solicitacao_sangue (
+        quantidade integer not null,
+        id bigint generated by default as identity,
+        nome_hospital varchar(255) not null,
+        nivel_urgencia enum ('ELETIVA','EMERGENCIA','URGENTE') not null,
+        status enum ('ATENDIDA','CANCELADA','EM_ATENDIMENTO','PENDENTE') not null,
+        tipo_componente enum ('HEMACIAS','PLAQUETAS','PLASMA') not null,
+        tipo_sanguineo enum ('AB_NEGATIVO','AB_POSITIVO','A_NEGATIVO','A_POSITIVO','B_NEGATIVO','B_POSITIVO','O_NEGATIVO','O_POSITIVO') not null,
+        primary key (id)
+    )
+2026-10-22T14:43:34.455-03:00  INFO 24072 --- [rotavital] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-10-22T14:43:34.527-03:00  INFO 24072 --- [rotavital] [           main] c.j.r.r.BolsaRepositoryIntegrationTest   : Started BolsaRepositoryIntegrationTest in 0.582 seconds (process running for 14.124)
+Hibernate: 
+    insert 
+    into
+        bolsa
+        (data_coleta, data_validade, identificador, status, tipo_componente, tipo_sanguineo, volume, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, default)
+Hibernate: 
+    insert 
+    into
+        bolsa
+        (data_coleta, data_validade, identificador, status, tipo_componente, tipo_sanguineo, volume, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, default)
+2026-10-22T14:43:34.574-03:00  WARN 24072 --- [rotavital] [           main] org.hibernate.orm.jdbc.error             : HHH000247: ErrorCode: 23505, SQLState: 23505
+2026-10-22T14:43:34.574-03:00  WARN 24072 --- [rotavital] [           main] org.hibernate.orm.jdbc.error             : Unique index or primary key violation: "PUBLIC.CONSTRAINT_3 INDEX PUBLIC.CONSTRAINT_INDEX_3 ON PUBLIC.BOLSA(IDENTIFICADOR NULLS FIRST) VALUES ( /* 1 */ 'UNICO' )"; SQL statement:
+insert into bolsa (data_coleta,data_validade,identificador,status,tipo_componente,tipo_sanguineo,volume,id) values (?,?,?,?,?,?,?,default) [23505-240]
+2026-10-22T14:43:34.602-03:00  INFO 24072 --- [rotavital] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.jackops.rotavital.RotavitalApplicationTests]: RotavitalApplicationTests does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-10-22T14:43:34.614-03:00  INFO 24072 --- [rotavital] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.jackops.rotavital.RotavitalApplication for test class com.jackops.rotavital.RotavitalApplicationTests
+2026-10-22T14:43:34.616-03:00  INFO 24072 --- [rotavital] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.jackops.rotavital.RotavitalApplicationTests]: RotavitalApplicationTests does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-10-22T14:43:34.617-03:00  INFO 24072 --- [rotavital] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.jackops.rotavital.RotavitalApplication for test class com.jackops.rotavital.RotavitalApplicationTests
+2026-10-22T14:43:34.622-03:00  INFO 24072 --- [rotavital] [           main] o.s.b.d.r.RestartApplicationListener     : Restart disabled due to context in which it is running
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v4.1.1)
+
+2026-10-22T14:43:34.656-03:00  INFO 24072 --- [rotavital] [           main] c.j.rotavital.RotavitalApplicationTests  : Starting RotavitalApplicationTests using Java 25.0.4 with PID 24072 (started by migue in C:\Users\migue\Vital\backend\rotavital)
+2026-10-22T14:43:34.657-03:00  INFO 24072 --- [rotavital] [           main] c.j.rotavital.RotavitalApplicationTests  : No active profile set, falling back to 1 default profile: "default"
+2026-10-22T14:43:34.980-03:00  INFO 24072 --- [rotavital] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-10-22T14:43:35.010-03:00  INFO 24072 --- [rotavital] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 26 ms. Found 2 JPA repository interfaces.
+2026-10-22T14:43:35.150-03:00  INFO 24072 --- [rotavital] [           main] org.hibernate.orm.jpa                    : HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-10-22T14:43:35.189-03:00  INFO 24072 --- [rotavital] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-10-22T14:43:35.190-03:00  INFO 24072 --- [rotavital] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-2 - Starting...
+2026-10-22T14:43:35.192-03:00  INFO 24072 --- [rotavital] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-2 - Added connection conn15: url=jdbc:h2:mem:rotavital user=SA
+2026-10-22T14:43:35.192-03:00  INFO 24072 --- [rotavital] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-2 - Start completed.
+2026-10-22T14:43:35.193-03:00  INFO 24072 --- [rotavital] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [jdbc:h2:mem:rotavital]
+	Database driver: H2 JDBC Driver
+	Database dialect: H2Dialect
+	Database version: 2.4.240
+	Default catalog/schema: ROTAVITAL/PUBLIC
+	Autocommit mode: undefined/unknown
+	Isolation level: READ_COMMITTED [default READ_COMMITTED]
+	JDBC fetch size: 100
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-10-22T14:43:35.272-03:00  INFO 24072 --- [rotavital] [           main] org.hibernate.orm.core                   : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-10-22T14:43:35.288-03:00  INFO 24072 --- [rotavital] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-10-22T14:43:35.425-03:00  WARN 24072 --- [rotavital] [           main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-10-22T14:43:35.541-03:00  INFO 24072 --- [rotavital] [           main] o.s.b.h.a.H2ConsoleAutoConfiguration     : H2 console available at '/h2-console'. Database available at 'jdbc:h2:mem:rotavital'
+2026-10-22T14:43:35.573-03:00  INFO 24072 --- [rotavital] [           main] c.j.rotavital.RotavitalApplicationTests  : Started RotavitalApplicationTests in 0.951 seconds (process running for 15.171)
+2026-10-22T14:43:35.586-03:00  INFO 24072 --- [rotavital] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.jackops.rotavital.service.BolsaServiceEstruturaIntegracaoTest]: BolsaServiceEstruturaIntegracaoTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-10-22T14:43:35.608-03:00  INFO 24072 --- [rotavital] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.jackops.rotavital.RotavitalApplication for test class com.jackops.rotavital.service.BolsaServiceEstruturaIntegracaoTest
+2026-10-22T14:43:35.609-03:00  INFO 24072 --- [rotavital] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.jackops.rotavital.service.BolsaServiceEstruturaIntegracaoTest]: BolsaServiceEstruturaIntegracaoTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-10-22T14:43:35.610-03:00  INFO 24072 --- [rotavital] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.jackops.rotavital.RotavitalApplication for test class com.jackops.rotavital.service.BolsaServiceEstruturaIntegracaoTest
+[ERROR] Tests run: 6, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 0.480 s <<< FAILURE! -- in com.jackops.rotavital.service.BolsaValidationTest
+[ERROR] com.jackops.rotavital.service.BolsaValidationTest.validadeAnteriorDeveSerBadRequestSemPersistenciaOuHistorico -- Time elapsed: 0.358 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Unexpected exception type thrown, expected: <org.springframework.web.server.ResponseStatusException> but was: <com.jackops.rotavital.exception.RegraDeNegocioException>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:158)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:68)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:35)
+	at org.junit.jupiter.api.Assertions.assertThrows(Assertions.java:3223)
+	at com.jackops.rotavital.service.BolsaValidationTest.validadeAnteriorDeveSerBadRequestSemPersistenciaOuHistorico(BolsaValidationTest.java:51)
+Caused by: com.jackops.rotavital.exception.RegraDeNegocioException: Data de validade n�o pode ser anterior � data de coleta
+	at com.jackops.rotavital.service.BolsaService.cadastrar(BolsaService.java:51)
+	at com.jackops.rotavital.service.BolsaValidationTest.lambda$validadeAnteriorDeveSerBadRequestSemPersistenciaOuHistorico$0(BolsaValidationTest.java:52)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:54)
+	... 3 more
+
+2026-10-22T14:43:36.140-03:00  INFO 24072 --- [rotavital] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.jackops.rotavital.service.IndicadoresServiceTest]: IndicadoresServiceTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-10-22T14:43:36.142-03:00  INFO 24072 --- [rotavital] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.jackops.rotavital.RotavitalApplication for test class com.jackops.rotavital.service.IndicadoresServiceTest
+2026-10-22T14:43:36.143-03:00  INFO 24072 --- [rotavital] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.jackops.rotavital.service.IndicadoresServiceTest]: IndicadoresServiceTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-10-22T14:43:36.145-03:00  INFO 24072 --- [rotavital] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.jackops.rotavital.RotavitalApplication for test class com.jackops.rotavital.service.IndicadoresServiceTest
+[ERROR] Failures: 
+[ERROR]   RunCucumberTest.Cadastro de bolsa com dados v�lidos realizado com sucesso No value at JSON path "$.status"
+[ERROR]   RunCucumberTest.Rejei��o de cadastro com data de validade anterior � data de coleta Status expected:<400> but was:<409>
+[ERROR]   BolsaControllerTest.deveBloquearValidadeAnteriorAColeta:42 Status expected:<400> but was:<409>
+[ERROR]   BolsaValidationTest.validadeAnteriorDeveSerBadRequestSemPersistenciaOuHistorico:51 Unexpected exception type thrown, expected: <org.springframework.web.server.ResponseStatusException> but was: <com.jackops.rotavital.exception.RegraDeNegocioException>
+[ERROR] Tests run: 61, Failures: 4, Errors: 0, Skipped: 0
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.5.6:test (default-test) on project rotavital: There are test failures.
+[ERROR] 
+[ERROR] See C:\Users\migue\Vital\backend\rotavital\target\surefire-reports for the individual test results.
+[ERROR] See dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

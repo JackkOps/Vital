@@ -39,7 +39,7 @@ class BolsaControllerTest {
     @Test
     void deveBloquearValidadeAnteriorAColeta() throws Exception {
         mockMvc.perform(post("/api/bolsas").contentType(MediaType.APPLICATION_JSON).content(json("BOLSA-2026-0002", "2026-10-01", "2026-09-01", 450)))
-                .andExpect(status().isConflict())
+                .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.mensagem").value("Data de validade não pode ser anterior à data de coleta"));
     }
 

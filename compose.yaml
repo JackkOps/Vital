@@ -1,0 +1,56 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: rotavital-db
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-rotavital}
+      POSTGRES_USER: ${POSTGRES_USER:-rotavital_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-rotavital_pass}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-rotavital_user} -d ${POSTGRES_DB:-rotavital}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - rotavital-net
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rotavital-api
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-rotavital}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-rotavital_user}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-rotavital_pass}
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SERVER_PORT: 8080
+    ports:
+      - "${SERVER_PORT:-8080}:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/api/bolsas || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - rotavital-net
+
+volumes:
+  postgres_data:
+    name: rotavital_postgres_data
+
+networks:
+  rotavital-net:
+    name: rotavital_network
+    driver: bridge

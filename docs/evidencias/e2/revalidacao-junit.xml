@@ -1,0 +1,16 @@
+<testsuites tests="72" failures="0" errors="0" skipped="0">
+  <testsuite name="com.jackops.rotavital.bdd.RunCucumberTest" tests="10" failures="0" errors="0" skipped="0" />
+  <testsuite name="com.jackops.rotavital.controller.BolsaControllerTest" tests="5" failures="0" errors="0" skipped="0" />
+  <testsuite name="com.jackops.rotavital.controller.HistoricoControllerTest" tests="4" failures="0" errors="0" skipped="0" />
+  <testsuite name="com.jackops.rotavital.controller.SolicitacaoSangueControllerTest" tests="8" failures="0" errors="0" skipped="0" />
+  <testsuite name="com.jackops.rotavital.estrutura.FilaRequisicoesTest" tests="5" failures="0" errors="0" skipped="0" />
+  <testsuite name="com.jackops.rotavital.estrutura.ListaEstoqueTest" tests="10" failures="0" errors="0" skipped="0" />
+  <testsuite name="com.jackops.rotavital.estrutura.PilhaHistoricoTest" tests="5" failures="0" errors="0" skipped="0" />
+  <testsuite name="com.jackops.rotavital.repository.BolsaRepositoryIntegrationTest" tests="1" failures="0" errors="0" skipped="0" />
+  <testsuite name="com.jackops.rotavital.RotavitalApplicationTests" tests="1" failures="0" errors="0" skipped="0" />
+  <testsuite name="com.jackops.rotavital.service.BolsaServiceEstruturaIntegracaoTest" tests="1" failures="0" errors="0" skipped="0" />
+  <testsuite name="com.jackops.rotavital.service.BolsaValidationTest" tests="7" failures="0" errors="0" skipped="0" />
+  <testsuite name="com.jackops.rotavital.service.HistoricoServiceTest" tests="2" failures="0" errors="0" skipped="0" />
+  <testsuite name="com.jackops.rotavital.service.IndicadoresServiceTest" tests="3" failures="0" errors="0" skipped="0" />
+  <testsuite name="com.jackops.rotavital.service.SolicitacaoValidationTest" tests="10" failures="0" errors="0" skipped="0" />
+</testsuites>

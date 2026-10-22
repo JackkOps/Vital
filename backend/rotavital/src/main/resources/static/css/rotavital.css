@@ -13,6 +13,8 @@
     --plasma-fundo: #fcf1dc;
     --plaquetas: #5b4b9a;
     --plaquetas-fundo: #eeebf7;
+    --sangue-total: #6b2140;
+    --sangue-total-fundo: #f4e6ec;
 
     --ok: #1d6b45;
     --ok-fundo: #e3f3ea;
@@ -420,6 +422,7 @@ td.acoes .botao + .botao {
 .componente.HEMACIAS { color: var(--hemacias); }
 .componente.PLASMA { color: var(--plasma); }
 .componente.PLAQUETAS { color: var(--plaquetas); }
+.componente.SANGUE_TOTAL { color: var(--sangue-total); }
 
 /* Selos de status */
 
@@ -530,6 +533,7 @@ td.acoes .botao + .botao {
 .matriz tr.HEMACIAS td:not(.zero) { color: var(--hemacias); background: var(--hemacias-fundo); }
 .matriz tr.PLASMA td:not(.zero) { color: var(--plasma); background: var(--plasma-fundo); }
 .matriz tr.PLAQUETAS td:not(.zero) { color: var(--plaquetas); background: var(--plaquetas-fundo); }
+.matriz tr.SANGUE_TOTAL td:not(.zero) { color: var(--sangue-total); background: var(--sangue-total-fundo); }
 
 .matriz td.total,
 .matriz th.total {

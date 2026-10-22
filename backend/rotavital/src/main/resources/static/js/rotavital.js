@@ -17,7 +17,8 @@
     const COMPONENTES = {
         HEMACIAS: "Hemácias",
         PLASMA: "Plasma",
-        PLAQUETAS: "Plaquetas"
+        PLAQUETAS: "Plaquetas",
+        SANGUE_TOTAL: "Sangue total"
     };
 
     const URGENCIAS = {

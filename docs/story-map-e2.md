@@ -22,7 +22,7 @@ flowchart LR
 
 | ID | História de Usuário | Tipo de Desenvolvimento | Risco Mitigado |
 |---|---|---|---|
-| **US-01** | **Cadastro de Bolsa com Validações, Novo Hemocomponente (SANGUE_TOTAL) e Bloqueio de Duplicidade** | **TDD Estrito (Ciclo RED $\to$ GREEN):** Testes unitários e BDD escritos antes da implementação do suporte a `SANGUE_TOTAL` e da padronização de HTTP 400 para validade anterior à coleta. | **Alto:** Inconsistência cadastral ou tipo hemoterápico não aceito invalida a operação de triagem. |
+| **US-01** | **Cadastro de Bolsa com Validações, Novo Hemocomponente (SANGUE_TOTAL) e Bloqueio de Duplicidade** | **TDD Estrito (Ciclo RED $\to$ GREEN demonstrado):** RED demonstrado via cenário BDD original para `SANGUE_TOTAL` e testes unitários/integração para retorno HTTP 400 em validade anterior à coleta. O teste unitário específico de `SANGUE_TOTAL` em `BolsaValidationTest` foi adicionado posteriormente como cobertura de regressão pós-GREEN. | **Alto:** Inconsistência cadastral ou tipo hemoterápico não aceito invalida a operação de triagem. |
 | **US-02** | **Registro de Solicitação Hospitalar e Gestão de Fila FIFO** | **Cobertura de Regressão & Automação BDD:** Validação unitária de campos do DTO (`SolicitacaoValidationTest`) e teste da estrutura FIFO (`FilaRequisicoesTest`). | **Alto:** Inversão de prioridade em fila hospitalar põe pacientes receptores em risco. |
 | **US-03** | **Histórico de Operações em Ordem LIFO (Pilha de Auditoria)** | **Cobertura de Regressão & Automação BDD:** Testes unitários da pilha LIFO (`PilhaHistoricoTest`), serviço (`HistoricoServiceTest`) e operação de pop do topo da auditoria. | **Médio:** Rastreabilidade cronológica reversa e auditoria clínica. |
 
@@ -39,7 +39,7 @@ flowchart LR
 > **Para que** o estoque não contenha duplicidades nem bolsas inválidas.
 
 #### Tarefas:
-- **T1.1 (TDD - RED $\to$ GREEN):** Inclusão e validação do novo tipo `SANGUE_TOTAL` no enum `TipoComponente` e em `BolsaValidationTest`.
+- **T1.1 (BDD RED original / Unitário Regressão pós-GREEN):** Inclusão e validação do novo tipo `SANGUE_TOTAL` no enum `TipoComponente`. O RED original foi evidenciado via cenário Cucumber BDD (`historia-1-cadastro-bolsa.feature`), com unitário adicionado posteriormente em `BolsaValidationTest` como regressão.
 - **T1.2 (TDD - RED $\to$ GREEN):** Validação temporal: rejeição com HTTP 400 quando `dataValidade < dataColeta`.
 - **T1.3 (Regressão / Regra):** Validação de volume positivo (`volume > 0`) e campos obrigatórios.
 - **T1.4 (Regressão / Integração):** Teste de integração com banco/JPA validando constraint única de `codigoIdentificador` (`BolsaRepositoryIntegrationTest`).

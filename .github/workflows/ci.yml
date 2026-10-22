@@ -26,6 +26,16 @@ jobs:
           chmod +x ./mvnw
           ./mvnw test
 
+      - name: Publicar relatórios e evidências de teste
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: relatorios-testes
+          path: |
+            backend/rotavital/target/surefire-reports/
+            backend/rotavital/target/cucumber.html
+            backend/rotavital/target/cucumber.json
+
       - name: Compilar pacote JAR
         working-directory: backend/rotavital
         run: ./mvnw package -DskipTests=true
@@ -49,8 +59,8 @@ jobs:
           DEPLOY_HOOK_URL: ${{ secrets.DEPLOY_HOOK_URL }}
         run: |
           if [ -z "$DEPLOY_HOOK_URL" ]; then
-            echo "Deploy hook não configurado em secrets.DEPLOY_HOOK_URL. Simulação de deploy contínuo concluída com sucesso (esteira verde)."
-          else
-            echo "Disparando deploy em produção..."
-            curl -X POST "$DEPLOY_HOOK_URL"
+            echo "ERRO: Segredo DEPLOY_HOOK_URL não configurado no GitHub Secrets. Configure o segredo do provedor para habilitar o deploy automático."
+            exit 1
           fi
+          echo "Disparando deploy em produção via webhook..."
+          curl -f -X POST "$DEPLOY_HOOK_URL"

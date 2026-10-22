@@ -48,7 +48,8 @@ public class BolsaService {
             throw new RegraDeNegocioException("Bolsa já existe");
         }
         if (request.dataValidade().isBefore(request.dataColeta())) {
-            throw new RegraDeNegocioException("Data de validade não pode ser anterior à data de coleta");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Data de validade não pode ser anterior à data de coleta");
         }
         Bolsa bolsa = Bolsa.builder()
                 .identificador(request.identificador())
@@ -92,7 +93,8 @@ public class BolsaService {
         }
 
         if (request.dataValidade().isBefore(request.dataColeta())) {
-            throw new RegraDeNegocioException("Data de validade não pode ser anterior à data de coleta");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Data de validade não pode ser anterior à data de coleta");
         }
 
         bolsa.setTipoSanguineo(request.tipoSanguineo());

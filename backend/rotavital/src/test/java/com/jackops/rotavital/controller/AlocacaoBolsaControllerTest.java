@@ -79,6 +79,25 @@ class AlocacaoBolsaControllerTest {
                 .andExpect(jsonPath("$.mensagem").value("Solicitação não encontrada"));
     }
 
+    @Test
+    void deveRetornar400ParaIdentificadorZeroOuNegativo() throws Exception {
+        for (long id : new long[] {0, -1}) {
+            mockMvc.perform(post("/api/alocacoes/solicitacoes/{id}/alocar", id))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.mensagem").value(
+                            "Identificador da solicitação inválido: informe um número inteiro maior que zero"));
+        }
+    }
+
+    @Test
+    void deveRetornar400ParaIdentificadorNaoNumerico() throws Exception {
+        for (String id : new String[] {"abc", "99999999999999999999"}) {
+            mockMvc.perform(post("/api/alocacoes/solicitacoes/{id}/alocar", id))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.mensagem").value("Valor inválido para o parâmetro: solicitacaoId"));
+        }
+    }
+
     private SolicitacaoSangue criarSolicitacao() {
         return solicitacaoSangueRepository.save(SolicitacaoSangue.builder()
                 .nomeHospital("Hospital Central")

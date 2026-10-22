@@ -73,7 +73,7 @@ docker compose down
 
 ### 3. 🧪 Testes Automatizados e TDD (Entrega E2)
 
-A aplicação conta com uma pirâmide completa de testes automatizados com JUnit 5, MockMvc e **Cucumber (BDD)**.
+A aplicação conta com uma pirâmide completa de testes automatizados com JUnit 5, MockMvc e **Cucumber (BDD)**
 
 #### User Story Map e Tarefas
 O Story Map detalhado e a quebra de tarefas das 3 histórias selecionadas da Release 1 estão documentados em [docs/story-map-e2.md](docs/story-map-e2.md):

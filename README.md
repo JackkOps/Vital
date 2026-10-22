@@ -237,11 +237,12 @@ Funcionalidades de etapas futuras foram isoladas na branch [`unidade-2`](https:/
 | Área | Tecnologias |
 |---|---|
 | Backend | Java 21, Spring Boot 4.1.1 (Web MVC, Data JPA, Validation, DevTools) |
-| Banco de dados | H2 em memória (desenvolvimento) e driver PostgreSQL |
+| Banco de dados | H2 em memória (desenvolvimento) e PostgreSQL 16 (Docker Compose) |
 | Interface web | HTML, CSS e JavaScript, servidos pelo próprio Spring Boot e consumindo a API REST |
 | Estruturas de dados | C (C11) com GCC, Make e Valgrind |
-| Testes | JUnit, Spring Boot Test e MockMvc |
+| Testes | JUnit, Spring Boot Test, MockMvc e Cucumber (BDD) |
 | Build | Maven (Maven Wrapper) |
+| Containers e CI/CD | Docker (Dockerfile multi-stage), Docker Compose e GitHub Actions |
 | Versionamento e gestão | Git, GitHub (código e issues) e Jira |
 | Documentação | Markdown, Mermaid e script PowerShell de verificação da tradução C → Java |
 

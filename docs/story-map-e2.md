@@ -68,7 +68,7 @@ flowchart LR
 #### Tarefas:
 - **T3.1 (Regressão / Estrutura):** Teste unitário da pilha manual LIFO (`PilhaHistoricoTest`).
 - **T3.2 (Regressão / Unitário):** Teste do serviço de histórico com consulta topo-primeiro e pop (`HistoricoServiceTest`).
-- **T3.3 (Regressão / Integração):** Controller de histórico e persistência (`HistoricoControllerTest`).
+- **T3.3 (Regressão / Controller MockMvc):** Controller de histórico testado com pilha em memória (`HistoricoControllerTest`), enquanto a persistência e validação da solicitação subjacente são cobertas nos cenários BDD.
 - **T3.4 (BDD / Cucumber):** Automação dos cenários de aceitação em `docs/bdd/historia-3-historico-pilha-lifo.feature`.
 
 ---
@@ -86,5 +86,5 @@ flowchart LR
 | **US-02** | T2.4 | Aceitação (BDD) | `RunCucumberTest.java` $\to$ `historia-2-solicitacao-fila-fifo.feature` |
 | **US-03** | T3.1 | Estrutura | `PilhaHistoricoTest.java` |
 | **US-03** | T3.2 | Unitário | `HistoricoServiceTest.java` |
-| **US-03** | T3.3 | Integração | `HistoricoControllerTest.java` |
+| **US-03** | T3.3 | Controller MockMvc | `HistoricoControllerTest.java` |
 | **US-03** | T3.4 | Aceitação (BDD) | `RunCucumberTest.java` $\to$ `historia-3-historico-pilha-lifo.feature` |

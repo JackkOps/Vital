@@ -107,16 +107,18 @@ A esteira de integração e entrega contínua está implementada via **GitHub Ac
   3. Compilação do pacote JAR.
   4. Build e validação do `Dockerfile` multi-stage.
 * **Deploy Contínuo (CD):** Disparado automaticamente após merge na branch `main` mediante aprovação de todos os gates.
-* **URL Pública do Sistema no Ar:** [https://rotavital-api.onrender.com](https://rotavital-api.onrender.com) *(ou URL configurada no provedor)*.
+* **URL Pública do Sistema no Ar:** `[Pendente de deploy remoto no Render/Railway via webhook DEPLOY_HOOK_URL]`.
 * **Procedimento de Rollback:**
   Em caso de falha em produção:
-  1. No painel do provedor de deploy (Render/Railway), selecione o deploy anterior íntegro e clique em **Rollback / Redeploy**.
-  2. No Git, se necessário reverter o commit na `main`:
+  1. No painel do provedor de deploy (Render/Railway), selecione o deploy anterior íntegro e acione o rollback imediato.
+  2. No Git (com branch `main` protegida por regras do repositório, onde pushes diretos são bloqueados):
      ```bash
-     git revert HEAD --no-edit
-     git push origin main
+     git checkout -b fix/rollback-release
+     # Reverte o merge commit indicando a mainline (-m 1)
+     git revert -m 1 <hash-do-merge>
+     git push origin fix/rollback-release
+     # Abrir Pull Request para a main; o CI executa os testes e o CD publica a versão restaurada
      ```
-     O pipeline detecta o push e republica automaticamente a versão anterior estável.
 
 ---
 
@@ -154,10 +156,10 @@ O uso de Inteligência Artificial Generativa neste projeto foi ativo, supervisio
 
 ### 7. 📁 Evidências
 
-Todos os registros e logs comprobatórios estão disponíveis na pasta [`docs/evidencias/`](docs/evidencias/):
-* **E1 (Docker):** `docs/evidencias/e1/` (prints do `docker compose ps` e endpoint respondendo).
-* **E2 (TDD):** [`docs/evidencias/e2/README.md`](docs/evidencias/e2/README.md) (contendo logs de execução `red-us01.txt`, `revalidacao.txt` e `revalidacao-junit.xml`).
-* **E3 (Deploy):** `docs/evidencias/e3/` (execuções verde e vermelha do GitHub Actions, link do app no ar e rollback).
+Todos os registros e logs comprobatórios são organizados na pasta [`docs/evidencias/`](docs/evidencias/):
+* **E1 (Docker):** `docs/evidencias/e1/` *(Configurado localmente via `compose.yaml`; aguardando execução local do Docker Desktop para captura de tela do `docker compose ps` e API respondendo)*.
+* **E2 (TDD):** [`docs/evidencias/e2/README.md`](docs/evidencias/e2/README.md) *(100% Concluído e versionado com hashes SHA-256 e logs `red-us01.txt`, `revalidacao.txt` e `revalidacao-junit.xml`)*.
+* **E3 (Deploy):** `docs/evidencias/e3/` *(Workflow `.github/workflows/ci.yml` pronto; aguardando push para o GitHub para coleta de prints da execução vermelha que barra merge e verde que publica)*.
 
 ---
 

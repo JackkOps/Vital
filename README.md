@@ -515,8 +515,8 @@ Os testes automatizados podem ser executados com `./mvnw.cmd test`.
 
 ### Screencasts
 
-- Vídeo 1 - Uso do sistema: **[assistir no YouTube](COLE_AQUI_O_LINK_DO_VIDEO_1)**
-- Vídeo 2 - Explicação do código: **[assistir no YouTube](COLE_AQUI_O_LINK_DO_VIDEO_2)**
+- Vídeo 1 - Uso do sistema: **[assistir no YouTube](https://youtu.be/rVwKBNQx7dY)**
+- Vídeo 2 - Explicação do código: **[assistir no YouTube](https://youtu.be/1NgdL95KPeM)**
 
 ---
 

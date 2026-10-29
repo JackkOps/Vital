@@ -4,273 +4,326 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Rota Vital</title>
+    <meta name="color-scheme" content="light dark">
     <link rel="stylesheet" href="css/rotavital.css">
 </head>
 <body>
     <a class="pular" href="#conteudo">Pular para o conteúdo</a>
 
-    <header class="topo">
-        <div class="marca">
-            <span class="marca-gota" aria-hidden="true"></span>
-            <div>
-                <p class="marca-nome">Rota Vital</p>
-                <p class="marca-sub">Estoque de hemocomponentes e requisições hospitalares</p>
+    <div class="app">
+        <!-- Menu lateral (desktop) -->
+        <aside class="lateral">
+            <div class="marca">
+                <span class="marca-icone" data-icone="gota"></span>
+                <div>
+                    <p class="marca-nome">Rota Vital</p>
+                    <p class="marca-sub">Hemocentro Regional</p>
+                </div>
             </div>
-        </div>
-        <p class="data-hoje" id="data-hoje"></p>
-    </header>
+            <nav class="menu" aria-label="Áreas do sistema">
+                <a href="#estoque" data-pagina="estoque"><span data-icone="estoque"></span>Estoque</a>
+                <a href="#solicitacoes" data-pagina="solicitacoes"><span data-icone="prancheta"></span>Solicitações<span class="contador tom-at" data-contador="solicitacoes" hidden></span></a>
+                <a href="#validade" data-pagina="validade"><span data-icone="calendario"></span>Validade<span class="contador tom-pe" data-contador="validade" hidden></span></a>
+                <a href="#indicadores" data-pagina="indicadores"><span data-icone="grafico"></span>Indicadores</a>
+                <a href="#historico" data-pagina="historico"><span data-icone="historico"></span>Histórico</a>
+            </nav>
+            <div class="conexao" id="conexao" role="status">
+                <span class="conexao-ponto" aria-hidden="true"></span>
+                <div><strong>Conectando…</strong><span class="secundario"></span></div>
+            </div>
+        </aside>
 
-    <div class="estrutura">
-        <nav class="navegacao" aria-label="Áreas do sistema">
-            <a href="#estoque" data-area="estoque">Estoque</a>
-            <a href="#solicitacoes" data-area="solicitacoes">Solicitações</a>
-            <a href="#validade" data-area="validade">Validade</a>
-            <a href="#indicadores" data-area="indicadores">Indicadores</a>
-            <a href="#historico" data-area="historico">Histórico</a>
-        </nav>
-
-        <main id="conteudo" tabindex="-1">
-
-            <!-- Estoque de bolsas (História 1) -->
-            <section class="area" id="area-estoque" data-area="estoque" aria-labelledby="titulo-estoque">
-                <h1 id="titulo-estoque">Estoque de bolsas</h1>
-                <p class="area-descricao">Cadastre as bolsas recebidas e acompanhe o status de cada uma.</p>
-
-                <form class="formulario" id="form-bolsa">
-                    <h2 id="form-bolsa-titulo">Cadastrar bolsa</h2>
-                    <input type="hidden" name="id">
-                    <div class="campos">
-                        <label>Identificador
-                            <input name="identificador" required autocomplete="off" placeholder="BOLSA-2026-0001">
-                        </label>
-                        <label>Tipo sanguíneo
-                            <select name="tipoSanguineo" data-opcoes="tipoSanguineo" required></select>
-                        </label>
-                        <label>Componente
-                            <select name="tipoComponente" data-opcoes="tipoComponente" required></select>
-                        </label>
-                        <label>Data de coleta
-                            <input name="dataColeta" type="date" required>
-                        </label>
-                        <label>Validade
-                            <input name="dataValidade" type="date" required>
-                        </label>
-                        <label>Volume (mL)
-                            <input name="volume" type="number" min="1" step="1" required inputmode="numeric">
-                        </label>
-                    </div>
-                    <div class="acoes-form">
-                        <button type="submit" class="botao principal" id="form-bolsa-enviar">Cadastrar bolsa</button>
-                        <button type="button" class="botao" id="form-bolsa-cancelar" hidden>Cancelar edição</button>
-                    </div>
-                </form>
-
-                <div class="bloco">
-                    <div class="bloco-cabecalho">
-                        <h2>Bolsas cadastradas</h2>
-                        <button type="button" class="botao discreto" data-recarregar="estoque">Atualizar</button>
-                    </div>
-                    <div class="tabela-rolagem">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th scope="col">Identificador</th>
-                                    <th scope="col">Tipo</th>
-                                    <th scope="col">Componente</th>
-                                    <th scope="col">Coleta</th>
-                                    <th scope="col">Validade</th>
-                                    <th scope="col" class="num">Volume</th>
-                                    <th scope="col">Status</th>
-                                    <th scope="col"><span class="visualmente-oculto">Ações</span></th>
-                                </tr>
-                            </thead>
-                            <tbody id="tabela-bolsas"></tbody>
-                        </table>
-                    </div>
+        <!-- Topo com abas (celular) -->
+        <header class="topo-movel">
+            <div class="topo-linha">
+                <div class="marca">
+                    <span class="marca-icone" data-icone="gota"></span>
+                    <p class="marca-nome">Rota Vital</p>
                 </div>
-            </section>
+                <p class="data-hoje" data-relogio="curto"></p>
+            </div>
+            <nav class="abas" aria-label="Áreas do sistema">
+                <a href="#estoque" data-pagina="estoque">Estoque</a>
+                <a href="#solicitacoes" data-pagina="solicitacoes">Solicitações<span class="contador tom-at" data-contador="solicitacoes" hidden></span></a>
+                <a href="#validade" data-pagina="validade">Validade<span class="contador tom-pe" data-contador="validade" hidden></span></a>
+                <a href="#indicadores" data-pagina="indicadores">Indicadores</a>
+                <a href="#historico" data-pagina="historico">Histórico</a>
+            </nav>
+        </header>
 
-            <!-- Solicitações, fila e alocação (Histórias 2 e 4) -->
-            <section class="area" id="area-solicitacoes" data-area="solicitacoes" aria-labelledby="titulo-solicitacoes" hidden>
-                <h1 id="titulo-solicitacoes">Solicitações hospitalares</h1>
-                <p class="area-descricao">Registre os pedidos dos hospitais, chame a fila de atendimento e aloque a bolsa compatível que vence primeiro.</p>
+        <main class="principal" id="conteudo" tabindex="-1">
+            <div class="conteudo">
 
-                <form class="formulario" id="form-solicitacao">
-                    <h2 id="form-solicitacao-titulo">Registrar solicitação</h2>
-                    <input type="hidden" name="id">
-                    <div class="campos">
-                        <label class="largo">Hospital
-                            <input name="nomeHospital" required autocomplete="off" placeholder="Hospital da Restauração">
-                        </label>
-                        <label>Tipo sanguíneo
-                            <select name="tipoSanguineo" data-opcoes="tipoSanguineo" required></select>
-                        </label>
-                        <label>Componente
-                            <select name="tipoComponente" data-opcoes="tipoComponente" required></select>
-                        </label>
-                        <label>Quantidade
-                            <input name="quantidade" type="number" min="1" step="1" required inputmode="numeric">
-                        </label>
-                        <label id="campo-urgencia">Urgência
-                            <select name="nivelUrgencia" data-opcoes="nivelUrgencia" required></select>
-                        </label>
+                <!-- Estoque de bolsas (História 1) -->
+                <section data-secao="estoque" aria-labelledby="titulo-estoque" hidden>
+                    <header class="cabecalho-pagina">
+                        <div>
+                            <h1 id="titulo-estoque">Estoque de bolsas</h1>
+                            <p>Cadastre, edite e consulte as bolsas de hemocomponentes do hemocentro.</p>
+                        </div>
+                        <p class="data-hoje" data-relogio="longo"></p>
+                    </header>
+
+                    <form class="cartao" id="form-bolsa" novalidate>
+                        <div class="cartao-cab">
+                            <h2 id="form-bolsa-titulo">Cadastrar bolsa</h2>
+                            <span class="pilula tom-in" id="form-bolsa-modo" hidden>Modo de edição</span>
+                            <p class="lado aviso-obrigatorio"><span>*</span> campos obrigatórios</p>
+                        </div>
+                        <div class="resumo-erros" data-resumo role="alert" hidden></div>
+                        <input type="hidden" name="id">
+                        <div class="formulario-grade">
+                            <div class="campo col-3" data-campo="identificador">
+                                <label for="bolsa-identificador">Identificador <span class="obrigatorio">*</span></label>
+                                <input class="entrada mono" id="bolsa-identificador" name="identificador" autocomplete="off" spellcheck="false" placeholder="BOLSA-2026-0001" aria-describedby="erro-bolsa-identificador">
+                                <p class="mensagem-erro" id="erro-bolsa-identificador"></p>
+                            </div>
+                            <fieldset class="campo col-5" data-campo="tipoSanguineo" aria-describedby="erro-bolsa-tipo">
+                                <legend>Tipo sanguíneo <span class="obrigatorio">*</span></legend>
+                                <div class="opcoes" data-opcoes="tipoSanguineo"></div>
+                                <p class="mensagem-erro" id="erro-bolsa-tipo"></p>
+                            </fieldset>
+                            <fieldset class="campo col-4" data-campo="tipoComponente" aria-describedby="erro-bolsa-componente">
+                                <legend>Componente <span class="obrigatorio">*</span></legend>
+                                <div class="opcoes componentes" data-opcoes="tipoComponente"></div>
+                                <p class="mensagem-erro" id="erro-bolsa-componente"></p>
+                            </fieldset>
+
+                            <div class="campo col-3" data-campo="dataColeta">
+                                <label for="bolsa-coleta">Data de coleta <span class="obrigatorio">*</span></label>
+                                <input class="entrada" id="bolsa-coleta" name="dataColeta" type="date" aria-describedby="erro-bolsa-coleta">
+                                <p class="mensagem-erro" id="erro-bolsa-coleta"></p>
+                            </div>
+                            <div class="campo col-3" data-campo="dataValidade">
+                                <label for="bolsa-validade">Data de validade <span class="obrigatorio">*</span></label>
+                                <input class="entrada" id="bolsa-validade" name="dataValidade" type="date" aria-describedby="erro-bolsa-validade">
+                                <p class="mensagem-erro" id="erro-bolsa-validade"></p>
+                            </div>
+                            <div class="campo col-3" data-campo="volume">
+                                <label for="bolsa-volume">Volume (mL) <span class="obrigatorio">*</span></label>
+                                <input class="entrada" id="bolsa-volume" name="volume" type="number" min="1" step="1" inputmode="numeric" placeholder="300" aria-describedby="erro-bolsa-volume">
+                                <p class="mensagem-erro" id="erro-bolsa-volume"></p>
+                            </div>
+                            <div class="col-3 alinhar-fim">
+                                <button type="button" class="botao secundario" id="form-bolsa-cancelar" hidden>Cancelar edição</button>
+                                <button type="submit" class="botao principal" id="form-bolsa-enviar"><span data-icone="mais"></span>Cadastrar bolsa</button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div class="cartao sem-respiro">
+                        <div class="cartao-cab">
+                            <h2>Bolsas cadastradas</h2>
+                            <span class="contagem" id="contagem-bolsas"></span>
+                            <div class="lado" id="filtros-bolsas">
+                                <div class="filtro"><label for="filtro-tipo">Tipo</label>
+                                    <select class="entrada" id="filtro-tipo" data-filtro="tipo" data-opcoes-select="tipoSanguineo"></select></div>
+                                <div class="filtro"><label for="filtro-componente">Componente</label>
+                                    <select class="entrada" id="filtro-componente" data-filtro="componente" data-opcoes-select="tipoComponente"></select></div>
+                                <div class="filtro"><label for="filtro-status">Status</label>
+                                    <select class="entrada" id="filtro-status" data-filtro="status" data-opcoes-select="statusBolsa"></select></div>
+                            </div>
+                        </div>
+                        <div id="lista-bolsas" aria-live="polite"></div>
                     </div>
-                    <div class="acoes-form">
-                        <button type="submit" class="botao principal" id="form-solicitacao-enviar">Registrar solicitação</button>
-                        <button type="button" class="botao" id="form-solicitacao-cancelar" hidden>Cancelar edição</button>
-                    </div>
-                </form>
+                </section>
 
-                <div class="bloco">
-                    <div class="bloco-cabecalho">
-                        <h2>Fila de atendimento</h2>
-                        <div class="grupo-botoes">
-                            <button type="button" class="botao discreto" data-recarregar="solicitacoes">Atualizar</button>
-                            <button type="button" class="botao principal" id="chamar-proxima">Chamar próxima</button>
+                <!-- Solicitações hospitalares (Histórias 2 e 4) -->
+                <section data-secao="solicitacoes" aria-labelledby="titulo-solicitacoes" hidden>
+                    <header class="cabecalho-pagina">
+                        <div>
+                            <h1 id="titulo-solicitacoes">Solicitações hospitalares</h1>
+                            <p>Registre pedidos, atenda a fila por ordem de chegada e aloque bolsas compatíveis.</p>
+                        </div>
+                        <p class="data-hoje" data-relogio="longo"></p>
+                    </header>
+
+                    <div class="grade-solicitacoes">
+                        <form class="cartao area-registrar" id="form-solicitacao" novalidate>
+                            <div class="cartao-cab">
+                                <h2>Registrar solicitação</h2>
+                                <p class="legenda">Entra no fim da fila de atendimento.</p>
+                            </div>
+                            <div class="resumo-erros" data-resumo role="alert" hidden></div>
+                            <div class="formulario-grade">
+                                <div class="campo col-12" data-campo="nomeHospital">
+                                    <label for="solic-hospital">Hospital <span class="obrigatorio">*</span></label>
+                                    <input class="entrada" id="solic-hospital" name="nomeHospital" list="hospitais" autocomplete="off" placeholder="Nome do hospital" aria-describedby="erro-solic-hospital">
+                                    <datalist id="hospitais"></datalist>
+                                    <p class="mensagem-erro" id="erro-solic-hospital"></p>
+                                </div>
+                                <fieldset class="campo col-12" data-campo="tipoSanguineo" aria-describedby="erro-solic-tipo">
+                                    <legend>Tipo sanguíneo do paciente <span class="obrigatorio">*</span></legend>
+                                    <div class="opcoes" data-opcoes="tipoSanguineo"></div>
+                                    <p class="mensagem-erro" id="erro-solic-tipo"></p>
+                                </fieldset>
+                                <div class="campo col-12" data-campo="tipoComponente">
+                                    <label for="solic-componente">Componente <span class="obrigatorio">*</span></label>
+                                    <select class="entrada" id="solic-componente" name="tipoComponente" data-opcoes-select="tipoComponente" data-vazio="Selecione o componente" aria-describedby="erro-solic-componente"></select>
+                                    <p class="mensagem-erro" id="erro-solic-componente"></p>
+                                </div>
+                                <div class="campo col-12" data-campo="quantidade">
+                                    <label for="solic-quantidade">Quantidade de bolsas <span class="obrigatorio">*</span></label>
+                                    <input class="entrada entrada-curta" id="solic-quantidade" name="quantidade" type="number" min="1" step="1" inputmode="numeric" aria-describedby="erro-solic-quantidade">
+                                    <p class="mensagem-erro" id="erro-solic-quantidade"></p>
+                                </div>
+                                <fieldset class="campo col-12" data-campo="nivelUrgencia" aria-describedby="erro-solic-urgencia">
+                                    <legend>Urgência <span class="obrigatorio">*</span></legend>
+                                    <div class="opcoes" data-opcoes="nivelUrgencia"></div>
+                                    <p class="mensagem-erro" id="erro-solic-urgencia"></p>
+                                </fieldset>
+                                <div class="col-12">
+                                    <button type="submit" class="botao principal"><span data-icone="mais"></span>Registrar solicitação</button>
+                                </div>
+                            </div>
+                        </form>
+
+                        <div class="cartao area-fila">
+                            <div class="cartao-cab">
+                                <h2>Fila de atendimento</h2>
+                                <span class="lado pilula" id="contagem-fila"></span>
+                                <p class="legenda">FIFO · atendida por ordem de chegada</p>
+                            </div>
+                            <div id="fila-atendimento" aria-live="polite"></div>
+                        </div>
+
+                        <div class="cartao area-atendimento">
+                            <div class="cartao-cab">
+                                <h2>Em atendimento</h2>
+                                <p class="legenda">Compatibilidade ABO/Rh + FEFO (vence primeiro, sai primeiro)</p>
+                            </div>
+                            <div id="em-atendimento" aria-live="polite"></div>
                         </div>
                     </div>
-                    <p class="nota">Solicitações pendentes, na ordem de chegada.</p>
-                    <ol class="fila" id="lista-fila"></ol>
-                </div>
 
-                <div class="bloco">
-                    <div class="bloco-cabecalho">
-                        <h2>Todas as solicitações</h2>
+                    <div class="cartao sem-respiro">
+                        <div class="cartao-cab">
+                            <h2>Todas as solicitações</h2>
+                            <span class="contagem" id="contagem-solicitacoes"></span>
+                        </div>
+                        <div id="lista-solicitacoes"></div>
                     </div>
-                    <div class="tabela-rolagem">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th scope="col" class="num">Nº</th>
-                                    <th scope="col">Hospital</th>
-                                    <th scope="col">Tipo</th>
-                                    <th scope="col">Componente</th>
-                                    <th scope="col" class="num">Qtd.</th>
-                                    <th scope="col">Urgência</th>
-                                    <th scope="col">Status</th>
-                                    <th scope="col"><span class="visualmente-oculto">Ações</span></th>
-                                </tr>
-                            </thead>
-                            <tbody id="tabela-solicitacoes"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
+                </section>
 
-            <!-- Validade (História 5) -->
-            <section class="area" id="area-validade" data-area="validade" aria-labelledby="titulo-validade" hidden>
-                <h1 id="titulo-validade">Validade das bolsas</h1>
-                <p class="area-descricao">Veja as bolsas próximas do vencimento e dê baixa nas que já venceram. A verificação também roda sozinha todos os dias à 1h.</p>
+                <!-- Validade das bolsas (História 5) -->
+                <section data-secao="validade" aria-labelledby="titulo-validade" hidden>
+                    <header class="cabecalho-pagina">
+                        <div>
+                            <h1 id="titulo-validade">Validade das bolsas</h1>
+                            <p>Acompanhe vencimentos e registre baixas antes que uma bolsa vencida pareça disponível.</p>
+                        </div>
+                        <p class="data-hoje" data-relogio="longo"></p>
+                    </header>
 
-                <div class="bloco destaque">
-                    <div class="bloco-cabecalho">
-                        <h2>Verificar validade agora</h2>
-                        <button type="button" class="botao perigo" id="verificar-validade">Verificar e dar baixa nas vencidas</button>
-                    </div>
-                    <p class="nota">Bolsas disponíveis com validade anterior a hoje passam para descartada. Bolsas alocadas não são alteradas.</p>
-                    <div id="resultado-verificacao" aria-live="polite"></div>
-                </div>
+                    <div class="grade-2">
+                        <div class="cartao">
+                            <div class="verificar">
+                                <span class="verificar-icone" data-icone="calendario"></span>
+                                <div>
+                                    <strong>Verificar validade agora</strong>
+                                    <p>Dá baixa por vencimento em todas as bolsas disponíveis com validade anterior a hoje. A verificação automática roda todo dia à 01:00.</p>
+                                </div>
+                            </div>
+                            <div id="vencidas" aria-live="polite"></div>
+                            <button type="button" class="botao perigo" data-acao="verificar-validade"><span data-icone="lixeira"></span>Verificar e dar baixa nas vencidas</button>
+                        </div>
 
-                <div class="bloco">
-                    <div class="bloco-cabecalho">
-                        <h2>Próximas do vencimento</h2>
-                        <button type="button" class="botao discreto" data-recarregar="validade">Atualizar</button>
-                    </div>
-                    <p class="nota">Bolsas disponíveis que entram na janela de alerta do seu componente, da que vence primeiro para a última.</p>
-                    <div class="tabela-rolagem">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th scope="col">Identificador</th>
-                                    <th scope="col">Tipo</th>
-                                    <th scope="col">Componente</th>
-                                    <th scope="col">Validade</th>
-                                    <th scope="col" class="num">Dias restantes</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tabela-alertas"></tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="bloco">
-                    <div class="bloco-cabecalho">
-                        <h2>Baixas registradas</h2>
-                    </div>
-                    <div class="tabela-rolagem">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th scope="col" class="num">Nº</th>
-                                    <th scope="col">Bolsa</th>
-                                    <th scope="col">Motivo</th>
-                                    <th scope="col">Data</th>
-                                    <th scope="col">Origem</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tabela-baixas"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Indicadores -->
-            <section class="area" id="area-indicadores" data-area="indicadores" aria-labelledby="titulo-indicadores" hidden>
-                <h1 id="titulo-indicadores">Indicadores</h1>
-                <p class="area-descricao" id="indicadores-referencia"></p>
-
-                <div class="bloco">
-                    <div class="bloco-cabecalho">
-                        <h2>Bolsas disponíveis por tipo e componente</h2>
-                        <button type="button" class="botao discreto" data-recarregar="indicadores">Atualizar</button>
-                    </div>
-                    <p class="nota" id="descricao-estoque"></p>
-                    <div class="tabela-rolagem">
-                        <table class="matriz" id="matriz-estoque"></table>
-                    </div>
-                </div>
-
-                <div class="bloco">
-                    <div class="bloco-cabecalho">
-                        <h2>Demanda em aberto por hospital</h2>
-                    </div>
-                    <p class="nota" id="descricao-demanda"></p>
-                    <div class="tabela-rolagem">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th scope="col">Hospital</th>
-                                    <th scope="col">Componente</th>
-                                    <th scope="col">Tipo</th>
-                                    <th scope="col" class="num">Bolsas em aberto</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tabela-demanda"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Histórico de operações -->
-            <section class="area" id="area-historico" data-area="historico" aria-labelledby="titulo-historico" hidden>
-                <h1 id="titulo-historico">Histórico de operações</h1>
-                <p class="area-descricao">Operações registradas nesta execução do sistema, da mais recente para a mais antiga.</p>
-
-                <div class="bloco">
-                    <div class="bloco-cabecalho">
-                        <h2>Operações</h2>
-                        <div class="grupo-botoes">
-                            <button type="button" class="botao discreto" data-recarregar="historico">Atualizar</button>
-                            <button type="button" class="botao" id="remover-ultima">Remover última operação</button>
+                        <div class="cartao">
+                            <div class="cartao-cab">
+                                <h2>Próximas do vencimento</h2>
+                                <span class="lado contagem" id="contagem-proximas"></span>
+                            </div>
+                            <div class="janelas" id="janelas-alerta"></div>
+                            <div id="proximas" aria-live="polite"></div>
                         </div>
                     </div>
-                    <ol class="historico" id="lista-historico"></ol>
-                </div>
-            </section>
+
+                    <div class="cartao sem-respiro">
+                        <div class="cartao-cab">
+                            <h2>Baixas registradas</h2>
+                            <span class="contagem" id="contagem-baixas"></span>
+                        </div>
+                        <div id="lista-baixas"></div>
+                    </div>
+                </section>
+
+                <!-- Indicadores (História 6) -->
+                <section data-secao="indicadores" aria-labelledby="titulo-indicadores" hidden>
+                    <header class="cabecalho-pagina">
+                        <div>
+                            <h1 id="titulo-indicadores">Indicadores</h1>
+                            <p id="indicadores-descricao">Situação do estoque e da demanda hospitalar.</p>
+                        </div>
+                        <p class="data-hoje" data-relogio="longo"></p>
+                    </header>
+                    <div class="kpis" id="kpis"></div>
+                    <div class="grade-indicadores">
+                        <div class="cartao">
+                            <div class="cartao-cab">
+                                <h2>Bolsas disponíveis por tipo sanguíneo e componente</h2>
+                                <p class="legenda">Quantidade de bolsas com status DISPONÍVEL e dentro da validade.</p>
+                            </div>
+                            <div id="mapa-estoque"></div>
+                        </div>
+                        <div class="cartao">
+                            <div class="cartao-cab">
+                                <h2>Demanda em aberto por hospital</h2>
+                                <p class="legenda">Bolsas pedidas em solicitações PENDENTE ou EM ATENDIMENTO.</p>
+                            </div>
+                            <div id="demanda-hospitais"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Histórico de operações (História 3) -->
+                <section data-secao="historico" aria-labelledby="titulo-historico" hidden>
+                    <header class="cabecalho-pagina">
+                        <div>
+                            <h1 id="titulo-historico">Histórico de operações</h1>
+                            <p>Pilha de registros: a operação mais recente fica no topo.</p>
+                        </div>
+                        <p class="data-hoje" data-relogio="longo"></p>
+                    </header>
+                    <div class="grade-historico">
+                        <div class="cartao">
+                            <div class="cartao-cab">
+                                <h2>Linha do tempo</h2>
+                                <span class="lado contagem" id="contagem-historico"></span>
+                            </div>
+                            <div id="linha-tempo"></div>
+                        </div>
+                        <div class="cartao">
+                            <div class="cartao-cab">
+                                <h2>Remover última operação</h2>
+                            </div>
+                            <div class="aviso info"><span data-icone="info"></span><p><strong>Só apaga o registro do histórico.</strong> A operação no estoque <strong>não é desfeita</strong>: bolsas cadastradas, alocadas ou baixadas continuam como estão.</p></div>
+                            <div id="registro-topo"></div>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
         </main>
     </div>
 
-    <div class="avisos" id="avisos" role="status" aria-live="polite"></div>
+    <div class="toasts" id="toasts" aria-live="polite"></div>
+
+    <dialog class="modal" id="modal" aria-labelledby="modal-titulo" aria-describedby="modal-texto">
+        <form method="dialog">
+            <div class="modal-corpo">
+                <span class="modal-icone" data-icone="alerta"></span>
+                <div>
+                    <h2 id="modal-titulo"></h2>
+                    <p class="modal-texto" id="modal-texto"></p>
+                </div>
+            </div>
+            <div class="modal-extra" id="modal-extra"></div>
+            <div class="modal-acoes">
+                <button class="botao secundario" value="cancelar">Cancelar</button>
+                <button class="botao perigo" value="confirmar" id="modal-confirmar"></button>
+            </div>
+        </form>
+    </dialog>
 
     <script src="js/rotavital.js"></script>
 </body>

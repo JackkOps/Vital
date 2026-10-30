@@ -1,17 +1,24 @@
 package com.jackops.rotavital.dto;
 
+import com.jackops.rotavital.model.enums.StatusSolicitacao;
+
 public class RespostaAlocacaoBolsa {
     private Long bolsaId;
     private boolean alocada;
     private String mensagem;
+    private long bolsasAlocadas;
+    private StatusSolicitacao statusSolicitacao;
 
     public RespostaAlocacaoBolsa() {
     }
 
-    public RespostaAlocacaoBolsa(Long bolsaId, boolean alocada, String mensagem) {
+    public RespostaAlocacaoBolsa(Long bolsaId, boolean alocada, String mensagem,
+                                 long bolsasAlocadas, StatusSolicitacao statusSolicitacao) {
         this.bolsaId = bolsaId;
         this.alocada = alocada;
         this.mensagem = mensagem;
+        this.bolsasAlocadas = bolsasAlocadas;
+        this.statusSolicitacao = statusSolicitacao;
     }
 
     public Long getBolsaId() {
@@ -36,5 +43,21 @@ public class RespostaAlocacaoBolsa {
 
     public void setMensagem(String mensagem) {
         this.mensagem = mensagem;
+    }
+
+    public long getBolsasAlocadas() {
+        return bolsasAlocadas;
+    }
+
+    public void setBolsasAlocadas(long bolsasAlocadas) {
+        this.bolsasAlocadas = bolsasAlocadas;
+    }
+
+    public StatusSolicitacao getStatusSolicitacao() {
+        return statusSolicitacao;
+    }
+
+    public void setStatusSolicitacao(StatusSolicitacao statusSolicitacao) {
+        this.statusSolicitacao = statusSolicitacao;
     }
 }

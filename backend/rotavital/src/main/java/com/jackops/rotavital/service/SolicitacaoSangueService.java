@@ -15,6 +15,7 @@ import com.jackops.rotavital.estrutura.FilaRequisicoes;
 import com.jackops.rotavital.estrutura.PilhaHistorico;
 import com.jackops.rotavital.model.SolicitacaoSangue;
 import com.jackops.rotavital.model.enums.StatusSolicitacao;
+import com.jackops.rotavital.repository.BolsaRepository;
 import com.jackops.rotavital.repository.SolicitacaoSangueRepository;
 
 import jakarta.annotation.PostConstruct;
@@ -24,12 +25,14 @@ public class SolicitacaoSangueService {
     private final SolicitacaoSangueRepository solicitacaoRepository;
     private final FilaRequisicoes filaRequisicoes;
     private final PilhaHistorico pilhaHistorico;
+    private final BolsaRepository bolsaRepository;
 
     public SolicitacaoSangueService(SolicitacaoSangueRepository solicitacaoRepository,
-            FilaRequisicoes filaRequisicoes, PilhaHistorico pilhaHistorico) {
+            FilaRequisicoes filaRequisicoes, PilhaHistorico pilhaHistorico, BolsaRepository bolsaRepository) {
         this.solicitacaoRepository = solicitacaoRepository;
         this.filaRequisicoes = filaRequisicoes;
         this.pilhaHistorico = pilhaHistorico;
+        this.bolsaRepository = bolsaRepository;
     }
 
     /**
@@ -107,6 +110,8 @@ public class SolicitacaoSangueService {
         if (solicitacao.getStatus() == StatusSolicitacao.PENDENTE) {
             removerDaFila(id);
         }
+        // As bolsas já alocadas continuam ALOCADA; só perdem o vínculo com o pedido excluído.
+        bolsaRepository.findBySolicitacaoIdOrderByIdAsc(id).forEach(bolsa -> bolsa.setSolicitacao(null));
         solicitacaoRepository.delete(solicitacao);
         pilhaHistorico.empilhar("Exclusão de solicitação " + solicitacao.getId());
     }
@@ -171,6 +176,7 @@ public class SolicitacaoSangueService {
                 solicitacao.getTipoComponente(),
                 solicitacao.getQuantidade(),
                 solicitacao.getNivelUrgencia(),
-                solicitacao.getStatus());
+                solicitacao.getStatus(),
+                solicitacao.getId() == null ? 0 : bolsaRepository.countBySolicitacaoId(solicitacao.getId()));
     }
 }

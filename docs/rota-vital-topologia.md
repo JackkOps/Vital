@@ -269,7 +269,7 @@ Antes de a topologia sair do papel, o contrato de API (W02 — PI3E7-14) precisa
 |---|---|---|
 | `POST/GET /api/bolsas`, `GET/PUT/DELETE /api/bolsas/{id}` | Implementado | Histórias 1 e 5 |
 | `POST/GET /api/solicitacoes`, `GET /api/solicitacoes/fila`, `GET/PUT/DELETE /api/solicitacoes/{id}` | Implementado | História 4 |
-| `POST /api/alocacoes/solicitacoes/{solicitacaoId}/alocar` | Implementado | História 2 |
+| `POST /api/alocacoes/solicitacoes/{solicitacaoId}/alocar`, `GET /api/alocacoes/solicitacoes/{solicitacaoId}` | Implementado | História 2 |
 | `GET /api/indicadores` | Implementado | História 7 |
 | `GET /actuator/health` | A criar | Proxy e deploy saberem se a API está no ar |
 | `GET /api/remessas/{id}` e `GET /api/remessas/{id}/leituras` | A criar | História 6 (status e histórico da remessa) |

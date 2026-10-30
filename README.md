@@ -364,6 +364,7 @@ cd backend\rotavital
 | Remover última operação do histórico | `DELETE /api/historico/ultima` |
 | Consultar indicadores estatísticos | `GET /api/indicadores` |
 | Alocar bolsa compatível (ABO/Rh + FEFO) | `POST /api/alocacoes/solicitacoes/{solicitacaoId}/alocar` |
+| Listar bolsas alocadas para uma solicitação | `GET /api/alocacoes/solicitacoes/{solicitacaoId}` |
 | Listar alertas de vencimento | `GET /api/validade/alertas` |
 | Verificar validade e dar baixa nas vencidas | `POST /api/validade/verificar` |
 | Dar baixa manual por vencimento | `POST /api/validade/bolsas/{bolsaId}/baixa` |

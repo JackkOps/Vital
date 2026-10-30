@@ -1,5 +1,7 @@
 package com.jackops.rotavital.controller;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -59,7 +61,62 @@ class AlocacaoBolsaControllerTest {
         mockMvc.perform(post("/api/alocacoes/solicitacoes/{id}/alocar", solicitacao.getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.alocada").value(true))
-                .andExpect(jsonPath("$.bolsaId").value(bolsa.getId()));
+                .andExpect(jsonPath("$.bolsaId").value(bolsa.getId()))
+                .andExpect(jsonPath("$.bolsasAlocadas").value(1))
+                .andExpect(jsonPath("$.statusSolicitacao").value("ATENDIDA"));
+    }
+
+    @Test
+    void deveExporAlocacaoNasRotasDeSolicitacoesEBolsas() throws Exception {
+        SolicitacaoSangue solicitacao = criarSolicitacao();
+        Bolsa bolsa = criarBolsaDisponivel("BOLSA-VINCULO");
+        mockMvc.perform(post("/api/alocacoes/solicitacoes/{id}/alocar", solicitacao.getId()))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/alocacoes/solicitacoes/{id}", solicitacao.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(bolsa.getId()))
+                .andExpect(jsonPath("$[0].solicitacaoId").value(solicitacao.getId()));
+        mockMvc.perform(get("/api/solicitacoes/{id}", solicitacao.getId()))
+                .andExpect(jsonPath("$.bolsasAlocadas").value(1))
+                .andExpect(jsonPath("$.status").value("ATENDIDA"));
+        mockMvc.perform(get("/api/bolsas/{id}", bolsa.getId()))
+                .andExpect(jsonPath("$.solicitacaoId").value(solicitacao.getId()));
+    }
+
+    @Test
+    void deveRetornar409AoAlocarParaSolicitacaoJaAtendida() throws Exception {
+        SolicitacaoSangue solicitacao = criarSolicitacao();
+        criarBolsaDisponivel("BOLSA-PRIMEIRA");
+        criarBolsaDisponivel("BOLSA-SOBRA");
+        mockMvc.perform(post("/api/alocacoes/solicitacoes/{id}/alocar", solicitacao.getId()))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/alocacoes/solicitacoes/{id}/alocar", solicitacao.getId()))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.mensagem").value("Solicitação já recebeu a quantidade de bolsas pedida"));
+    }
+
+    @Test
+    void deveExcluirSolicitacaoComBolsaAlocadaMantendoBolsaAlocada() throws Exception {
+        SolicitacaoSangue solicitacao = criarSolicitacao();
+        Bolsa bolsa = criarBolsaDisponivel("BOLSA-EXCLUSAO");
+        mockMvc.perform(post("/api/alocacoes/solicitacoes/{id}/alocar", solicitacao.getId()))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(delete("/api/solicitacoes/{id}", solicitacao.getId()))
+                .andExpect(status().isNoContent());
+
+        mockMvc.perform(get("/api/bolsas/{id}", bolsa.getId()))
+                .andExpect(jsonPath("$.status").value("ALOCADA"))
+                .andExpect(jsonPath("$.solicitacaoId").doesNotExist());
+    }
+
+    @Test
+    void deveRetornar404AoListarAlocacoesDeSolicitacaoInexistente() throws Exception {
+        mockMvc.perform(get("/api/alocacoes/solicitacoes/{id}", 999999))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.mensagem").value("Solicitação não encontrada"));
     }
 
     @Test
@@ -96,6 +153,18 @@ class AlocacaoBolsaControllerTest {
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.mensagem").value("Valor inválido para o parâmetro: solicitacaoId"));
         }
+    }
+
+    private Bolsa criarBolsaDisponivel(String identificador) {
+        return bolsaRepository.save(Bolsa.builder()
+                .identificador(identificador)
+                .tipoSanguineo(TipoSanguineo.O_POSITIVO)
+                .tipoComponente(TipoComponente.HEMACIAS)
+                .dataColeta(LocalDate.now().minusDays(10))
+                .dataValidade(LocalDate.now().plusDays(20))
+                .volume(450)
+                .status(StatusBolsa.DISPONIVEL)
+                .build());
     }
 
     private SolicitacaoSangue criarSolicitacao() {

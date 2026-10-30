@@ -13,6 +13,8 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
@@ -46,6 +48,13 @@ public class Bolsa {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private StatusBolsa status;
+
+    /**
+     * Solicitação que recebeu a bolsa. Fica nula enquanto a bolsa não foi alocada.
+     */
+    @ManyToOne
+    @JoinColumn(name = "solicitacao_id")
+    private SolicitacaoSangue solicitacao;
 
     public Bolsa() {
     }
@@ -128,6 +137,14 @@ public class Bolsa {
 
     public void setStatus(StatusBolsa status) {
         this.status = status;
+    }
+
+    public SolicitacaoSangue getSolicitacao() {
+        return solicitacao;
+    }
+
+    public void setSolicitacao(SolicitacaoSangue solicitacao) {
+        this.solicitacao = solicitacao;
     }
 
     /**

@@ -140,6 +140,7 @@ public class BolsaService {
     private BolsaResponse paraResponse(Bolsa bolsa) {
         return new BolsaResponse(bolsa.getId(), bolsa.getIdentificador(), bolsa.getTipoSanguineo(),
                 bolsa.getTipoComponente(), bolsa.getDataColeta(), bolsa.getDataValidade(),
-                bolsa.getVolume(), bolsa.getStatus());
+                bolsa.getVolume(), bolsa.getStatus(),
+                bolsa.getSolicitacao() == null ? null : bolsa.getSolicitacao().getId());
     }
 }

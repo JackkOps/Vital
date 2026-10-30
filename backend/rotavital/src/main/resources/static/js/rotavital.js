@@ -269,8 +269,7 @@
         edicaoBolsaId: null,
         sugestaoIdentificador: null,
         atendimentoSelecionado: null,
-        resultadoAlocacao: null,
-        alocacoes: lerAlocacoes()
+        resultadoAlocacao: null
     };
 
     function carregandoPrimeiraVez(chave) {
@@ -299,37 +298,9 @@
     const bolsaPorId = (id) => bolsas().find((bolsa) => bolsa.id === id);
     const solicitacaoPorId = (id) => solicitacoes().find((solicitacao) => solicitacao.id === id);
 
-    /*
-     * A API ainda não expõe qual bolsa foi alocada para qual solicitação. Para mostrar
-     * o progresso "1 de 2", este navegador guarda as alocações feitas por ele.
-     */
-    const CHAVE_ALOCACOES = 'rotavital.alocacoes';
-
-    function lerAlocacoes() {
-        try {
-            return JSON.parse(localStorage.getItem(CHAVE_ALOCACOES)) || {};
-        } catch (erro) {
-            return {};
-        }
-    }
-
-    function registrarAlocacao(solicitacaoId, bolsaId) {
-        const lista = estado.alocacoes[solicitacaoId] || [];
-        if (!lista.includes(bolsaId)) {
-            lista.push(bolsaId);
-        }
-        estado.alocacoes[solicitacaoId] = lista;
-        try {
-            localStorage.setItem(CHAVE_ALOCACOES, JSON.stringify(estado.alocacoes));
-        } catch (erro) {
-            // Sem armazenamento local: o progresso vale só até recarregar a página.
-        }
-    }
-
+    /** Bolsas que a API registrou como alocadas para a solicitação. */
     function bolsasAlocadasPara(solicitacaoId) {
-        return (estado.alocacoes[solicitacaoId] || [])
-            .map(bolsaPorId)
-            .filter((bolsa) => bolsa && bolsa.status === 'ALOCADA');
+        return bolsas().filter((bolsa) => bolsa.solicitacaoId === solicitacaoId);
     }
 
     function candidatasPara(solicitacao) {
@@ -803,13 +774,12 @@
         try {
             const { status, dados } = await requisitar(API.alocar(solicitacao.id), { metodo: 'POST' });
             if (status === 200 && dados.alocada) {
-                registrarAlocacao(solicitacao.id, dados.bolsaId);
                 estado.resultadoAlocacao = { solicitacaoId: solicitacao.id, alocada: true, bolsaId: dados.bolsaId, candidatas };
                 await carregar();
                 const bolsa = bolsaPorId(dados.bolsaId);
-                const alocadas = bolsasAlocadasPara(solicitacao.id).length;
+                const concluida = dados.statusSolicitacao === 'ATENDIDA' ? ' Solicitação atendida.' : '';
                 avisar('sucesso', `${bolsa ? bolsa.identificador : 'Bolsa'} alocada para ${codigoSolicitacao(solicitacao.id)} `
-                    + `(${alocadas} de ${solicitacao.quantidade}).`);
+                    + `(${dados.bolsasAlocadas} de ${solicitacao.quantidade}).${concluida}`);
             } else {
                 estado.resultadoAlocacao = { solicitacaoId: solicitacao.id, alocada: false };
                 avisar('erro', `Sem estoque compatível para ${codigoSolicitacao(solicitacao.id)}.`);

@@ -115,8 +115,8 @@ A topologia proposta não entra de uma vez. O que muda em cada etapa:
 | Unidade 2 — cadeia fria (História 6) | PostgreSQL | MQTT | Entram o broker e a ligação com os veículos (TCP 8883) |
 
 O PostgreSQL entra junto com o primeiro deploy porque, no ambiente publicado, os dados precisam
-sobreviver a um reinício, o que o H2 em memória não garante (`ddl-auto=create-drop`). O driver já está
-no `pom.xml`. O H2 continua sendo usado nos testes e no desenvolvimento local. A data exata depende do
+sobreviver a um reinício, o que o H2 em memória não garante. O driver já está no `pom.xml` e o
+schema é criado e atualizado pelas migrations do Flyway (`db/migration`), com o Hibernate em `ddl-auto=validate`. O H2 continua sendo usado nos testes e no desenvolvimento local. A data exata depende do
 pipeline de SO (PI3E7-15 e PI3E7-21).
 
 ### MQTT: tópicos e QoS

@@ -33,7 +33,7 @@ services:
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-rotavital_user}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-rotavital_pass}
       SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
       SERVER_PORT: 8080
     ports:
       - "${SERVER_PORT:-8080}:8080"

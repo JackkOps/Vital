@@ -324,6 +324,11 @@ No Windows:
 
 Requisitos: Java 21. O backend usa Spring Boot, JPA e H2.
 
+O schema do banco é versionado com **Flyway** em `backend/rotavital/src/main/resources/db/migration`.
+O Hibernate roda com `ddl-auto=validate`: ele só confere se as entidades batem com as tabelas e não altera nada.
+Toda mudança de entidade (coluna, tabela, relacionamento) precisa de uma nova migration `V<n>__descricao.sql`.
+Bancos criados antes do Flyway (pelo antigo `ddl-auto=update`) são marcados como baseline na V1 e recebem só as migrations seguintes.
+
 A API sobe em `http://localhost:8080`.
 
 A interface web fica disponível no navegador em `http://localhost:8080/`.

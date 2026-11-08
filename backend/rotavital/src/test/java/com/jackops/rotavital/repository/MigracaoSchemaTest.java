@@ -25,7 +25,7 @@ class MigracaoSchemaTest {
         List<String> versoes = jdbc.queryForList(
                 "SELECT \"version\" FROM \"flyway_schema_history\" WHERE \"success\" = TRUE AND \"version\" IS NOT NULL ORDER BY \"installed_rank\"",
                 String.class);
-        assertEquals(List.of("1", "2", "3"), versoes);
+        assertEquals(List.of("1", "2", "3", "4", "5"), versoes);
     }
 
     @Test

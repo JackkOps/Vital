@@ -19,7 +19,14 @@
         alocar: (solicitacaoId) => `/api/alocacoes/solicitacoes/${solicitacaoId}/alocar`,
         cancelarAlocacao: (bolsaId) => `/api/alocacoes/bolsas/${bolsaId}/cancelar`,
         cancelarSolicitacao: (solicitacaoId) => `/api/solicitacoes/${solicitacaoId}/cancelar`,
-        baixaManual: (bolsaId) => `/api/validade/bolsas/${bolsaId}/baixa`
+        baixaManual: (bolsaId) => `/api/validade/bolsas/${bolsaId}/baixa`,
+        rede: '/api/rotas/rede',
+        rotas: '/api/rotas',
+        confirmarRota: (rotaId) => `/api/rotas/${rotaId}/confirmar`,
+        remessas: '/api/remessas',
+        leituras: (remessaId) => `/api/remessas/${remessaId}/leituras`,
+        entregarRemessa: (remessaId) => `/api/remessas/${remessaId}/entregar`,
+        verificarSensores: '/api/remessas/verificar-sensores'
     };
 
     /* ---------- Domínio ---------- */
@@ -83,7 +90,7 @@
     const QUANTIDADE_MAXIMA = 10;
     const VALIDADE_MINIMA_DIAS = 1;
 
-    const PAGINAS = ['estoque', 'solicitacoes', 'validade', 'indicadores', 'historico'];
+    const PAGINAS = ['estoque', 'solicitacoes', 'validade', 'logistica', 'indicadores', 'historico'];
 
     /* ---------- Ícones (traço 24x24) ---------- */
 
@@ -92,6 +99,7 @@
         estoque: '<path d="M21 8 12 3 3 8l9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/>',
         prancheta: '<rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>',
         calendario: '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
+        caminhao: '<path d="M1 4h13v12H1z"/><path d="M14 8h4l3 4v4h-7"/><circle cx="5.5" cy="18" r="2"/><circle cx="17.5" cy="18" r="2"/>',
         grafico: '<path d="M3 3v18h18"/><path d="M8 17v-5M13 17V8M18 17v-9"/>',
         historico: '<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/>',
         check: '<path d="M20 6 9 17l-5-5"/>',
@@ -267,7 +275,10 @@
             const consulta = parametros.toString();
             return consulta ? `${API.indicadores}?${consulta}` : API.indicadores;
         },
-        historico: API.historico
+        historico: API.historico,
+        rede: API.rede,
+        rotas: API.rotas,
+        remessas: API.remessas
     };
 
     const estado = {
@@ -1185,6 +1196,229 @@
             }).join('')}</tbody></table></div>`;
     }
 
+    /* ---------- Logística (rotas e cadeia fria) ---------- */
+
+    const STATUS_ROTA = {
+        CONFIRMADA: { rotulo: 'Confirmada', tom: 'ok', icone: 'check' },
+        AGUARDANDO_CONFIRMACAO: { rotulo: 'Risco de atraso', tom: 'at', icone: 'alerta' }
+    };
+
+    const CONDICAO_REMESSA = {
+        CONFORME: { rotulo: 'Conforme', tom: 'ok', icone: 'check' },
+        SOB_RISCO: { rotulo: 'Sob risco', tom: 'pe', icone: 'alerta' }
+    };
+
+    const formRota = document.getElementById('form-rota');
+    const formRemessa = document.getElementById('form-remessa');
+
+    function locaisRede() {
+        return estado.dados.rede?.locais || [];
+    }
+
+    function nomeLocal(id) {
+        return locaisRede().find((l) => l.id === id)?.nome || `Local ${id}`;
+    }
+
+    function minutosTexto(minutos) {
+        if (minutos < 60) {
+            return `${minutos} min`;
+        }
+        const horas = Math.floor(minutos / 60);
+        const resto = minutos % 60;
+        return resto ? `${horas} h ${resto} min` : `${horas} h`;
+    }
+
+    function dataHoraLocal(data = new Date()) {
+        const local = new Date(data.getTime() - data.getTimezoneOffset() * 60000);
+        return local.toISOString().slice(0, 19);
+    }
+
+    function quando(isoLocal) {
+        return isoLocal ? hora(new Date(isoLocal)) : '—';
+    }
+
+    function preencherFormRota() {
+        const origem = document.getElementById('rota-origem');
+        const destinos = document.getElementById('rota-destinos');
+        const locais = locaisRede();
+        if (locais.length === 0 || origem.options.length > 0) {
+            return;
+        }
+        origem.innerHTML = locais.filter((l) => l.tipo === 'HEMOCENTRO')
+            .map((l) => `<option value="${l.id}">${esc(l.nome)}</option>`).join('');
+        destinos.innerHTML = locais.filter((l) => l.tipo === 'HOSPITAL')
+            .map((l) => `<label><input type="checkbox" name="destino" value="${l.id}">${esc(l.nome)}</label>`).join('');
+    }
+
+    function resumoRota(rota) {
+        const caminho = rota.caminho.map((l) => esc(l.nome)).join(' → ');
+        const entregas = rota.entregas.map((e) => `${esc(e.nome)} em ${minutosTexto(e.chegadaMinutos)}`
+            + (e.dentroDaJanela ? '' : ' (fora da janela)')).join(' · ');
+        return `<p class="caminho-rota"><strong>${minutosTexto(rota.tempoTotalMinutos)}</strong> ·
+                ${rota.distanciaTotalKm.toLocaleString('pt-BR')} km · janela ${minutosTexto(rota.janelaMinutos)}</p>
+            <p class="caminho-rota">${caminho}</p>
+            <p class="legenda">Entregas: ${entregas}</p>`;
+    }
+
+    async function calcularRota(evento) {
+        evento.preventDefault();
+        const destinoIds = [...formRota.querySelectorAll('input[name="destino"]:checked')].map((c) => Number(c.value));
+        const janela = formRota.elements.janelaMinutos.value;
+        const alvo = document.getElementById('resultado-rota');
+        if (destinoIds.length === 0) {
+            avisar('erro', 'Marque ao menos um hospital de destino.');
+            return;
+        }
+        const corpo = { origemId: Number(formRota.elements.origemId.value), destinoIds };
+        if (janela) {
+            corpo.janelaMinutos = Number(janela);
+        }
+        const botao = formRota.querySelector('button[type=submit]');
+        botao.disabled = true;
+        try {
+            const { dados: rota } = await requisitar(API.rotas, { metodo: 'POST', corpo });
+            alvo.innerHTML = rota.cumpreJanela
+                ? `<div class="resultado ok" role="status"><p class="resultado-titulo">${icone('check')}Rota confirmada</p>${resumoRota(rota)}</div>`
+                : `<div class="resultado perigo" role="alert"><p class="resultado-titulo">${icone('alerta')}Risco de atraso</p>
+                    <p>${esc(rota.alerta)}</p>${resumoRota(rota)}
+                    <div class="linha-botoes" style="margin-top:10px"><button type="button" class="botao secundario" data-acao="confirmar-rota" data-id="${rota.id}">Confirmar mesmo assim</button></div></div>`;
+            avisar(rota.cumpreJanela ? 'sucesso' : 'erro', rota.cumpreJanela
+                ? `Rota ${rota.id} calculada e confirmada.` : `Rota ${rota.id} passa da janela de tempo.`);
+            await carregar(['rotas', 'historico']);
+        } catch (erro) {
+            alvo.innerHTML = `<div class="resultado perigo" role="alert"><p class="resultado-titulo">${icone('alerta')}Sem rota</p><p>${esc(erro.message)}</p></div>`;
+            avisar('erro', erro.message);
+        } finally {
+            botao.disabled = false;
+        }
+    }
+
+    async function confirmarRota(id) {
+        try {
+            await requisitar(API.confirmarRota(id), { metodo: 'POST' });
+            document.getElementById('resultado-rota').innerHTML = '';
+            avisar('sucesso', `Rota ${id} confirmada com risco de atraso assumido.`);
+            await carregar(['rotas', 'historico']);
+        } catch (erro) {
+            avisar('erro', erro.message);
+        }
+    }
+
+    async function despacharRemessa(evento) {
+        evento.preventDefault();
+        const campos = formRemessa.elements;
+        if (!campos.tipoComponente.value || !campos.sensorId.value.trim()) {
+            avisar('erro', 'Informe o componente e o sensor da remessa.');
+            return;
+        }
+        const corpo = { tipoComponente: campos.tipoComponente.value, sensorId: campos.sensorId.value.trim() };
+        if (campos.rotaId.value) {
+            corpo.rotaId = Number(campos.rotaId.value);
+        }
+        try {
+            const { dados: remessa } = await requisitar(API.remessas, { metodo: 'POST', corpo });
+            formRemessa.reset();
+            avisar('sucesso', `Remessa ${remessa.id} despachada.`);
+            await carregar(['remessas', 'historico']);
+        } catch (erro) {
+            avisar('erro', erro.message);
+        }
+    }
+
+    async function simularLeitura(remessa) {
+        const campo = document.querySelector(`[data-temperatura-remessa="${remessa.id}"]`);
+        const temperatura = Number(String(campo?.value || '').replace(',', '.'));
+        if (!campo || campo.value === '' || Number.isNaN(temperatura)) {
+            avisar('erro', 'Informe a temperatura lida.');
+            return;
+        }
+        const corpo = {
+            leituraId: `WEB-${remessa.id}-${Date.now()}`,
+            sensorId: remessa.sensorId,
+            sequencia: remessa.totalLeituras + 1,
+            temperatura,
+            dataHora: dataHoraLocal()
+        };
+        try {
+            const { dados } = await requisitar(API.leituras(remessa.id), { metodo: 'POST', corpo });
+            const alertas = dados.alertasGerados || [];
+            avisar(alertas.length ? 'erro' : 'sucesso', alertas.length
+                ? alertas.map((a) => a.mensagem).join(' · ')
+                : `Leitura de ${temperatura.toLocaleString('pt-BR')} °C registrada.`);
+            await carregar(['remessas']);
+        } catch (erro) {
+            avisar('erro', erro.message);
+        }
+    }
+
+    async function acaoRemessa(url, mensagem) {
+        try {
+            const { dados } = await requisitar(url, { metodo: 'POST' });
+            avisar('sucesso', typeof mensagem === 'function' ? mensagem(dados) : mensagem);
+            await carregar(['remessas', 'historico']);
+        } catch (erro) {
+            avisar('erro', erro.message);
+        }
+    }
+
+    function renderizarLogistica() {
+        preencherFormRota();
+
+        const rotas = estado.dados.rotas || [];
+        const alvoRotas = document.getElementById('lista-rotas');
+        const especialRotas = estadoDaFonte('rotas', 'Não foi possível carregar as rotas', 3);
+        document.getElementById('contagem-rotas').textContent = especialRotas ? '' : plural(rotas.length, 'rota', 'rotas');
+        if (especialRotas) {
+            alvoRotas.innerHTML = especialRotas;
+        } else if (rotas.length === 0) {
+            alvoRotas.innerHTML = estadoVazio('seta', 'Nenhuma rota calculada', 'Escolha os hospitais e calcule a primeira rota.');
+        } else {
+            alvoRotas.innerHTML = `<ul class="lista-rotas">${rotas.slice(0, 8).map((r) => `<li>
+                <div class="item-cab"><strong>Rota ${r.id}</strong>${selo(STATUS_ROTA[r.status])}
+                    <div class="lado">${r.status === 'AGUARDANDO_CONFIRMACAO'
+                        ? `<button type="button" class="botao secundario" data-acao="confirmar-rota" data-id="${r.id}">Confirmar mesmo assim</button>`
+                        : `<button type="button" class="botao secundario" data-acao="usar-rota" data-id="${r.id}">Usar no despacho</button>`}</div></div>
+                ${resumoRota(r)}
+                ${r.alerta ? `<p class="legenda">${esc(r.alerta)}</p>` : ''}
+            </li>`).join('')}</ul>`;
+        }
+
+        const seletorRota = document.getElementById('remessa-rota');
+        const escolhida = seletorRota.value;
+        seletorRota.innerHTML = '<option value="">Sem rota</option>' + rotas.filter((r) => r.status === 'CONFIRMADA')
+            .map((r) => `<option value="${r.id}"${String(r.id) === escolhida ? ' selected' : ''}>Rota ${r.id} · ${esc(r.entregas.map((e) => e.nome).join(', '))}</option>`).join('');
+
+        const alvoRemessas = document.getElementById('lista-remessas');
+        const especialRemessas = estadoDaFonte('remessas', 'Não foi possível carregar as remessas', 3);
+        if (especialRemessas) {
+            alvoRemessas.innerHTML = especialRemessas;
+            return;
+        }
+        const remessas = estado.dados.remessas || [];
+        if (remessas.length === 0) {
+            alvoRemessas.innerHTML = estadoVazio('caminhao', 'Nenhuma remessa despachada',
+                'Despache uma remessa para acompanhar as leituras de temperatura do sensor.');
+            return;
+        }
+        alvoRemessas.innerHTML = `<ul class="lista-remessas">${remessas.map((r) => {
+            const emTransito = r.status === 'EM_TRANSITO';
+            const faixa = `${r.temperaturaMinima.toLocaleString('pt-BR')} a ${r.temperaturaMaxima.toLocaleString('pt-BR')} °C`;
+            const ultima = r.ultimaTemperatura === null ? 'sem leituras' : `${r.ultimaTemperatura.toLocaleString('pt-BR')} °C às ${quando(r.ultimaLeituraEm)}`;
+            return `<li>
+                <div class="item-cab"><strong>Remessa ${r.id}</strong>${etiquetaComponente(r.tipoComponente)}
+                    ${selo(CONDICAO_REMESSA[r.condicao])}
+                    ${r.sensorIndisponivel ? selo({ rotulo: 'Sensor sem sinal', tom: 'at', icone: 'relogio' }) : ''}
+                    ${emTransito ? '' : selo({ rotulo: 'Entregue', tom: 'ne', icone: 'check' })}
+                    ${emTransito ? `<div class="lado">
+                        <span class="leitura-simulada"><input class="entrada" type="number" step="0.1" inputmode="decimal" aria-label="Temperatura lida da remessa ${r.id}" placeholder="°C" data-temperatura-remessa="${r.id}">
+                        <button type="button" class="botao secundario" data-acao="simular-leitura" data-id="${r.id}">Registrar leitura</button></span>
+                        <button type="button" class="botao secundario" data-acao="entregar-remessa" data-id="${r.id}">Marcar entregue</button></div>` : ''}</div>
+                <p class="legenda">Sensor ${esc(r.sensorId)} · faixa segura ${faixa} · última leitura: ${ultima} · ${plural(r.totalLeituras, 'leitura', 'leituras')}${r.rotaId ? ` · rota ${r.rotaId}` : ''}</p>
+                ${r.alertas.length ? `<ul class="alertas-remessa">${r.alertas.map((a) => `<li>${quando(a.criadoEm)} · ${esc(a.mensagem)}</li>`).join('')}</ul>` : ''}
+            </li>`;
+        }).join('')}</ul>`;
+    }
+
     /* ---------- Indicadores ---------- */
 
     function classeCalor(n) {
@@ -1486,6 +1720,14 @@
             el.setAttribute('aria-label', `${pendentesValidade} bolsas vencidas ou perto de vencer`);
         });
 
+        const remessasComProblema = (estado.dados.remessas || [])
+            .filter((r) => r.status === 'EM_TRANSITO' && (r.condicao === 'SOB_RISCO' || r.sensorIndisponivel)).length;
+        document.querySelectorAll('[data-contador="logistica"]').forEach((el) => {
+            el.hidden = remessasComProblema === 0;
+            el.textContent = remessasComProblema;
+            el.setAttribute('aria-label', `${remessasComProblema} remessas com alerta`);
+        });
+
         const conexao = document.getElementById('conexao');
         const falhas = Object.keys(estado.erros).length;
         conexao.classList.toggle('falha', falhas > 0);
@@ -1507,6 +1749,7 @@
         estoque: renderizarEstoque,
         solicitacoes: renderizarSolicitacoes,
         validade: renderizarValidade,
+        logistica: renderizarLogistica,
         indicadores: renderizarIndicadores,
         historico: renderizarHistorico
     };
@@ -1592,6 +1835,28 @@
                 }
                 break;
             }
+            case 'confirmar-rota':
+                confirmarRota(id);
+                break;
+            case 'usar-rota':
+                document.getElementById('remessa-rota').value = String(id);
+                document.getElementById('remessa-componente').focus();
+                break;
+            case 'simular-leitura': {
+                const remessa = (estado.dados.remessas || []).find((r) => r.id === id);
+                if (remessa) {
+                    simularLeitura(remessa);
+                }
+                break;
+            }
+            case 'entregar-remessa':
+                acaoRemessa(API.entregarRemessa(id), `Remessa ${id} entregue.`);
+                break;
+            case 'verificar-sensores':
+                acaoRemessa(API.verificarSensores, (dados) => dados.alertasGerados.length
+                    ? `${plural(dados.alertasGerados.length, 'sensor sem sinal', 'sensores sem sinal')} detectado(s).`
+                    : 'Todos os sensores em trânsito estão enviando leituras.');
+                break;
             case 'selecionar-atendimento':
                 estado.atendimentoSelecionado = id;
                 renderizar();
@@ -1627,6 +1892,8 @@
         formBolsa.addEventListener('change', limparErroDoCampo);
         document.getElementById('form-bolsa-cancelar').addEventListener('click', sairEdicaoBolsa);
         formSolicitacao.addEventListener('submit', enviarSolicitacao);
+        formRota.addEventListener('submit', calcularRota);
+        formRemessa.addEventListener('submit', despacharRemessa);
         formSolicitacao.addEventListener('input', limparErroDoCampo);
         formSolicitacao.addEventListener('change', limparErroDoCampo);
 

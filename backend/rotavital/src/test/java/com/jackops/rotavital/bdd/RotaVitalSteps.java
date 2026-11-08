@@ -6,6 +6,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -19,7 +22,14 @@ import org.springframework.test.web.servlet.ResultActions;
 import com.jackops.rotavital.estrutura.FilaRequisicoes;
 import com.jackops.rotavital.estrutura.ListaEstoque;
 import com.jackops.rotavital.estrutura.PilhaHistorico;
+import com.jackops.rotavital.model.Remessa;
+import com.jackops.rotavital.model.enums.TipoComponente;
+import com.jackops.rotavital.repository.AlertaRemessaRepository;
 import com.jackops.rotavital.repository.BolsaRepository;
+import com.jackops.rotavital.repository.LeituraTemperaturaRepository;
+import com.jackops.rotavital.repository.LocalRedeRepository;
+import com.jackops.rotavital.repository.RemessaRepository;
+import com.jackops.rotavital.repository.RotaRepository;
 import com.jackops.rotavital.repository.SolicitacaoSangueRepository;
 import tools.jackson.databind.ObjectMapper;
 
@@ -30,6 +40,13 @@ public class RotaVitalSteps {
     @Autowired PilhaHistorico pilha;
     @Autowired FilaRequisicoes fila;
     @Autowired ListaEstoque estoque;
+    @Autowired LocalRedeRepository locais;
+    @Autowired RotaRepository rotas;
+    @Autowired RemessaRepository remessas;
+    @Autowired LeituraTemperaturaRepository leituras;
+    @Autowired AlertaRemessaRepository alertasRemessa;
+    private final List<Long> destinosRota = new ArrayList<>();
+    private Long remessaId;
     private final ObjectMapper json = new ObjectMapper();
     private Map<String, Object> bolsa;
     private Map<String, Object> solicitacao;
@@ -38,6 +55,11 @@ public class RotaVitalSteps {
 
     @Before
     public void limpar() {
+        alertasRemessa.deleteAll();
+        leituras.deleteAll();
+        remessas.deleteAll();
+        rotas.deleteAll();
+        destinosRota.clear();
         bolsas.deleteAll();
         solicitacoes.deleteAll();
         pilha.limpar();
@@ -382,5 +404,114 @@ public class RotaVitalSteps {
     public void probabilidadeApresentada(String componente) throws Exception {
         resposta.andExpect(jsonPath("$.situacaoComponentes[?(@.tipoComponente == '" + componente
                 + "')].probabilidadeDesabastecimento").value(1.0));
+    }
+
+    /* ---------- História 3: cálculo de rota ---------- */
+
+    private long localPorNome(String nome) {
+        return locais.findByNomeIgnoreCase(nome).orElseThrow().getId();
+    }
+
+    @Dado("que existem entregas pendentes para {string} e {string}")
+    public void entregasPendentes(String primeiro, String segundo) {
+        destinosRota.add(localPorNome(primeiro));
+        destinosRota.add(localPorNome(segundo));
+    }
+
+    @Dado("que existem entregas pendentes para {string}")
+    public void entregaPendente(String hospital) {
+        destinosRota.add(localPorNome(hospital));
+    }
+
+    @Quando("o sistema calcula a rota a partir do {string}")
+    public void calcularRota(String origem) throws Exception {
+        resposta = mvc.perform(post("/api/rotas").contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(Map.of("origemId", localPorNome(origem), "destinoIds", destinosRota))));
+    }
+
+    @Então("o caminho de menor custo é retornado em {int} minutos")
+    public void caminhoDeMenorCusto(int minutos) throws Exception {
+        resposta.andExpect(status().isCreated()).andExpect(jsonPath("$.tempoTotalMinutos").value(minutos));
+    }
+
+    @Então("a rota cumpre a janela de tempo exigida")
+    public void cumpreJanela() throws Exception {
+        resposta.andExpect(jsonPath("$.cumpreJanela").value(true));
+    }
+
+    @Então("a rota é confirmada automaticamente")
+    public void confirmadaAutomaticamente() throws Exception {
+        resposta.andExpect(jsonPath("$.status").value("CONFIRMADA"));
+    }
+
+    @Então("o sistema alerta que não há rota disponível")
+    public void semRota() throws Exception {
+        resposta.andExpect(status().isUnprocessableContent())
+                .andExpect(jsonPath("$.mensagem", containsString("Não há rota disponível")));
+        assertEquals(0, rotas.count());
+    }
+
+    @Então("o operador é alertado sobre o risco de atraso")
+    public void riscoDeAtraso() throws Exception {
+        resposta.andExpect(status().isCreated()).andExpect(jsonPath("$.cumpreJanela").value(false))
+                .andExpect(jsonPath("$.alerta", containsString("Risco de atraso")));
+    }
+
+    @Então("a rota não é confirmada automaticamente")
+    public void naoConfirmada() throws Exception {
+        resposta.andExpect(jsonPath("$.status").value("AGUARDANDO_CONFIRMACAO"));
+    }
+
+    /* ---------- História 6: cadeia fria ---------- */
+
+    @Dado("que existe uma remessa de {string} em trânsito com sensor ativo")
+    public void remessaEmTransito(String componente) throws Exception {
+        String corpo = mvc.perform(post("/api/remessas").contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(Map.of("tipoComponente", componente, "sensorId", "SENSOR-BDD"))))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+        remessaId = json.readTree(corpo).get("id").asLong();
+    }
+
+    @Dado("que existe uma remessa de {string} em trânsito sem leitura há {int} minutos")
+    public void remessaSemLeitura(String componente, int minutos) {
+        Remessa remessa = new Remessa(null, TipoComponente.valueOf(componente), "SENSOR-BDD",
+                LocalDateTime.now().minusMinutes(minutos));
+        remessaId = remessas.save(remessa).getId();
+    }
+
+    @Quando("o sistema recebe uma leitura de {double} graus")
+    public void receberLeitura(double temperatura) throws Exception {
+        resposta = mvc.perform(post("/api/remessas/{id}/leituras", remessaId).contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(Map.of("leituraId", "BDD-1", "sensorId", "SENSOR-BDD",
+                        "sequencia", 1, "temperatura", temperatura, "dataHora", LocalDateTime.now().withNano(0).toString()))));
+    }
+
+    @Então("a leitura é registrada no histórico da remessa")
+    public void leituraNoHistorico() throws Exception {
+        resposta.andExpect(status().isCreated());
+        mvc.perform(get("/api/remessas/{id}/leituras", remessaId)).andExpect(jsonPath("$.length()").value(1));
+    }
+
+    @Então("a remessa permanece com condição {string}")
+    public void condicaoRemessa(String condicao) throws Exception {
+        mvc.perform(get("/api/remessas/{id}", remessaId)).andExpect(jsonPath("$.condicao").value(condicao));
+    }
+
+    @Então("o operador recebe um alerta {string}")
+    public void alertaRemessa(String tipo) throws Exception {
+        mvc.perform(get("/api/remessas/{id}", remessaId))
+                .andExpect(jsonPath("$.alertas.length()").value(1))
+                .andExpect(jsonPath("$.alertas[0].tipo").value(tipo));
+    }
+
+    @Quando("o sistema verifica os sensores")
+    public void verificarSensores() throws Exception {
+        resposta = mvc.perform(post("/api/remessas/verificar-sensores"));
+    }
+
+    @Então("o sistema registra falha de comunicação")
+    public void falhaDeComunicacao() throws Exception {
+        resposta.andExpect(status().isOk()).andExpect(jsonPath("$.alertasGerados.length()").value(1));
+        mvc.perform(get("/api/remessas/{id}", remessaId)).andExpect(jsonPath("$.sensorIndisponivel").value(true));
     }
 }

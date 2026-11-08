@@ -17,6 +17,8 @@
         historico: '/api/historico',
         removerUltimaOperacao: '/api/historico/ultima',
         alocar: (solicitacaoId) => `/api/alocacoes/solicitacoes/${solicitacaoId}/alocar`,
+        cancelarAlocacao: (bolsaId) => `/api/alocacoes/bolsas/${bolsaId}/cancelar`,
+        cancelarSolicitacao: (solicitacaoId) => `/api/solicitacoes/${solicitacaoId}/cancelar`,
         baixaManual: (bolsaId) => `/api/validade/bolsas/${bolsaId}/baixa`
     };
 
@@ -76,6 +78,10 @@
         AB_NEGATIVO: ['O_NEGATIVO', 'A_NEGATIVO', 'B_NEGATIVO', 'AB_NEGATIVO'],
         AB_POSITIVO: Object.keys(TIPOS_SANGUINEOS)
     };
+
+    // Iguais a SolicitacaoSangue.QUANTIDADE_MAXIMA e rotavital.alocacao.validade-minima-dias no backend.
+    const QUANTIDADE_MAXIMA = 10;
+    const VALIDADE_MINIMA_DIAS = 1;
 
     const PAGINAS = ['estoque', 'solicitacoes', 'validade', 'indicadores', 'historico'];
 
@@ -255,7 +261,12 @@
         fila: API.fila,
         alertas: API.alertas,
         baixas: API.baixas,
-        indicadores: API.indicadores,
+        indicadores: () => {
+            const parametros = new URLSearchParams(
+                Object.entries(estado.filtrosIndicadores).filter(([, valor]) => valor));
+            const consulta = parametros.toString();
+            return consulta ? `${API.indicadores}?${consulta}` : API.indicadores;
+        },
         historico: API.historico
     };
 
@@ -266,6 +277,7 @@
         carregando: new Set(),
         atualizadoEm: null,
         filtros: { tipo: '', componente: '', status: '' },
+        filtrosIndicadores: { dataInicio: '', dataFim: '', hospital: '', tipoComponente: '' },
         edicaoBolsaId: null,
         sugestaoIdentificador: null,
         atendimentoSelecionado: null,
@@ -281,7 +293,8 @@
         renderizar();
         await Promise.all(chaves.map(async (chave) => {
             try {
-                estado.dados[chave] = (await requisitar(FONTES[chave])).dados;
+                const url = typeof FONTES[chave] === 'function' ? FONTES[chave]() : FONTES[chave];
+                estado.dados[chave] = (await requisitar(url)).dados;
                 delete estado.erros[chave];
             } catch (erro) {
                 estado.erros[chave] = { mensagem: erro.message, status: erro.status, quando: new Date() };
@@ -308,7 +321,7 @@
         return bolsas().filter((bolsa) => bolsa.status === 'DISPONIVEL'
             && bolsa.tipoComponente === solicitacao.tipoComponente
             && aceitos.includes(bolsa.tipoSanguineo)
-            && diasAte(bolsa.dataValidade) >= 0);
+            && diasAte(bolsa.dataValidade) >= VALIDADE_MINIMA_DIAS);
     }
 
     function vencidasAguardandoBaixa() {
@@ -717,6 +730,8 @@
             erros.quantidade = 'Informe a quantidade de bolsas.';
         } else if (!(dados.quantidade > 0) || !Number.isInteger(dados.quantidade)) {
             erros.quantidade = 'A quantidade precisa ser um número inteiro positivo.';
+        } else if (dados.quantidade > QUANTIDADE_MAXIMA) {
+            erros.quantidade = `O limite é de ${QUANTIDADE_MAXIMA} bolsas por solicitação.`;
         }
         if (!dados.nivelUrgencia) {
             erros.nivelUrgencia = 'Selecione a urgência.';
@@ -790,6 +805,37 @@
         }
     }
 
+    async function cancelarSolicitacao(solicitacao) {
+        const confirmado = await confirmar({
+            titulo: `Cancelar ${codigoSolicitacao(solicitacao.id)}?`,
+            texto: `O pedido de ${solicitacao.nomeHospital} fica com status CANCELADA e as bolsas já alocadas a ele voltam ao estoque como DISPONÍVEL.`,
+            rotuloConfirmar: 'Cancelar solicitação'
+        });
+        if (!confirmado) {
+            return;
+        }
+        try {
+            await requisitar(API.cancelarSolicitacao(solicitacao.id), { metodo: 'POST' });
+            if (estado.resultadoAlocacao?.solicitacaoId === solicitacao.id) {
+                estado.resultadoAlocacao = null;
+            }
+            avisar('sucesso', `${codigoSolicitacao(solicitacao.id)} cancelada.`);
+            await carregar();
+        } catch (erro) {
+            avisar('erro', erro.message);
+        }
+    }
+
+    async function cancelarAlocacao(bolsa) {
+        try {
+            await requisitar(API.cancelarAlocacao(bolsa.id), { metodo: 'POST' });
+            avisar('sucesso', `Alocação de ${bolsa.identificador} cancelada. A bolsa voltou ao estoque.`);
+            await carregar();
+        } catch (erro) {
+            avisar('erro', erro.message);
+        }
+    }
+
     async function excluirSolicitacao(solicitacao) {
         const confirmado = await confirmar({
             titulo: `Excluir ${codigoSolicitacao(solicitacao.id)}?`,
@@ -840,7 +886,7 @@
 
         if (fila.length === 0) {
             alvo.innerHTML = `${estadoVazio('prancheta', 'Fila vazia',
-                'Nenhuma solicitação aguardando atendimento. Novos pedidos entram aqui por ordem de chegada.', 'tracejado')}
+                'Nenhuma solicitação aguardando atendimento. Emergências entram à frente; no mesmo nível vale a ordem de chegada.', 'tracejado')}
                 <div style="margin-top:12px">${botao}</div>`;
             return;
         }
@@ -903,7 +949,7 @@
             resultadoHtml = `<div class="resultado perigo" role="alert">
                 <p class="resultado-titulo">${icone('alerta')}Sem estoque compatível</p>
                 <p>Nenhuma bolsa DISPONÍVEL de ${esc(componente.rotulo)} dentro da validade é compatível com o tipo ${tipo.rotulo}.</p>
-                <p class="legenda" style="margin-top:6px">A solicitação continua em atendimento. Acione a captação ou exclua o pedido.</p>
+                <p class="legenda" style="margin-top:6px">A solicitação continua em atendimento. Bolsas que vencem em menos de ${plural(VALIDADE_MINIMA_DIAS, 'dia', 'dias')} não são oferecidas. Acione a captação ou cancele o pedido.</p>
             </div>`;
         }
 
@@ -921,7 +967,7 @@
             <div class="progresso" role="progressbar" aria-label="Bolsas alocadas" aria-valuemin="0" aria-valuemax="${atual.quantidade}" aria-valuenow="${alocadas.length}"><span style="width:${percentual}%"></span></div>
             <div class="atendimento-acoes">
                 <button type="button" class="botao principal largo" data-acao="alocar" data-id="${atual.id}"${completa ? ' disabled' : ''}>${icone('link')}${completa ? 'Quantidade solicitada atingida' : 'Alocar bolsa compatível'}</button>
-                <div class="linha-botoes"><button type="button" class="botao secundario" data-acao="excluir-solicitacao" data-id="${atual.id}">Excluir solicitação</button></div>
+                <div class="linha-botoes"><button type="button" class="botao secundario" data-acao="cancelar-solicitacao" data-id="${atual.id}">Cancelar solicitação</button><button type="button" class="botao secundario" data-acao="excluir-solicitacao" data-id="${atual.id}">Excluir solicitação</button></div>
                 ${resultadoHtml}
             </div>
             ${outros.length ? `<div class="outros-atendimentos"><span class="secundario">Também em atendimento:</span><ul>
@@ -1065,6 +1111,7 @@
                                     <div class="linha">${etiquetaComponente(b.tipoComponente)}<span class="venceu num">venceu ${formatarData(b.dataValidade)}</span></div>
                                 </div>
                                 ${alocada ? selo(STATUS_BOLSA.ALOCADA) : ''}
+                                ${alocada ? `<button type="button" class="botao secundario" data-acao="cancelar-alocacao" data-id="${b.id}">Cancelar alocação</button>` : ''}
                                 <button type="button" class="botao perigo-contorno" data-acao="baixa-manual" data-id="${b.id}"${alocada ? ' disabled' : ''}>Dar baixa manual</button>
                             </div>
                             ${alocada ? `<div class="aviso perigo">${icone('alerta')}<p><strong>Cancele a alocação antes de dar baixa.</strong> Esta bolsa está reservada para uma solicitação.</p></div>` : ''}
@@ -1171,6 +1218,8 @@
         if (!indicadores) {
             return;
         }
+        preencherHospitaisIndicadores();
+        renderizarIndicadoresPeriodo(indicadores);
         if (estado.atualizadoEm) {
             document.getElementById('indicadores-descricao').textContent =
                 `Situação do estoque e da demanda hospitalar, atualizada às ${hora(estado.atualizadoEm)}.`;
@@ -1207,8 +1256,16 @@
             + kpi('lixeira', 'Baixas no mês', baixasMes.length, baixasMes.length === 1 ? 'bolsa' : 'bolsas',
                 `${automaticas} automáticas · ${baixasMes.length - automaticas} manuais · motivo: vencimento`, baixasMes.length ? 'pe' : '');
 
+        if (!indicadores.dadosSuficientes) {
+            const aviso = `<div class="aviso info">${icone('alerta')}<p>${esc(indicadores.mensagem)}.</p></div>`;
+            mapa.innerHTML = aviso;
+            demanda.innerHTML = aviso;
+            return;
+        }
+
         // Mapa de calor tipo x componente
-        const componentes = Object.keys(COMPONENTES);
+        const filtroComponente = estado.filtrosIndicadores.tipoComponente;
+        const componentes = Object.keys(COMPONENTES).filter((c) => !filtroComponente || c === filtroComponente);
         const tipos = Object.keys(TIPOS_SANGUINEOS);
         const linhas = tipos.map((tipo) => {
             const celulas = componentes.map((componente) => {
@@ -1261,6 +1318,65 @@
             ${semEstoque.map((item) => `<div class="aviso perigo" style="margin-top:14px">${icone('alerta')}<p>
                 <strong>${TIPOS_SANGUINEOS[item.tipoSanguineo]?.rotulo} ${esc(COMPONENTES[item.tipoComponente]?.minusculo)} sem estoque:</strong>
                 o pedido de ${esc(item.nomeHospital)} não tem bolsa compatível disponível.</p></div>`).join('')}`;
+    }
+
+    function preencherHospitaisIndicadores() {
+        const select = document.getElementById('ind-hospital');
+        const escolhido = estado.filtrosIndicadores.hospital;
+        const hospitais = [...new Set(solicitacoes().map((s) => s.nomeHospital))]
+            .sort((a, b) => a.localeCompare(b, 'pt-BR'));
+        if (escolhido && !hospitais.includes(escolhido)) {
+            hospitais.push(escolhido);
+        }
+        select.innerHTML = '<option value="">Todos</option>'
+            + hospitais.map((h) => `<option value="${esc(h)}"${h === escolhido ? ' selected' : ''}>${esc(h)}</option>`).join('');
+    }
+
+    function porcentagem(valor) {
+        return `${(valor * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%`;
+    }
+
+    function renderizarIndicadoresPeriodo(indicadores) {
+        const alvo = document.getElementById('indicadores-periodo');
+        document.getElementById('periodo-legenda').textContent =
+            `De ${formatarData(indicadores.periodoInicio)} a ${formatarData(indicadores.periodoFim)}.`;
+        if (!indicadores.dadosSuficientes) {
+            alvo.innerHTML = `<div class="aviso info">${icone('alerta')}<p><strong>${esc(indicadores.mensagem)}.</strong>
+                Nenhum indicador foi calculado. Escolha outro período ou remova filtros.</p></div>`;
+            return;
+        }
+
+        const taxa = indicadores.taxaDescarteVencimento;
+        const tempo = indicadores.tempoMedioAtendimentoHoras;
+        const situacoes = indicadores.situacaoComponentes || [];
+        const criticos = situacoes.filter((c) => c.estoqueCritico);
+        const linhas = situacoes.map((c) => `<tr class="${c.estoqueCritico ? 'linha-critica' : ''}">
+                <td>${etiquetaComponente(c.tipoComponente)}</td>
+                <td class="num direita">${c.bolsasDisponiveis}</td>
+                <td class="num direita">${c.demandaEmAberto}</td>
+                <td>${c.estoqueCritico
+                    ? selo({ rotulo: 'Estoque crítico', tom: 'pe', icone: 'alerta' })
+                    : selo({ rotulo: 'Adequado', tom: 'ok', icone: 'check' })}</td>
+                <td class="num direita">${porcentagem(c.probabilidadeDesabastecimento)}</td>
+            </tr>`).join('');
+
+        alvo.innerHTML = `<div class="periodo-resumo">
+                <p><span class="legenda">Taxa de descarte por vencimento</span><br>
+                    <strong>${taxa === null ? '—' : porcentagem(taxa)}</strong></p>
+                <p><span class="legenda">Tempo médio de atendimento</span><br>
+                    <strong>${tempo === null ? '—' : `${tempo.toLocaleString('pt-BR')} h`}</strong></p>
+            </div>
+            ${criticos.length ? `<div class="aviso perigo" style="margin-bottom:12px">${icone('alerta')}<p>
+                <strong>Estoque crítico:</strong> ${criticos.map((c) => esc(COMPONENTES[c.tipoComponente]?.rotulo)).join(', ')}
+                abaixo de ${plural(criticos[0].nivelCritico, 'bolsa', 'bolsas')} disponíveis.</p></div>` : ''}
+            <div class="tabela-rolagem"><table class="tabela">
+                <thead><tr>
+                    <th scope="col">Componente</th><th scope="col" class="direita">Disponíveis</th>
+                    <th scope="col" class="direita">Faltam alocar</th><th scope="col">Situação</th>
+                    <th scope="col" class="direita">Risco de faltar em ${plural(indicadores.horizonteDesabastecimentoDias, 'dia', 'dias')}</th>
+                </tr></thead>
+                <tbody>${linhas}</tbody>
+            </table></div>`;
     }
 
     /* ---------- Histórico ---------- */
@@ -1462,6 +1578,20 @@
                 }
                 break;
             }
+            case 'cancelar-solicitacao': {
+                const solicitacao = solicitacaoPorId(id);
+                if (solicitacao) {
+                    cancelarSolicitacao(solicitacao);
+                }
+                break;
+            }
+            case 'cancelar-alocacao': {
+                const bolsa = bolsaPorId(id);
+                if (bolsa) {
+                    cancelarAlocacao(bolsa);
+                }
+                break;
+            }
             case 'selecionar-atendimento':
                 estado.atendimentoSelecionado = id;
                 renderizar();
@@ -1504,6 +1634,13 @@
             select.addEventListener('change', () => {
                 estado.filtros[select.dataset.filtro] = select.value;
                 renderizarEstoque();
+            });
+        });
+
+        document.querySelectorAll('[data-filtro-indicadores]').forEach((campo) => {
+            campo.addEventListener('change', () => {
+                estado.filtrosIndicadores[campo.dataset.filtroIndicadores] = campo.value;
+                carregar(['indicadores']);
             });
         });
 

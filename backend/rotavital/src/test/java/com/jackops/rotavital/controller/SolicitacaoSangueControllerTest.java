@@ -61,7 +61,7 @@ class SolicitacaoSangueControllerTest {
     }
 
     @Test
-    void deveListarFilaEmOrdemDeChegada() throws Exception {
+    void deveListarFilaPorUrgenciaEOrdemDeChegadaDentroDoNivel() throws Exception {
         cadastrarSemRetorno("Hospital Eletiva", "ELETIVA");
         cadastrarSemRetorno("Hospital Primeira Emergencia", "EMERGENCIA");
         cadastrarSemRetorno("Hospital Urgente", "URGENTE");
@@ -71,19 +71,29 @@ class SolicitacaoSangueControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(4))
                 .andExpect(jsonPath("$[0].nomeHospital")
-                        .value("Hospital Eletiva"))
-                .andExpect(jsonPath("$[1].nomeHospital")
                         .value("Hospital Primeira Emergencia"))
+                .andExpect(jsonPath("$[1].nomeHospital")
+                        .value("Hospital Segunda Emergencia"))
                 .andExpect(jsonPath("$[2].nomeHospital")
                         .value("Hospital Urgente"))
                 .andExpect(jsonPath("$[3].nomeHospital")
-                        .value("Hospital Segunda Emergencia"));
+                        .value("Hospital Eletiva"));
     }
 
     @Test
-    void deveChamarProximaSolicitacaoDaFila() throws Exception {
+    void deveManterOrdemDeChegadaEntreSolicitacoesDeMesmaUrgencia() throws Exception {
         cadastrarSemRetorno("Hospital Primeiro", "ELETIVA");
-        cadastrarSemRetorno("Hospital Segundo", "EMERGENCIA");
+        cadastrarSemRetorno("Hospital Segundo", "ELETIVA");
+
+        mockMvc.perform(get("/api/solicitacoes/fila"))
+                .andExpect(jsonPath("$[0].nomeHospital").value("Hospital Primeiro"))
+                .andExpect(jsonPath("$[1].nomeHospital").value("Hospital Segundo"));
+    }
+
+    @Test
+    void deveChamarEmergenciaAntesDaEletivaMesmoChegandoDepois() throws Exception {
+        cadastrarSemRetorno("Hospital Segundo", "ELETIVA");
+        cadastrarSemRetorno("Hospital Primeiro", "EMERGENCIA");
 
         mockMvc.perform(post("/api/solicitacoes/fila/proxima"))
                 .andExpect(status().isOk())
@@ -130,6 +140,51 @@ class SolicitacaoSangueControllerTest {
         mockMvc.perform(get("/api/solicitacoes/{id}", 999L))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.mensagem").value("Solicitação não encontrada"));
+    }
+
+    @Test
+    void deveRejeitarQuantidadeAcimaDoLimite() throws Exception {
+        mockMvc.perform(post("/api/solicitacoes")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json("Hospital Limite", "ELETIVA").replace("\"quantidade\": 1", "\"quantidade\": 11")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.mensagem").value("Quantidade acima do limite de 10 bolsas por solicitação"));
+    }
+
+    @Test
+    void deveAceitarQuantidadeNoLimite() throws Exception {
+        mockMvc.perform(post("/api/solicitacoes")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json("Hospital Limite", "ELETIVA").replace("\"quantidade\": 1", "\"quantidade\": 10")))
+                .andExpect(status().isCreated());
+    }
+
+    @Test
+    void deveCancelarSolicitacaoPendenteETirarDaFila() throws Exception {
+        long id = cadastrar("Hospital Cancelar", "URGENTE");
+
+        mockMvc.perform(post("/api/solicitacoes/{id}/cancelar", id))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("CANCELADA"));
+
+        mockMvc.perform(get("/api/solicitacoes/fila"))
+                .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @Test
+    void deveRetornar409AoCancelarSolicitacaoJaCancelada() throws Exception {
+        long id = cadastrar("Hospital Cancelar", "ELETIVA");
+        mockMvc.perform(post("/api/solicitacoes/{id}/cancelar", id)).andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/solicitacoes/{id}/cancelar", id))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.mensagem").value("Solicitação já está cancelada"));
+    }
+
+    @Test
+    void deveRetornar404AoCancelarSolicitacaoInexistente() throws Exception {
+        mockMvc.perform(post("/api/solicitacoes/{id}/cancelar", 999L))
+                .andExpect(status().isNotFound());
     }
 
     private void cadastrarSemRetorno(String nomeHospital, String nivelUrgencia)

@@ -1,9 +1,11 @@
 package com.jackops.rotavital.service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,10 +27,18 @@ public class AlocacaoBolsaService {
     private final BolsaRepository bolsaRepository;
     private final SolicitacaoSangueRepository solicitacaoSangueRepository;
 
+    /**
+     * Margem de segurança: a bolsa só entra na seleção se ainda faltarem pelo menos
+     * esses dias para vencer, para não vencer durante o transporte.
+     */
+    private final int validadeMinimaDias;
+
     public AlocacaoBolsaService(BolsaRepository bolsaRepository,
-                                SolicitacaoSangueRepository solicitacaoSangueRepository) {
+                                SolicitacaoSangueRepository solicitacaoSangueRepository,
+                                @Value("${rotavital.alocacao.validade-minima-dias:1}") int validadeMinimaDias) {
         this.bolsaRepository = bolsaRepository;
         this.solicitacaoSangueRepository = solicitacaoSangueRepository;
+        this.validadeMinimaDias = validadeMinimaDias;
     }
 
     /**
@@ -52,9 +62,10 @@ public class AlocacaoBolsaService {
             throw new RegraDeNegocioException("Solicitação já recebeu a quantidade de bolsas pedida");
         }
 
+        LocalDate validadeMinima = LocalDate.now().plusDays(validadeMinimaDias);
         List<Bolsa> bolsasCandidatas = bolsaRepository
                 .travarPorStatusEComponente(StatusBolsa.DISPONIVEL, solicitacao.getTipoComponente()).stream()
-                .filter(bolsa -> !bolsa.getDataValidade().isBefore(LocalDate.now()))
+                .filter(bolsa -> !bolsa.getDataValidade().isBefore(validadeMinima))
                 .filter(bolsa -> isCompativel(solicitacao, bolsa))
                 .sorted(Comparator.comparing(Bolsa::getDataValidade))
                 .toList();
@@ -75,9 +86,12 @@ public class AlocacaoBolsaService {
         bolsaRepository.save(bolsaSelecionada);
 
         long alocadas = jaAlocadas + 1;
-        solicitacao.setStatus(alocadas >= solicitacao.getQuantidade()
-                ? StatusSolicitacao.ATENDIDA
-                : StatusSolicitacao.EM_ATENDIMENTO);
+        if (alocadas >= solicitacao.getQuantidade()) {
+            solicitacao.setStatus(StatusSolicitacao.ATENDIDA);
+            solicitacao.setAtendidaEm(LocalDateTime.now());
+        } else {
+            solicitacao.setStatus(StatusSolicitacao.EM_ATENDIMENTO);
+        }
         solicitacaoSangueRepository.save(solicitacao);
 
         return new RespostaAlocacaoBolsa(
@@ -87,6 +101,33 @@ public class AlocacaoBolsaService {
                 alocadas,
                 solicitacao.getStatus()
         );
+    }
+
+    /**
+     * Desfaz a alocação: a bolsa volta para DISPONIVEL e perde o vínculo. Se o pedido
+     * estava ATENDIDA, ele volta para EM_ATENDIMENTO, porque ficou faltando uma bolsa.
+     */
+    @Transactional
+    public BolsaResponse cancelarAlocacao(Long bolsaId) {
+        Bolsa bolsa = bolsaRepository.findById(bolsaId)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Bolsa não encontrada"));
+        if (bolsa.getStatus() != StatusBolsa.ALOCADA) {
+            throw new RegraDeNegocioException("Bolsa não está alocada");
+        }
+
+        SolicitacaoSangue solicitacao = bolsa.getSolicitacao();
+        if (solicitacao != null) {
+            solicitacao = solicitacaoSangueRepository.travarPorId(solicitacao.getId()).orElseThrow();
+            if (solicitacao.getStatus() == StatusSolicitacao.ATENDIDA) {
+                solicitacao.setStatus(StatusSolicitacao.EM_ATENDIMENTO);
+                solicitacao.setAtendidaEm(null);
+                solicitacaoSangueRepository.save(solicitacao);
+            }
+        }
+
+        bolsa.setStatus(StatusBolsa.DISPONIVEL);
+        bolsa.setSolicitacao(null);
+        return paraResponse(bolsaRepository.save(bolsa));
     }
 
     @Transactional(readOnly = true)
@@ -134,6 +175,7 @@ public class AlocacaoBolsaService {
     private BolsaResponse paraResponse(Bolsa bolsa) {
         return new BolsaResponse(bolsa.getId(), bolsa.getIdentificador(), bolsa.getTipoSanguineo(),
                 bolsa.getTipoComponente(), bolsa.getDataColeta(), bolsa.getDataValidade(),
-                bolsa.getVolume(), bolsa.getStatus(), bolsa.getSolicitacao().getId());
+                bolsa.getVolume(), bolsa.getStatus(),
+                bolsa.getSolicitacao() == null ? null : bolsa.getSolicitacao().getId());
     }
 }

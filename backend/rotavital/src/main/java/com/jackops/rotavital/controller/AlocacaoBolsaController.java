@@ -51,6 +51,14 @@ public class AlocacaoBolsaController {
     }
 
     /**
+     * Cancela a alocação da bolsa, devolvendo-a ao estoque (409 se ela não está alocada).
+     */
+    @PostMapping("/bolsas/{bolsaId}/cancelar")
+    public BolsaResponse cancelarAlocacao(@PathVariable Long bolsaId) {
+        return alocacaoBolsaService.cancelarAlocacao(bolsaId);
+    }
+
+    /**
      * Lista as bolsas alocadas para a solicitação, na ordem em que foram alocadas.
      */
     @GetMapping("/solicitacoes/{solicitacaoId}")

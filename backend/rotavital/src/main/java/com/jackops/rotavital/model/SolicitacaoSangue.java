@@ -1,5 +1,7 @@
 package com.jackops.rotavital.model;
 
+import java.time.LocalDateTime;
+
 import com.jackops.rotavital.model.enums.TipoComponente;
 import com.jackops.rotavital.model.enums.TipoSanguineo;
 import com.jackops.rotavital.model.enums.NivelUrgencia;
@@ -12,11 +14,15 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "solicitacao_sangue")
 public class SolicitacaoSangue {
+
+    /** Limite de bolsas que um hospital pode pedir numa única solicitação. */
+    public static final int QUANTIDADE_MAXIMA = 10;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -43,6 +49,12 @@ public class SolicitacaoSangue {
     @Enumerated(EnumType.STRING)
     @Column(nullable=false)
     private StatusSolicitacao status = StatusSolicitacao.PENDENTE;
+
+    /** Momento em que o pedido foi registrado. */
+    private LocalDateTime criadaEm;
+
+    /** Momento em que o pedido recebeu todas as bolsas (status ATENDIDA). */
+    private LocalDateTime atendidaEm;
 
     public SolicitacaoSangue() {
     }
@@ -114,6 +126,29 @@ public class SolicitacaoSangue {
 
     public void setStatus(StatusSolicitacao status){
         this.status = status;
+    }
+
+    public LocalDateTime getCriadaEm() {
+        return criadaEm;
+    }
+
+    public void setCriadaEm(LocalDateTime criadaEm) {
+        this.criadaEm = criadaEm;
+    }
+
+    public LocalDateTime getAtendidaEm() {
+        return atendidaEm;
+    }
+
+    public void setAtendidaEm(LocalDateTime atendidaEm) {
+        this.atendidaEm = atendidaEm;
+    }
+
+    @PrePersist
+    void registrarCriacao() {
+        if (criadaEm == null) {
+            criadaEm = LocalDateTime.now();
+        }
     }
 
     public static class SolicitacaoSangueBuilder {

@@ -54,6 +54,11 @@ public class SolicitacaoSangueController {
         return solicitacaoService.chamarProximaDaFila();
     }
 
+    @PostMapping("/{id}/cancelar")
+    public SolicitacaoResponse cancelar(@PathVariable Long id) {
+        return solicitacaoService.cancelar(id);
+    }
+
     @PutMapping("/{id}")
     public SolicitacaoResponse atualizar(
             @PathVariable Long id,

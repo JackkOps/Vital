@@ -1,5 +1,6 @@
 package com.jackops.rotavital.exception;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -12,6 +13,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.jackops.rotavital.dto.FiltroIndicadores;
 import com.jackops.rotavital.service.IndicadoresService;
 
 @SpringBootTest
@@ -25,7 +27,7 @@ class ErroInesperadoTest {
 
     @Test
     void deveRetornar500ComMensagemUniformeParaFalhaInesperada() throws Exception {
-        when(indicadoresService.consultar()).thenThrow(new IllegalStateException("falha simulada"));
+        when(indicadoresService.consultar(any(FiltroIndicadores.class))).thenThrow(new IllegalStateException("falha simulada"));
 
         mockMvc.perform(get("/api/indicadores"))
                 .andExpect(status().isInternalServerError())

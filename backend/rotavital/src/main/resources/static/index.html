@@ -24,6 +24,7 @@
                 <a href="#estoque" data-pagina="estoque"><span data-icone="estoque"></span>Estoque</a>
                 <a href="#solicitacoes" data-pagina="solicitacoes"><span data-icone="prancheta"></span>Solicitações<span class="contador tom-at" data-contador="solicitacoes" hidden></span></a>
                 <a href="#validade" data-pagina="validade"><span data-icone="calendario"></span>Validade<span class="contador tom-pe" data-contador="validade" hidden></span></a>
+                <a href="#logistica" data-pagina="logistica"><span data-icone="caminhao"></span>Logística<span class="contador tom-pe" data-contador="logistica" hidden></span></a>
                 <a href="#indicadores" data-pagina="indicadores"><span data-icone="grafico"></span>Indicadores</a>
                 <a href="#historico" data-pagina="historico"><span data-icone="historico"></span>Histórico</a>
             </nav>
@@ -46,6 +47,7 @@
                 <a href="#estoque" data-pagina="estoque">Estoque</a>
                 <a href="#solicitacoes" data-pagina="solicitacoes">Solicitações<span class="contador tom-at" data-contador="solicitacoes" hidden></span></a>
                 <a href="#validade" data-pagina="validade">Validade<span class="contador tom-pe" data-contador="validade" hidden></span></a>
+                <a href="#logistica" data-pagina="logistica">Logística<span class="contador tom-pe" data-contador="logistica" hidden></span></a>
                 <a href="#indicadores" data-pagina="indicadores">Indicadores</a>
                 <a href="#historico" data-pagina="historico">Histórico</a>
             </nav>
@@ -244,6 +246,67 @@
                             <span class="contagem" id="contagem-baixas"></span>
                         </div>
                         <div id="lista-baixas"></div>
+                    </div>
+                </section>
+
+                <!-- Logística: rotas e cadeia fria (Histórias 3 e 6) -->
+                <section data-secao="logistica" aria-labelledby="titulo-logistica" hidden>
+                    <header class="cabecalho-pagina">
+                        <div>
+                            <h1 id="titulo-logistica">Logística</h1>
+                            <p>Calcule a rota de menor tempo até os hospitais e acompanhe a temperatura das remessas em trânsito.</p>
+                        </div>
+                        <p class="data-hoje" data-relogio="longo"></p>
+                    </header>
+
+                    <div class="grade-2">
+                        <form class="cartao" id="form-rota" novalidate>
+                            <div class="cartao-cab">
+                                <h2>Calcular rota</h2>
+                                <p class="legenda">Menor tempo pelo grafo da rede (Dijkstra). Sem janela informada, valem 120 minutos.</p>
+                            </div>
+                            <div class="formulario-grade">
+                                <div class="campo col-6">
+                                    <label for="rota-origem">Saída</label>
+                                    <select class="entrada" id="rota-origem" name="origemId"></select>
+                                </div>
+                                <div class="campo col-6">
+                                    <label for="rota-janela">Janela da cadeia fria (min)</label>
+                                    <input class="entrada entrada-curta" id="rota-janela" name="janelaMinutos" type="number" min="1" step="1" inputmode="numeric" placeholder="120">
+                                </div>
+                                <fieldset class="campo col-12">
+                                    <legend>Hospitais de destino</legend>
+                                    <div class="destinos-rota" id="rota-destinos"></div>
+                                </fieldset>
+                            </div>
+                            <div class="alinhar-fim"><button type="submit" class="botao principal"><span data-icone="seta"></span>Calcular rota</button></div>
+                            <div id="resultado-rota" aria-live="polite"></div>
+                        </form>
+
+                        <div class="cartao">
+                            <div class="cartao-cab">
+                                <h2>Rotas calculadas</h2>
+                                <span class="lado contagem" id="contagem-rotas"></span>
+                            </div>
+                            <div id="lista-rotas"></div>
+                        </div>
+                    </div>
+
+                    <div class="cartao">
+                        <div class="cartao-cab">
+                            <h2>Remessas em trânsito</h2>
+                            <div class="lado"><button type="button" class="botao secundario" data-acao="verificar-sensores"><span data-icone="relogio"></span>Verificar sensores</button></div>
+                        </div>
+                        <form class="despacho" id="form-remessa" novalidate>
+                            <div class="filtro"><label for="remessa-componente">Componente</label>
+                                <select class="entrada" id="remessa-componente" name="tipoComponente" data-opcoes-select="tipoComponente" data-vazio="Selecione"></select></div>
+                            <div class="filtro"><label for="remessa-sensor">Sensor</label>
+                                <input class="entrada entrada-curta" id="remessa-sensor" name="sensorId" placeholder="SENSOR-01"></div>
+                            <div class="filtro"><label for="remessa-rota">Rota</label>
+                                <select class="entrada" id="remessa-rota" name="rotaId"></select></div>
+                            <button type="submit" class="botao principal"><span data-icone="mais"></span>Despachar remessa</button>
+                        </form>
+                        <div id="lista-remessas" aria-live="polite"></div>
                     </div>
                 </section>
 

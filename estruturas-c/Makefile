@@ -1,6 +1,6 @@
 CC=gcc
 CFLAGS=-Wall -Wextra -Werror -std=c11 -g
-OBJ=lista_estoque.o fila_requisicoes.o pilha_historico.o testes.o
+OBJ=lista_estoque.o fila_requisicoes.o pilha_historico.o heap_minimo.o grafo.o testes.o
 BIN=testes
 
 .PHONY: all test valgrind clean

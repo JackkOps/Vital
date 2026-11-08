@@ -155,10 +155,10 @@ Comportamento em conexão instável:
 |---|---|---|
 | 1. Cadastro de bolsa | Hemocentro → API → Banco | `POST /api/bolsas`, `GET /api/bolsas`, `GET/PUT/DELETE /api/bolsas/{id}` |
 | 2. Alocação FEFO | Hemocentro → API → Banco | `POST /api/alocacoes/solicitacoes/{solicitacaoId}/alocar` |
-| 3. Rota de distribuição | Logística → API | ainda não implementado |
+| 3. Rota de distribuição | Logística → API → Banco | `GET /api/rotas/rede`, `POST /api/rotas`, `GET /api/rotas`, `GET /api/rotas/{id}`, `POST /api/rotas/{id}/confirmar` |
 | 4. Solicitação hospitalar | Hospital → API → Banco | `POST /api/solicitacoes`, `GET /api/solicitacoes`, `GET /api/solicitacoes/fila`, `GET/PUT/DELETE /api/solicitacoes/{id}` |
-| 5. Alerta de vencimento | interno à API | ainda não implementado |
-| 6. Cadeia fria | Veículo → Broker → API → Banco | ainda não implementado |
+| 5. Alerta de vencimento | interno à API | `GET /api/validade/alertas`, `POST /api/validade/verificar`, `POST /api/validade/bolsas/{bolsaId}/baixa`, `GET /api/validade/baixas` |
+| 6. Cadeia fria | Veículo → Broker → API → Banco (hoje as leituras simuladas chegam por REST) | `POST /api/remessas`, `GET /api/remessas/{id}`, `POST/GET /api/remessas/{id}/leituras`, `POST /api/remessas/{id}/entregar`, `POST /api/remessas/verificar-sensores` |
 | 7. Painel de indicadores | Gestor → API → Banco | `GET /api/indicadores` |
 
 ### Solicitação e alocação (Histórias 4 e 2)
@@ -272,9 +272,9 @@ Antes de a topologia sair do papel, o contrato de API (W02 — PI3E7-14) precisa
 | `POST /api/alocacoes/solicitacoes/{solicitacaoId}/alocar`, `GET /api/alocacoes/solicitacoes/{solicitacaoId}` | Implementado | História 2 |
 | `GET /api/indicadores` | Implementado | História 7 |
 | `GET /actuator/health` | A criar | Proxy e deploy saberem se a API está no ar |
-| `GET /api/remessas/{id}` e `GET /api/remessas/{id}/leituras` | A criar | História 6 (status e histórico da remessa) |
+| `GET /api/remessas/{id}` e `GET /api/remessas/{id}/leituras` | Implementado (leituras entram por `POST /api/remessas/{id}/leituras`) | História 6 (status e histórico da remessa) |
 | Tópico `rotavital/remessas/{remessaId}/temperatura` (formato da leitura) | A criar | História 6 |
-| `POST /api/rotas` | A criar | História 3 (depende do grafo da AED) |
+| `POST /api/rotas` | Implementado (grafo e heap em `estrutura/`, Dijkstra) | História 3 |
 
 Os endpoints já implementados só precisam ser documentados. Os novos entram no contrato antes do
 código, para que telemetria, rotas e frontend sigam o mesmo formato.

@@ -218,6 +218,10 @@ Todos os registros e logs comprobatórios são organizados na pasta [`docs/evide
 |   |-- fila_requisicoes.c
 |   |-- pilha_historico.h
 |   |-- pilha_historico.c
+|   |-- heap_minimo.h
+|   |-- heap_minimo.c
+|   |-- grafo.h
+|   |-- grafo.c
 |   |-- testes.c
 |   `-- Makefile
 |-- frontend/
@@ -271,6 +275,8 @@ Funcionalidades de etapas futuras foram isoladas na branch [`unidade-2`](https:/
 | Lista encadeada | Estoque de bolsas | `estruturas-c/lista_estoque.c` | `ListaEstoque.java` |
 | Fila FIFO | Requisições hospitalares | `estruturas-c/fila_requisicoes.c` | `FilaRequisicoes.java` |
 | Pilha LIFO | Histórico de operações | `estruturas-c/pilha_historico.c` | `PilhaHistorico.java` |
+| Heap de mínimo | Fila de prioridade do Dijkstra | `estruturas-c/heap_minimo.c` | `HeapMinimo.java` |
+| Grafo (lista de adjacência) | Rede de distribuição e caminho mínimo (Dijkstra) | `estruturas-c/grafo.c` | `Grafo.java` |
 
 A tradução comentada está em [docs/traducao-c-java.md](docs/traducao-c-java.md).
 
@@ -363,17 +369,28 @@ cd backend\rotavital
 | Buscar solicitação | `GET /api/solicitacoes/{id}` |
 | Atualizar solicitação | `PUT /api/solicitacoes/{id}` |
 | Excluir solicitação | `DELETE /api/solicitacoes/{id}` |
-| Consultar fila FIFO | `GET /api/solicitacoes/fila` |
+| Consultar fila de atendimento (por urgência) | `GET /api/solicitacoes/fila` |
 | Chamar próxima solicitação | `POST /api/solicitacoes/fila/proxima` |
+| Cancelar solicitação | `POST /api/solicitacoes/{id}/cancelar` |
 | Consultar histórico (topo primeiro) | `GET /api/historico` |
 | Remover última operação do histórico | `DELETE /api/historico/ultima` |
-| Consultar indicadores estatísticos | `GET /api/indicadores` |
+| Consultar indicadores (filtros opcionais: `dataInicio`, `dataFim`, `hospital`, `tipoComponente`) | `GET /api/indicadores` |
 | Alocar bolsa compatível (ABO/Rh + FEFO) | `POST /api/alocacoes/solicitacoes/{solicitacaoId}/alocar` |
 | Listar bolsas alocadas para uma solicitação | `GET /api/alocacoes/solicitacoes/{solicitacaoId}` |
+| Cancelar alocação de uma bolsa | `POST /api/alocacoes/bolsas/{bolsaId}/cancelar` |
 | Listar alertas de vencimento | `GET /api/validade/alertas` |
 | Verificar validade e dar baixa nas vencidas | `POST /api/validade/verificar` |
 | Dar baixa manual por vencimento | `POST /api/validade/bolsas/{bolsaId}/baixa` |
 | Listar baixas registradas | `GET /api/validade/baixas` |
+| Consultar a rede de distribuição (locais e trechos) | `GET /api/rotas/rede` |
+| Calcular rota de menor tempo | `POST /api/rotas` |
+| Listar / buscar rotas | `GET /api/rotas`, `GET /api/rotas/{id}` |
+| Confirmar rota com risco de atraso | `POST /api/rotas/{id}/confirmar` |
+| Despachar remessa | `POST /api/remessas` |
+| Listar / buscar remessas | `GET /api/remessas`, `GET /api/remessas/{id}` |
+| Registrar / listar leituras de temperatura | `POST /api/remessas/{id}/leituras`, `GET /api/remessas/{id}/leituras` |
+| Marcar remessa como entregue | `POST /api/remessas/{id}/entregar` |
+| Verificar sensores sem sinal | `POST /api/remessas/verificar-sensores` |
 
 ## Verificar a Tradução Comentada
 
@@ -385,9 +402,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verificar-citacoes.p
 
 ## Histórico das Entregas
 
-Os registros abaixo preservam o conteúdo das entregas anteriores. As funcionalidades de compatibilidade, FEFO e roteirização citadas nesses registros pertencem às etapas futuras na branch `unidade-2`; os endpoints históricos de alocação não estão disponíveis nesta entrega da Unidade 1.
-
-Na Entrega 03 de POO, a alocação compatível ABO/Rh com FEFO (Entrega 02) foi reintegrada ao `main`.
+Os registros abaixo preservam o conteúdo de cada entrega. A alocação compatível ABO/Rh com FEFO (Entrega 02) chegou a ficar fora do `main` durante a Unidade 1 e foi reintegrada na Entrega 03 de POO. Na Entrega 04, a roteirização e o monitoramento da cadeia fria, antes previstos para etapas futuras, também passaram a fazer parte do `main`, completando as 7 histórias de usuário.
 
 ## 📦 Entrega 01
 
@@ -523,6 +538,37 @@ Os testes automatizados podem ser executados com `./mvnw.cmd test`.
 
 - Vídeo 1 - Uso do sistema: **[assistir no YouTube](https://youtu.be/rVwKBNQx7dY)**
 - Vídeo 2 - Explicação do código: **[assistir no YouTube](https://youtu.be/1NgdL95KPeM)**
+
+---
+
+## 📦 Entrega 04
+
+### Histórias implementadas
+
+> **História 2 - Alocação de bolsa compatível priorizando validade (FEFO) — conclusão**
+>
+> Como operador do banco de sangue, quero que o sistema sugira as bolsas compatíveis mais próximas do vencimento, para reduzir o descarte por validade.
+> **Critérios entregues:** validade mínima de segurança (bolsa que vence em menos de 1 dia não é oferecida); cancelamento da alocação, devolvendo a bolsa ao estoque como `DISPONIVEL` e reabrindo a solicitação que estava `ATENDIDA`; data de atendimento registrada quando a solicitação recebe todas as bolsas.
+
+> **História 3 - Cálculo de rota de distribuição**
+>
+> Como operador de logística, quero visualizar a rota mais eficiente para entregar hemocomponentes a um ou mais hospitais, para garantir entrega dentro da janela de tempo permitida.
+> **Critérios entregues:** rede de distribuição modelada como grafo (hemocentro e hospitais como vértices, trechos com tempo e distância como arestas), em lista de adjacência, com versão em C e em Java; caminho mínimo por Dijkstra com heap de mínimo, usando o tempo de viagem como peso; rota para até 8 hospitais, escolhendo a ordem de visita de menor tempo total; destinos informados diretamente ou a partir das solicitações; alerta "Não há rota disponível" quando o grafo não liga a origem ao destino; rota que passa da janela da cadeia fria (padrão de 120 min) fica `AGUARDANDO_CONFIRMACAO`, com alerta de risco de atraso, e só segue com confirmação manual do operador.
+
+> **História 4 - Solicitação hospitalar de hemocomponentes — conclusão**
+>
+> Como responsável pelo estoque de um hospital, quero registrar uma solicitação informando tipo, quantidade e urgência, para que o hemocentro receba e priorize meu pedido.
+> **Critérios entregues:** fila de atendimento por urgência (emergência, depois urgente, depois eletiva), mantendo a ordem de chegada dentro do mesmo nível; limite de 10 bolsas por solicitação; cancelamento da solicitação (status `CANCELADA`), com saída da fila e devolução das bolsas já alocadas ao estoque.
+
+> **História 6 - Monitoramento da cadeia fria durante o transporte**
+>
+> Como operador de logística, quero acompanhar a temperatura das remessas em trânsito, para identificar rapidamente quando uma carga sai da faixa segura e agir antes da perda das bolsas.
+> **Critérios entregues:** faixa segura por componente (hemácias e sangue total de 1 a 10 °C, plasma de −40 a −18 °C, plaquetas de 20 a 24 °C); despacho de remessa com sensor, vinculada a uma rota confirmada; leituras simuladas registradas no histórico da remessa; leitura fora da faixa marca a remessa como `SOB_RISCO` e gera alerta de excursão térmica; leitura repetida (mesmo `leituraId`) descartada; salto na sequência gera alerta de leituras perdidas; sensor sem leitura por mais de 10 min gera falha de comunicação e alerta de sensor indisponível, com verificação automática a cada minuto e sob demanda; temperatura fisicamente impossível rejeitada.
+
+> **História 7 - Painel de indicadores da rede de sangue**
+>
+> Como gestor do hemocentro, quero visualizar um painel com indicadores de estoque, demanda e descarte, para apoiar decisões de reposição e distribuição.
+> **Critérios entregues:** estoque por componente e tipo sanguíneo; demanda em aberto por hospital; taxa de descarte por vencimento; tempo médio de atendimento; destaque de estoque crítico (abaixo de 5 bolsas); probabilidade de desabastecimento em 7 dias, estimada por um modelo de Poisson sobre a demanda do período; filtros por período, hospital e componente; mensagem "Dados insuficientes para o período" quando não há movimentação, sem calcular indicadores sobre base incompleta.
 
 ---
 

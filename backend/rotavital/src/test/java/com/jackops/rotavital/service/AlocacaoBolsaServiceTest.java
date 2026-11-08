@@ -235,6 +235,60 @@ class AlocacaoBolsaServiceTest {
                 () -> alocacaoBolsaService.listarBolsasAlocadas(999999L));
     }
 
+    @Test
+    void deveIgnorarBolsaQueVenceDentroDaValidadeMinima() {
+        SolicitacaoSangue solicitacao = criarSolicitacao(TipoSanguineo.O_POSITIVO);
+        Bolsa venceHoje = criarBolsa(TipoSanguineo.O_POSITIVO, LocalDate.now(), StatusBolsa.DISPONIVEL);
+
+        RespostaAlocacaoBolsa resposta = alocacaoBolsaService.alocarBolsaCompativel(solicitacao.getId());
+
+        assertFalse(resposta.isAlocada());
+        assertEquals(StatusBolsa.DISPONIVEL, bolsaRepository.findById(venceHoje.getId()).orElseThrow().getStatus());
+    }
+
+    @Test
+    void deveAlocarBolsaNoLimiteDaValidadeMinimaEmVezDaQueVenceHoje() {
+        SolicitacaoSangue solicitacao = criarSolicitacao(TipoSanguineo.O_POSITIVO);
+        criarBolsa(TipoSanguineo.O_POSITIVO, LocalDate.now(), StatusBolsa.DISPONIVEL);
+        Bolsa venceAmanha = criarBolsa(TipoSanguineo.O_POSITIVO, LocalDate.now().plusDays(1), StatusBolsa.DISPONIVEL);
+
+        RespostaAlocacaoBolsa resposta = alocacaoBolsaService.alocarBolsaCompativel(solicitacao.getId());
+
+        assertTrue(resposta.isAlocada());
+        assertEquals(venceAmanha.getId(), resposta.getBolsaId());
+    }
+
+    @Test
+    void deveCancelarAlocacaoDevolvendoBolsaEReabrindoSolicitacaoAtendida() {
+        SolicitacaoSangue solicitacao = criarSolicitacao(TipoSanguineo.O_POSITIVO);
+        Bolsa bolsa = criarBolsa(TipoSanguineo.O_POSITIVO, LocalDate.now().plusDays(10), StatusBolsa.DISPONIVEL);
+        alocacaoBolsaService.alocarBolsaCompativel(solicitacao.getId());
+
+        BolsaResponse devolvida = alocacaoBolsaService.cancelarAlocacao(bolsa.getId());
+
+        assertEquals(StatusBolsa.DISPONIVEL, devolvida.status());
+        assertNull(devolvida.solicitacaoId());
+        assertEquals(0, bolsaRepository.countBySolicitacaoId(solicitacao.getId()));
+        assertEquals(StatusSolicitacao.EM_ATENDIMENTO,
+                solicitacaoSangueRepository.findById(solicitacao.getId()).orElseThrow().getStatus());
+    }
+
+    @Test
+    void deveRecusarCancelamentoDeBolsaQueNaoEstaAlocada() {
+        Bolsa bolsa = criarBolsa(TipoSanguineo.O_POSITIVO, LocalDate.now().plusDays(10), StatusBolsa.DISPONIVEL);
+
+        RegraDeNegocioException excecao = assertThrows(RegraDeNegocioException.class,
+                () -> alocacaoBolsaService.cancelarAlocacao(bolsa.getId()));
+
+        assertEquals("Bolsa não está alocada", excecao.getMessage());
+    }
+
+    @Test
+    void deveLancarNaoEncontradoAoCancelarAlocacaoDeBolsaInexistente() {
+        assertThrows(RecursoNaoEncontradoException.class,
+                () -> alocacaoBolsaService.cancelarAlocacao(999999L));
+    }
+
     private SolicitacaoSangue criarSolicitacao(TipoSanguineo tipoSanguineo) {
         return criarSolicitacao(tipoSanguineo, 1);
     }

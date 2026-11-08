@@ -133,7 +133,7 @@
                     <header class="cabecalho-pagina">
                         <div>
                             <h1 id="titulo-solicitacoes">Solicitações hospitalares</h1>
-                            <p>Registre pedidos, atenda a fila por ordem de chegada e aloque bolsas compatíveis.</p>
+                            <p>Registre pedidos, atenda a fila por urgência e aloque bolsas compatíveis.</p>
                         </div>
                         <p class="data-hoje" data-relogio="longo"></p>
                     </header>
@@ -142,7 +142,7 @@
                         <form class="cartao area-registrar" id="form-solicitacao" novalidate>
                             <div class="cartao-cab">
                                 <h2>Registrar solicitação</h2>
-                                <p class="legenda">Entra no fim da fila de atendimento.</p>
+                                <p class="legenda">Emergências entram à frente das urgentes e eletivas; no mesmo nível vale a ordem de chegada.</p>
                             </div>
                             <div class="resumo-erros" data-resumo role="alert" hidden></div>
                             <div class="formulario-grade">
@@ -164,7 +164,7 @@
                                 </div>
                                 <div class="campo col-12" data-campo="quantidade">
                                     <label for="solic-quantidade">Quantidade de bolsas <span class="obrigatorio">*</span></label>
-                                    <input class="entrada entrada-curta" id="solic-quantidade" name="quantidade" type="number" min="1" step="1" inputmode="numeric" aria-describedby="erro-solic-quantidade">
+                                    <input class="entrada entrada-curta" id="solic-quantidade" name="quantidade" type="number" min="1" max="10" step="1" inputmode="numeric" aria-describedby="erro-solic-quantidade">
                                     <p class="mensagem-erro" id="erro-solic-quantidade"></p>
                                 </div>
                                 <fieldset class="campo col-12" data-campo="nivelUrgencia" aria-describedby="erro-solic-urgencia">
@@ -182,7 +182,7 @@
                             <div class="cartao-cab">
                                 <h2>Fila de atendimento</h2>
                                 <span class="lado pilula" id="contagem-fila"></span>
-                                <p class="legenda">FIFO · atendida por ordem de chegada</p>
+                                <p class="legenda">Por urgência · FIFO dentro do mesmo nível</p>
                             </div>
                             <div id="fila-atendimento" aria-live="polite"></div>
                         </div>
@@ -256,7 +256,29 @@
                         </div>
                         <p class="data-hoje" data-relogio="longo"></p>
                     </header>
+                    <div class="cartao filtros-indicadores">
+                        <div class="cartao-cab">
+                            <h2>Período e filtros</h2>
+                            <div class="lado">
+                                <div class="filtro"><label for="ind-inicio">De</label>
+                                    <input class="entrada" type="date" id="ind-inicio" data-filtro-indicadores="dataInicio"></div>
+                                <div class="filtro"><label for="ind-fim">Até</label>
+                                    <input class="entrada" type="date" id="ind-fim" data-filtro-indicadores="dataFim"></div>
+                                <div class="filtro"><label for="ind-hospital">Hospital</label>
+                                    <select class="entrada" id="ind-hospital" data-filtro-indicadores="hospital"><option value="">Todos</option></select></div>
+                                <div class="filtro"><label for="ind-componente">Componente</label>
+                                    <select class="entrada" id="ind-componente" data-filtro-indicadores="tipoComponente" data-opcoes-select="tipoComponente"></select></div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="kpis" id="kpis"></div>
+                    <div class="cartao indicadores-periodo">
+                        <div class="cartao-cab">
+                            <h2>Indicadores do período</h2>
+                            <p class="legenda" id="periodo-legenda">Descarte, tempo de atendimento e risco de desabastecimento por componente.</p>
+                        </div>
+                        <div id="indicadores-periodo"></div>
+                    </div>
                     <div class="grade-indicadores">
                         <div class="cartao">
                             <div class="cartao-cab">

@@ -1,6 +1,7 @@
 package com.jackops.rotavital.service;
 
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
@@ -13,7 +14,9 @@ import com.jackops.rotavital.dto.CadastroSolicitacaoRequest;
 import com.jackops.rotavital.dto.SolicitacaoResponse;
 import com.jackops.rotavital.estrutura.FilaRequisicoes;
 import com.jackops.rotavital.estrutura.PilhaHistorico;
+import com.jackops.rotavital.exception.RegraDeNegocioException;
 import com.jackops.rotavital.model.SolicitacaoSangue;
+import com.jackops.rotavital.model.enums.StatusBolsa;
 import com.jackops.rotavital.model.enums.StatusSolicitacao;
 import com.jackops.rotavital.repository.BolsaRepository;
 import com.jackops.rotavital.repository.SolicitacaoSangueRepository;
@@ -22,6 +25,14 @@ import jakarta.annotation.PostConstruct;
 
 @Service
 public class SolicitacaoSangueService {
+    /**
+     * Ordem da fila: emergência, depois urgente, depois eletiva. Dentro do mesmo
+     * nível, quem chegou primeiro (menor id) é atendido primeiro.
+     */
+    private static final Comparator<SolicitacaoSangue> ORDEM_DE_ATENDIMENTO = Comparator
+            .comparingInt((SolicitacaoSangue s) -> s.getNivelUrgencia().getPrioridade())
+            .thenComparing(SolicitacaoSangue::getId);
+
     private final SolicitacaoSangueRepository solicitacaoRepository;
     private final FilaRequisicoes filaRequisicoes;
     private final PilhaHistorico pilhaHistorico;
@@ -36,7 +47,7 @@ public class SolicitacaoSangueService {
     }
 
     /**
-     * Recarrega as requisições pendentes para a fila FIFO no início da aplicação.
+     * Recarrega as requisições pendentes para a fila no início da aplicação.
      */
     @PostConstruct
     public void iniciarFila() {
@@ -55,7 +66,8 @@ public class SolicitacaoSangueService {
         solicitacao.setNivelUrgencia(request.nivelUrgencia());
 
         SolicitacaoSangue salva = solicitacaoRepository.save(solicitacao);
-        filaRequisicoes.enfileirar(salva);
+        // Recarrega em vez de enfileirar no fim: uma emergência pode passar à frente.
+        recarregarFila();
         pilhaHistorico.empilhar("Cadastro de solicitação " + salva.getId());
 
         return paraResponse(salva);
@@ -116,6 +128,34 @@ public class SolicitacaoSangueService {
         pilhaHistorico.empilhar("Exclusão de solicitação " + solicitacao.getId());
     }
 
+    /**
+     * Cancela o pedido: ele sai da fila e as bolsas já alocadas voltam ao estoque.
+     * Pedidos atendidos ou já cancelados não podem ser cancelados.
+     */
+    @Transactional
+    public SolicitacaoResponse cancelar(Long id) {
+        SolicitacaoSangue solicitacao = solicitacaoRepository.travarPorId(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Solicitação não encontrada"));
+
+        if (solicitacao.getStatus() == StatusSolicitacao.CANCELADA) {
+            throw new RegraDeNegocioException("Solicitação já está cancelada");
+        }
+        if (solicitacao.getStatus() == StatusSolicitacao.ATENDIDA) {
+            throw new RegraDeNegocioException("Solicitação já atendida não pode ser cancelada");
+        }
+
+        bolsaRepository.findBySolicitacaoIdOrderByIdAsc(id).forEach(bolsa -> {
+            bolsa.setStatus(StatusBolsa.DISPONIVEL);
+            bolsa.setSolicitacao(null);
+        });
+        solicitacao.setStatus(StatusSolicitacao.CANCELADA);
+        SolicitacaoSangue salva = solicitacaoRepository.save(solicitacao);
+        recarregarFila();
+        pilhaHistorico.empilhar("Cancelamento de solicitação " + salva.getId());
+        return paraResponse(salva);
+    }
+
     @Transactional(readOnly = true)
     public List<SolicitacaoResponse> listarFila() {
         recarregarFila();
@@ -164,7 +204,8 @@ public class SolicitacaoSangueService {
 
     private void recarregarFila() {
         filaRequisicoes.limpar();
-        solicitacaoRepository.findByStatusOrderByIdAsc(StatusSolicitacao.PENDENTE)
+        solicitacaoRepository.findByStatusOrderByIdAsc(StatusSolicitacao.PENDENTE).stream()
+                .sorted(ORDEM_DE_ATENDIMENTO)
                 .forEach(filaRequisicoes::enfileirar);
     }
 

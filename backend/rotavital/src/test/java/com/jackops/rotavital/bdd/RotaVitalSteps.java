@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -260,5 +261,126 @@ public class RotaVitalSteps {
     @Então("o sistema deve retornar status informando que não há registros a serem removidos")
     public void semOperacoes() throws Exception {
         resposta.andExpect(status().isNotFound()).andExpect(jsonPath("$.mensagem").value("Histórico vazio"));
+    }
+
+    /* ---------- História 4: prioridade por urgência, limite e cancelamento ---------- */
+
+    private ResultActions enviarSolicitacaoComUrgencia(String hospital, String urgencia) throws Exception {
+        solicitacao = new LinkedHashMap<>(Map.of("nomeHospital", hospital, "tipoSanguineo", "O_POSITIVO",
+                "tipoComponente", "HEMACIAS", "quantidade", 1, "nivelUrgencia", urgencia));
+        return enviarSolicitacao();
+    }
+
+    @Dado("que existem as solicitações eletivas pendentes dos hospitais {string} e {string}")
+    public void eletivasPendentes(String primeiro, String segundo) throws Exception {
+        enviarSolicitacaoComUrgencia(primeiro, "ELETIVA").andExpect(status().isCreated());
+        enviarSolicitacaoComUrgencia(segundo, "ELETIVA").andExpect(status().isCreated());
+    }
+
+    @Quando("o hospital {string} registra uma solicitação com urgência {string}")
+    public void registrarComUrgencia(String hospital, String urgencia) throws Exception {
+        enviarSolicitacaoComUrgencia(hospital, urgencia).andExpect(status().isCreated());
+    }
+
+    @Então("a fila de atendimento fica na ordem {string}, {string}, {string}")
+    public void ordemDaFila(String primeiro, String segundo, String terceiro) throws Exception {
+        mvc.perform(get("/api/solicitacoes/fila")).andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(3))
+                .andExpect(jsonPath("$[0].nomeHospital").value(primeiro))
+                .andExpect(jsonPath("$[1].nomeHospital").value(segundo))
+                .andExpect(jsonPath("$[2].nomeHospital").value(terceiro));
+    }
+
+    @Dado("que um hospital envia solicitação com {int} bolsas")
+    public void quantidadeAcimaDoLimite(int quantidade) {
+        solicitacao = new LinkedHashMap<>(Map.of("nomeHospital", "Hospital BDD", "tipoSanguineo", "O_POSITIVO",
+                "tipoComponente", "HEMACIAS", "quantidade", quantidade, "nivelUrgencia", "ELETIVA"));
+    }
+
+    @Dado("que existe uma solicitação em atendimento com uma bolsa alocada")
+    public void solicitacaoComBolsaAlocada() throws Exception {
+        bolsa.put("dataColeta", LocalDate.now().minusDays(5).toString());
+        bolsa.put("dataValidade", LocalDate.now().plusDays(20).toString());
+        enviarBolsa().andExpect(status().isCreated());
+        enviarSolicitacao("Hospital BDD", "O_POSITIVO", 2).andExpect(status().isCreated());
+        long id = solicitacoes.findAll().getFirst().getId();
+        mvc.perform(post("/api/alocacoes/solicitacoes/{id}/alocar", id)).andExpect(status().isOk());
+    }
+
+    @Quando("o hospital cancela a solicitação")
+    public void cancelarSolicitacao() throws Exception {
+        long id = solicitacoes.findAll().getFirst().getId();
+        resposta = mvc.perform(post("/api/solicitacoes/{id}/cancelar", id));
+    }
+
+    @Então("a solicitação passa a ter status {string}")
+    public void statusSolicitacao(String status) throws Exception {
+        resposta.andExpect(status().isOk()).andExpect(jsonPath("$.status").value(status));
+        assertEquals(status, solicitacoes.findAll().getFirst().getStatus().name());
+    }
+
+    @Então("a bolsa alocada volta a ter status {string}")
+    public void bolsaDevolvida(String status) {
+        var devolvida = bolsas.findAll().getFirst();
+        assertEquals(status, devolvida.getStatus().name());
+        assertNull(devolvida.getSolicitacao());
+    }
+
+    /* ---------- História 7: painel de indicadores ---------- */
+
+    @Dado("que não houve movimentação entre {string} e {string}")
+    public void semMovimentacao(String inicio, String fim) {
+        assertEquals(0, bolsas.count());
+        assertEquals(0, solicitacoes.count());
+    }
+
+    @Quando("acesso o painel de indicadores do período de {string} a {string}")
+    public void painelDoPeriodo(String inicio, String fim) throws Exception {
+        resposta = mvc.perform(get("/api/indicadores").param("dataInicio", inicio).param("dataFim", fim));
+    }
+
+    @Quando("acesso o painel de indicadores")
+    public void painel() throws Exception {
+        resposta = mvc.perform(get("/api/indicadores"));
+    }
+
+    @Então("o painel exibe a mensagem {string}")
+    public void mensagemPainel(String mensagem) throws Exception {
+        resposta.andExpect(status().isOk())
+                .andExpect(jsonPath("$.dadosSuficientes").value(false))
+                .andExpect(jsonPath("$.mensagem").value(mensagem));
+    }
+
+    @Então("nenhum indicador é calculado")
+    public void semIndicadores() throws Exception {
+        resposta.andExpect(jsonPath("$.estoqueDisponivel.length()").value(0))
+                .andExpect(jsonPath("$.situacaoComponentes.length()").value(0))
+                .andExpect(jsonPath("$.taxaDescarteVencimento").doesNotExist())
+                .andExpect(jsonPath("$.tempoMedioAtendimentoHoras").doesNotExist());
+    }
+
+    @Dado("que há {int} bolsas de {string} disponíveis e uma solicitação em aberto de {int} bolsas")
+    public void estoqueBaixo(int quantidadeBolsas, String componente, int pedidas) throws Exception {
+        for (int i = 1; i <= quantidadeBolsas; i++) {
+            bolsa = novaBolsa("BDD-CRIT-" + i);
+            bolsa.put("tipoComponente", componente);
+            bolsa.put("dataColeta", LocalDate.now().minusDays(2).toString());
+            bolsa.put("dataValidade", LocalDate.now().plusDays(20).toString());
+            enviarBolsa().andExpect(status().isCreated());
+        }
+        enviarSolicitacao("Hospital BDD", "O_POSITIVO", pedidas).andExpect(status().isCreated());
+    }
+
+    @Então("o componente {string} aparece como estoque crítico")
+    public void componenteCritico(String componente) throws Exception {
+        resposta.andExpect(status().isOk())
+                .andExpect(jsonPath("$.situacaoComponentes[?(@.tipoComponente == '" + componente + "')].estoqueCritico")
+                        .value(true));
+    }
+
+    @Então("a probabilidade de desabastecimento de {string} é apresentada")
+    public void probabilidadeApresentada(String componente) throws Exception {
+        resposta.andExpect(jsonPath("$.situacaoComponentes[?(@.tipoComponente == '" + componente
+                + "')].probabilidadeDesabastecimento").value(1.0));
     }
 }

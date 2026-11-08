@@ -812,6 +812,11 @@ select.entrada { padding-right: 32px; }
 .kpi-valor.pe strong { color: var(--pe); }
 .kpi p { font-size: 12.5px; color: var(--texto-2); }
 
+.filtros-indicadores, .indicadores-periodo { margin-bottom: 16px; }
+.periodo-resumo { display: flex; flex-wrap: wrap; gap: 8px 32px; margin-bottom: 16px; }
+.periodo-resumo strong { font-size: 22px; font-variant-numeric: tabular-nums; }
+.periodo-resumo p { margin: 0; }
+tr.linha-critica td { background: var(--pe-f); }
 .grade-indicadores { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 16px; align-items: start; }
 @media (max-width: 1100px) { .grade-indicadores { grid-template-columns: minmax(0, 1fr); } }
 

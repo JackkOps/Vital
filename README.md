@@ -545,6 +545,13 @@ Os testes automatizados podem ser executados com `./mvnw.cmd test`.
 
 ### Histórias implementadas
 
+Com esta entrega, as 7 histórias de usuário do projeto estão implementadas no `main`.
+
+> **História 1 - Cadastro de bolsa de hemocomponente**
+>
+> Como operador do banco de sangue, quero registrar uma bolsa no estoque para que ela fique disponível para alocação e rastreamento.
+> **Critérios entregues (Entrega 02, mantidos):** identificador único de negócio; campos obrigatórios e volume positivo; bloqueio de duplicidade; validade igual ou posterior à coleta; status inicial `DISPONIVEL`; cadastro e consulta de estoque pela API e pela interface web.
+
 > **História 2 - Alocação de bolsa compatível priorizando validade (FEFO) — conclusão**
 >
 > Como operador do banco de sangue, quero que o sistema sugira as bolsas compatíveis mais próximas do vencimento, para reduzir o descarte por validade.
@@ -560,6 +567,11 @@ Os testes automatizados podem ser executados com `./mvnw.cmd test`.
 > Como responsável pelo estoque de um hospital, quero registrar uma solicitação informando tipo, quantidade e urgência, para que o hemocentro receba e priorize meu pedido.
 > **Critérios entregues:** fila de atendimento por urgência (emergência, depois urgente, depois eletiva), mantendo a ordem de chegada dentro do mesmo nível; limite de 10 bolsas por solicitação; cancelamento da solicitação (status `CANCELADA`), com saída da fila e devolução das bolsas já alocadas ao estoque.
 
+> **História 5 - Alerta e baixa de bolsas próximas do vencimento**
+>
+> Como gestor do hemocentro, quero ser alertado sobre bolsas próximas do vencimento e dar baixa nas vencidas, para reduzir o descarte e impedir que uma bolsa inválida seja distribuída.
+> **Critérios entregues (Entrega 03, mantidos):** janela de alerta por tipo de componente (plaquetas 2 dias, hemácias e sangue total 7 dias, plasma 30 dias); verificação diária automática e sob demanda; bolsa vencida muda para `DESCARTADA` e deixa de ser considerada na alocação; bloqueio da baixa de bolsa `ALOCADA`; registro de cada baixa com motivo, data e origem (automática ou manual). As baixas por vencimento alimentam a taxa de descarte do painel da história 7.
+
 > **História 6 - Monitoramento da cadeia fria durante o transporte**
 >
 > Como operador de logística, quero acompanhar a temperatura das remessas em trânsito, para identificar rapidamente quando uma carga sai da faixa segura e agir antes da perda das bolsas.
@@ -569,6 +581,11 @@ Os testes automatizados podem ser executados com `./mvnw.cmd test`.
 >
 > Como gestor do hemocentro, quero visualizar um painel com indicadores de estoque, demanda e descarte, para apoiar decisões de reposição e distribuição.
 > **Critérios entregues:** estoque por componente e tipo sanguíneo; demanda em aberto por hospital; taxa de descarte por vencimento; tempo médio de atendimento; destaque de estoque crítico (abaixo de 5 bolsas); probabilidade de desabastecimento em 7 dias, estimada por um modelo de Poisson sobre a demanda do período; filtros por período, hospital e componente; mensagem "Dados insuficientes para o período" quando não há movimentação, sem calcular indicadores sobre base incompleta.
+
+### Screencasts
+
+- Vídeo 1 - Uso do sistema: **[assistir no YouTube](https://youtu.be/wnE8rBCS5k8)**
+- Vídeo 2 - Explicação do código: **[assistir no YouTube](https://youtu.be/rstKc16xaaE)**
 
 ---
 

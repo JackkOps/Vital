@@ -1,0 +1,138 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@import "@fontsource/ibm-plex-sans/400.css";
+@import "@fontsource/ibm-plex-sans/500.css";
+@import "@fontsource/ibm-plex-sans/600.css";
+@import "@fontsource/ibm-plex-sans/700.css";
+@import "@fontsource/ibm-plex-mono/500.css";
+@import "@fontsource/ibm-plex-mono/600.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Rota Vital — tokens de design.
+ * Paleta temática de hemocomponentes: fundo frio clínico (não o
+ * beige quente padrão), vermelho de marca sóbrio, verde-oxigenado
+ * para compatibilidade/sucesso, âmbar para validade/cadeia fria.
+ * Raio em 2 níveis (controle vs. painel); sem sombra decorativa —
+ * separação por borda de 1px, sombra reservada a overlays.
+ */
+@theme {
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", monospace;
+
+  --radius-control: 0.375rem; /* 6px — botões, inputs, badges */
+  --radius-panel: 0.625rem; /* 10px — cartões, painéis */
+
+  /* Névoa (fundo) */
+  --color-background: #eef2f4;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f6f8f9;
+  --color-border: #d7dee2;
+  --color-border-strong: #b7c2c8;
+
+  /* Grafite (tinta) */
+  --color-ink: #1b2430;
+  --color-ink-muted: #576473;
+  --color-ink-faint: #8b97a3;
+
+  /* Rubi (marca / ação primária) */
+  --color-brand: #8f1b2e;
+  --color-brand-hover: #741625;
+  --color-brand-soft: #fbe9ec;
+  --color-brand-foreground: #fff7f7;
+
+  /* Emergência (urgência máxima — mesma família, mais quente) */
+  --color-emergencia: #c53030;
+  --color-emergencia-soft: #fceaea;
+
+  /* Oxigenado (sucesso / compatível / disponível) */
+  --color-ok: #0e7c66;
+  --color-ok-soft: #e4f3ee;
+
+  /* Alerta (validade / cadeia fria) */
+  --color-alerta: #b9780a;
+  --color-alerta-soft: #fcf0dd;
+
+  /* Informativo (estados neutros, em andamento) */
+  --color-info: #2f5ea5;
+  --color-info-soft: #e8eef8;
+
+  /* Tipos sanguíneos — etiquetas (texto / fundo) */
+  --color-hem: #8f1b2e;
+  --color-hem-soft: #fbe9ec;
+  --color-pla: #9a6400;
+  --color-pla-soft: #fbf0d9;
+  --color-plq: #5b4b9a;
+  --color-plq-soft: #ecebf7;
+  --color-st: #6b2140;
+  --color-st-soft: #f4e6ec;
+}
+
+.dark {
+  --color-background: #11161b;
+  --color-surface: #171e24;
+  --color-surface-muted: #1b2329;
+  --color-border: #2a333a;
+  --color-border-strong: #3c4650;
+
+  --color-ink: #e8edf0;
+  --color-ink-muted: #a7b2bb;
+  --color-ink-faint: #717d87;
+
+  --color-brand: #e2828f;
+  --color-brand-hover: #ec9ca6;
+  --color-brand-soft: #351b20;
+  --color-brand-foreground: #190c0e;
+
+  --color-emergencia: #ff8f8f;
+  --color-emergencia-soft: #3a1c1c;
+
+  --color-ok: #6fd4b8;
+  --color-ok-soft: #113128;
+
+  --color-alerta: #e3af5a;
+  --color-alerta-soft: #332509;
+
+  --color-info: #8fb3e8;
+  --color-info-soft: #1b2738;
+
+  --color-hem: #e2828f;
+  --color-hem-soft: #351b20;
+  --color-pla: #d8ab5a;
+  --color-pla-soft: #332a12;
+  --color-plq: #b3a6e8;
+  --color-plq-soft: #24203a;
+  --color-st: #d890b0;
+  --color-st-soft: #332030;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-ink antialiased;
+    font-feature-settings: "tnum" 1;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-brand);
+    outline-offset: 2px;
+  }
+}
+
+@layer utilities {
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .select-chevron {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23576473' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.6rem center;
+    background-size: 16px;
+  }
+}

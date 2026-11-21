@@ -21,6 +21,7 @@
                 </div>
             </div>
             <nav class="menu" aria-label="Áreas do sistema">
+                <a href="#visao-geral" data-pagina="visao-geral"><span data-icone="painel"></span>Visão geral</a>
                 <a href="#estoque" data-pagina="estoque"><span data-icone="estoque"></span>Estoque</a>
                 <a href="#solicitacoes" data-pagina="solicitacoes"><span data-icone="prancheta"></span>Solicitações<span class="contador tom-at" data-contador="solicitacoes" hidden></span></a>
                 <a href="#validade" data-pagina="validade"><span data-icone="calendario"></span>Validade<span class="contador tom-pe" data-contador="validade" hidden></span></a>
@@ -44,6 +45,7 @@
                 <p class="data-hoje" data-relogio="curto"></p>
             </div>
             <nav class="abas" aria-label="Áreas do sistema">
+                <a href="#visao-geral" data-pagina="visao-geral">Visão geral</a>
                 <a href="#estoque" data-pagina="estoque">Estoque</a>
                 <a href="#solicitacoes" data-pagina="solicitacoes">Solicitações<span class="contador tom-at" data-contador="solicitacoes" hidden></span></a>
                 <a href="#validade" data-pagina="validade">Validade<span class="contador tom-pe" data-contador="validade" hidden></span></a>
@@ -55,6 +57,62 @@
 
         <main class="principal" id="conteudo" tabindex="-1">
             <div class="conteudo">
+
+                <!-- Visão geral: resumo de todas as áreas -->
+                <section data-secao="visao-geral" aria-labelledby="titulo-visao-geral" hidden>
+                    <header class="cabecalho-pagina">
+                        <div>
+                            <h1 id="titulo-visao-geral">Visão geral</h1>
+                            <p id="visao-descricao">Estoque, pedidos, validade e logística da rede em um só lugar.</p>
+                        </div>
+                        <p class="data-hoje" data-relogio="longo"></p>
+                    </header>
+
+                    <div class="kpis" id="visao-kpis"></div>
+
+                    <div class="cartao">
+                        <div class="cartao-cab">
+                            <h2>Fluxo da rede</h2>
+                            <p class="legenda">Do cadastro da bolsa à entrega no hospital. Clique em uma etapa para abrir a área correspondente.</p>
+                        </div>
+                        <div id="visao-fluxo"></div>
+                    </div>
+
+                    <div class="grade-2">
+                        <div class="cartao">
+                            <div class="cartao-cab">
+                                <h2>Precisa de atenção</h2>
+                                <span class="lado contagem" id="contagem-atencao"></span>
+                            </div>
+                            <div id="visao-atencao" aria-live="polite"></div>
+                        </div>
+                        <div class="cartao">
+                            <div class="cartao-cab">
+                                <h2>Estoque por componente</h2>
+                                <a class="lado link-secao" href="#indicadores">Ver indicadores</a>
+                                <p class="legenda">Bolsas disponíveis e dentro da validade, comparadas ao nível crítico.</p>
+                            </div>
+                            <div id="visao-estoque"></div>
+                        </div>
+                    </div>
+
+                    <div class="grade-2">
+                        <div class="cartao">
+                            <div class="cartao-cab">
+                                <h2>Próximos da fila</h2>
+                                <a class="lado link-secao" href="#solicitacoes">Ver solicitações</a>
+                            </div>
+                            <div id="visao-fila"></div>
+                        </div>
+                        <div class="cartao">
+                            <div class="cartao-cab">
+                                <h2>Atividade recente</h2>
+                                <a class="lado link-secao" href="#historico">Ver histórico</a>
+                            </div>
+                            <div id="visao-atividade"></div>
+                        </div>
+                    </div>
+                </section>
 
                 <!-- Estoque de bolsas (História 1) -->
                 <section data-secao="estoque" aria-labelledby="titulo-estoque" hidden>

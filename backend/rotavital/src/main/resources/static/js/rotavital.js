@@ -90,12 +90,14 @@
     const QUANTIDADE_MAXIMA = 10;
     const VALIDADE_MINIMA_DIAS = 1;
 
-    const PAGINAS = ['estoque', 'solicitacoes', 'validade', 'logistica', 'indicadores', 'historico'];
+    const PAGINAS = ['visao-geral', 'estoque', 'solicitacoes', 'validade', 'logistica', 'indicadores', 'historico'];
+    const PAGINA_INICIAL = 'visao-geral';
 
     /* ---------- Ícones (traço 24x24) ---------- */
 
     const ICONES = {
         gota: '<path d="M12 2.5s-6.5 7.2-6.5 12a6.5 6.5 0 0 0 13 0c0-4.8-6.5-12-6.5-12z"/>',
+        painel: '<rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>',
         estoque: '<path d="M21 8 12 3 3 8l9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/>',
         prancheta: '<rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>',
         calendario: '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
@@ -282,7 +284,7 @@
     };
 
     const estado = {
-        pagina: 'estoque',
+        pagina: PAGINA_INICIAL,
         dados: {},
         erros: {},
         carregando: new Set(),
@@ -1642,7 +1644,12 @@
         [/^Cadastro de solicitação (\d+)$/, 'Solicitação', 'at', 'prancheta', (m) => descreverSolicitacao(m[1], 'registrada')],
         [/^Atualização de solicitação (\d+)$/, 'Solicitação', 'at', 'lapis', (m) => descreverSolicitacao(m[1], 'atualizada')],
         [/^Exclusão de solicitação (\d+)$/, 'Solicitação', 'pe', 'lixeira', (m) => `${codigoSolicitacao(m[1])} excluída.`],
-        [/^Chamada de solicitação (\d+)$/, 'Atendimento', 'in', 'play', (m) => `${codigoSolicitacao(m[1])} chamada da fila · status EM ATENDIMENTO.`]
+        [/^Chamada de solicitação (\d+)$/, 'Atendimento', 'in', 'play', (m) => `${codigoSolicitacao(m[1])} chamada da fila · status EM ATENDIMENTO.`],
+        [/^Cancelamento de solicitação (\d+)$/, 'Solicitação', 'pe', 'x', (m) => `${codigoSolicitacao(m[1])} cancelada · bolsas alocadas voltaram ao estoque.`],
+        [/^Cálculo de rota (\d+)$/, 'Rota', 'in', 'seta', (m) => `Rota ${m[1]} calculada.`],
+        [/^Confirmação manual da rota (\d+)$/, 'Rota', 'at', 'seta', (m) => `Rota ${m[1]} confirmada manualmente, com risco de atraso assumido.`],
+        [/^Despacho da remessa (\d+)$/, 'Remessa', 'in', 'caminhao', (m) => `Remessa ${m[1]} despachada.`],
+        [/^Entrega da remessa (\d+)$/, 'Remessa', 'ok', 'check', (m) => `Remessa ${m[1]} entregue no hospital.`]
     ];
 
     function interpretarOperacao(texto) {
@@ -1704,6 +1711,231 @@
             <button type="button" class="botao perigo-contorno largo" data-acao="remover-ultima">${icone('lixeira')}Remover última operação</button>`;
     }
 
+    /* ---------- Visão geral ---------- */
+
+    // Usado só quando o painel de indicadores ainda não informou o nível crítico.
+    const NIVEL_CRITICO_PADRAO = 5;
+
+    /** Bolsas DISPONIVEL e dentro da validade, contadas por componente. */
+    function disponiveisPorComponente() {
+        const contagem = Object.fromEntries(Object.keys(COMPONENTES).map((c) => [c, 0]));
+        bolsas().forEach((bolsa) => {
+            if (bolsa.status === 'DISPONIVEL' && diasAte(bolsa.dataValidade) >= 0 && bolsa.tipoComponente in contagem) {
+                contagem[bolsa.tipoComponente] += 1;
+            }
+        });
+        return contagem;
+    }
+
+    function situacaoDoComponente(componente) {
+        const situacoes = estado.dados.indicadores?.situacaoComponentes || [];
+        return situacoes.find((s) => s.tipoComponente === componente) || null;
+    }
+
+    /** Itens que pedem ação, do mais grave para o menos grave. */
+    function itensDeAtencao(disponiveis) {
+        const itens = [];
+        const adicionar = (tom, nomeIcone, titulo, detalhe, pagina) => itens.push({ tom, icone: nomeIcone, titulo, detalhe, pagina });
+
+        const emergencias = (estado.dados.fila || []).filter((s) => s.nivelUrgencia === 'EMERGENCIA');
+        if (emergencias.length) {
+            adicionar('pe', 'alerta', `${plural(emergencias.length, 'emergência aguardando', 'emergências aguardando')} na fila`,
+                emergencias.slice(0, 3).map((s) => s.nomeHospital).join(', '), 'solicitacoes');
+        }
+
+        const vencidas = vencidasAguardandoBaixa();
+        if (vencidas.length) {
+            adicionar('pe', 'lixeira', `${plural(vencidas.length, 'bolsa vencida', 'bolsas vencidas')} sem baixa`,
+                'Dê baixa para que não pareçam disponíveis no estoque.', 'validade');
+        }
+
+        const remessas = (estado.dados.remessas || []).filter((r) => r.status === 'EM_TRANSITO');
+        const sobRisco = remessas.filter((r) => r.condicao === 'SOB_RISCO');
+        if (sobRisco.length) {
+            adicionar('pe', 'alerta', `${plural(sobRisco.length, 'remessa sob risco', 'remessas sob risco')} térmico`,
+                `Remessa ${sobRisco.map((r) => r.id).join(', ')} saiu da faixa segura de temperatura.`, 'logistica');
+        }
+
+        const criticos = Object.keys(COMPONENTES).filter((c) => {
+            const nivel = situacaoDoComponente(c)?.nivelCritico ?? NIVEL_CRITICO_PADRAO;
+            return disponiveis[c] < nivel;
+        });
+        if (criticos.length) {
+            adicionar('pe', 'estoque', `Estoque crítico em ${plural(criticos.length, 'componente', 'componentes')}`,
+                criticos.map((c) => `${COMPONENTES[c].rotulo}: ${disponiveis[c]}`).join(' · '), 'indicadores');
+        }
+
+        const alertas = estado.dados.alertas || [];
+        const vencemLogo = alertas.filter((a) => a.diasParaVencer <= 2);
+        if (vencemLogo.length) {
+            adicionar('at', 'relogio', `${plural(vencemLogo.length, 'bolsa vence', 'bolsas vencem')} em até 2 dias`,
+                'Priorize essas bolsas nas próximas alocações (FEFO).', 'validade');
+        }
+
+        const semSinal = remessas.filter((r) => r.sensorIndisponivel);
+        if (semSinal.length) {
+            adicionar('at', 'relogio', `${plural(semSinal.length, 'sensor sem sinal', 'sensores sem sinal')}`,
+                `Remessa ${semSinal.map((r) => r.id).join(', ')} parou de enviar leituras.`, 'logistica');
+        }
+
+        const semEstoque = solicitacoes().filter((s) => (s.status === 'PENDENTE' || s.status === 'EM_ATENDIMENTO')
+            && bolsasAlocadasPara(s.id).length < s.quantidade && candidatasPara(s).length === 0);
+        if (semEstoque.length) {
+            adicionar('at', 'prancheta', `${plural(semEstoque.length, 'pedido sem bolsa compatível', 'pedidos sem bolsa compatível')}`,
+                semEstoque.slice(0, 3).map((s) => `${codigoSolicitacao(s.id)} · ${s.nomeHospital}`).join(', '), 'solicitacoes');
+        }
+
+        const aguardando = (estado.dados.rotas || []).filter((r) => r.status === 'AGUARDANDO_CONFIRMACAO');
+        if (aguardando.length) {
+            adicionar('at', 'seta', `${plural(aguardando.length, 'rota aguardando', 'rotas aguardando')} confirmação`,
+                'Passam da janela da cadeia fria e precisam de decisão do operador.', 'logistica');
+        }
+        return itens;
+    }
+
+    function renderizarVisaoGeral() {
+        const kpis = document.getElementById('visao-kpis');
+        const fluxo = document.getElementById('visao-fluxo');
+        const atencao = document.getElementById('visao-atencao');
+        const estoque = document.getElementById('visao-estoque');
+        const fila = document.getElementById('visao-fila');
+        const atividade = document.getElementById('visao-atividade');
+        const contagemAtencao = document.getElementById('contagem-atencao');
+
+        const especial = estadoDaFonte('bolsas', 'Não foi possível carregar a visão geral', 4)
+            || estadoDaFonte('solicitacoes', 'Não foi possível carregar a visão geral', 4);
+        if (especial) {
+            kpis.innerHTML = '';
+            fluxo.innerHTML = especial;
+            [atencao, estoque, fila, atividade].forEach((el) => { el.innerHTML = ''; });
+            contagemAtencao.textContent = '';
+            return;
+        }
+        if (estado.atualizadoEm) {
+            document.getElementById('visao-descricao').textContent =
+                `Estoque, pedidos, validade e logística da rede em um só lugar · atualizado às ${hora(estado.atualizadoEm)}.`;
+        }
+
+        // Números base
+        const disponiveis = disponiveisPorComponente();
+        const totalDisponivel = Object.values(disponiveis).reduce((soma, n) => soma + n, 0);
+        const todas = solicitacoes();
+        const abertas = todas.filter((s) => s.status === 'PENDENTE' || s.status === 'EM_ATENDIMENTO');
+        const naFila = abertas.filter((s) => s.status === 'PENDENTE').length;
+        const emergencias = abertas.filter((s) => s.nivelUrgencia === 'EMERGENCIA').length;
+        const atendidas = todas.filter((s) => s.status === 'ATENDIDA').length;
+        const alocadas = bolsas().filter((b) => b.status === 'ALOCADA').length;
+        const alertas = estado.dados.alertas || [];
+        const vencidas = vencidasAguardandoBaixa().length;
+        const rotas = estado.dados.rotas || [];
+        const rotasConfirmadas = rotas.filter((r) => r.status === 'CONFIRMADA').length;
+        const remessas = estado.dados.remessas || [];
+        const emTransito = remessas.filter((r) => r.status === 'EM_TRANSITO');
+        const comAlerta = emTransito.filter((r) => r.condicao === 'SOB_RISCO' || r.sensorIndisponivel).length;
+        const entregues = remessas.length - emTransito.length;
+
+        // KPIs
+        const kpi = (nomeIcone, titulo, valor, unidade, detalhe, tom = '') => `<div class="cartao kpi">
+            <p class="kpi-titulo">${icone(nomeIcone)}${esc(titulo)}</p>
+            <p class="kpi-valor ${tom}"><strong>${valor}</strong><span>${esc(unidade)}</span></p>
+            <p>${esc(detalhe)}</p></div>`;
+        const emValidade = alertas.length + vencidas;
+        kpis.innerHTML = kpi('check', 'Bolsas disponíveis', totalDisponivel, totalDisponivel === 1 ? 'bolsa' : 'bolsas',
+                Object.entries(COMPONENTES).map(([valor, c]) => `${disponiveis[valor]} ${c.minusculo}`).join(' · '),
+                totalDisponivel === 0 ? 'pe' : '')
+            + kpi('prancheta', 'Solicitações em aberto', abertas.length, abertas.length === 1 ? 'pedido' : 'pedidos',
+                `${naFila} na fila · ${abertas.length - naFila} em atendimento · ${plural(emergencias, 'emergência', 'emergências')}`,
+                emergencias ? 'pe' : '')
+            + kpi('calendario', 'Validade em risco', emValidade, emValidade === 1 ? 'bolsa' : 'bolsas',
+                `${plural(vencidas, 'vencida', 'vencidas')} sem baixa · ${alertas.length} perto de vencer`,
+                vencidas ? 'pe' : emValidade ? 'at' : '')
+            + kpi('caminhao', 'Remessas em trânsito', emTransito.length, emTransito.length === 1 ? 'remessa' : 'remessas',
+                `${comAlerta} com alerta · ${plural(entregues, 'entregue', 'entregues')}`, comAlerta ? 'pe' : '');
+
+        // Fluxo da rede
+        const etapas = [
+            ['estoque', 'estoque', 'Estoque', totalDisponivel, 'disponíveis', `${plural(bolsas().length, 'bolsa cadastrada', 'bolsas cadastradas')}`],
+            ['solicitacoes', 'prancheta', 'Solicitações', abertas.length, 'em aberto', `${plural(todas.length, 'pedido registrado', 'pedidos registrados')}`],
+            ['solicitacoes', 'link', 'Alocação', alocadas, alocadas === 1 ? 'bolsa alocada' : 'bolsas alocadas', `${plural(atendidas, 'pedido atendido', 'pedidos atendidos')} · ABO/Rh + FEFO`],
+            ['logistica', 'seta', 'Rotas', rotasConfirmadas, rotasConfirmadas === 1 ? 'confirmada' : 'confirmadas', `${plural(rotas.length, 'rota calculada', 'rotas calculadas')} · Dijkstra`],
+            ['logistica', 'caminhao', 'Transporte', emTransito.length, 'em trânsito', `cadeia fria monitorada${comAlerta ? ` · ${comAlerta} com alerta` : ''}`],
+            ['logistica', 'check', 'Entrega', entregues, entregues === 1 ? 'remessa entregue' : 'remessas entregues', 'chegou ao hospital']
+        ];
+        fluxo.innerHTML = `<ol class="fluxo">${etapas.map(([pagina, nomeIcone, titulo, valor, unidade, detalhe], indice) => `<li>
+                <a href="#${pagina}">
+                    <span class="fluxo-passo">${icone(nomeIcone)}<span class="so-leitor">Etapa ${indice + 1}:</span></span>
+                    <span class="fluxo-titulo">${esc(titulo)}</span>
+                    <span class="fluxo-valor"><strong>${valor}</strong> ${esc(unidade)}</span>
+                    <span class="fluxo-detalhe">${esc(detalhe)}</span>
+                </a>
+            </li>`).join('')}</ol>`;
+
+        // Precisa de atenção
+        const itens = itensDeAtencao(disponiveis);
+        contagemAtencao.textContent = itens.length ? plural(itens.length, 'item', 'itens') : '';
+        atencao.innerHTML = itens.length === 0
+            ? estadoVazio('check', 'Tudo em ordem', 'Nenhuma emergência na fila, bolsa vencida, estoque crítico ou remessa com alerta.', 'tracejado')
+            : `<ul class="lista-atencao">${itens.map((item) => `<li>
+                    <a href="#${item.pagina}" class="tom-${item.tom}">
+                        <span class="atencao-icone">${icone(item.icone)}</span>
+                        <span class="atencao-corpo"><strong>${esc(item.titulo)}</strong><span>${esc(item.detalhe)}</span></span>
+                        <span class="atencao-seta">${icone('seta')}</span>
+                    </a>
+                </li>`).join('')}</ul>`;
+
+        // Estoque por componente
+        const maior = Math.max(1, ...Object.values(disponiveis));
+        estoque.innerHTML = `<ul class="barras">${Object.entries(COMPONENTES).map(([valor, c]) => {
+            const situacao = situacaoDoComponente(valor);
+            const nivel = situacao?.nivelCritico ?? NIVEL_CRITICO_PADRAO;
+            const critico = disponiveis[valor] < nivel;
+            const risco = situacao && estado.dados.indicadores?.dadosSuficientes
+                ? ` · risco de faltar ${porcentagem(situacao.probabilidadeDesabastecimento)}` : '';
+            return `<li>
+                <div class="rotulo"><span class="rotulo-linha">${etiquetaComponente(valor)}${critico
+                    ? selo({ rotulo: 'Crítico', tom: 'pe', icone: 'alerta' }) : ''}</span><span>${critico
+                    ? `abaixo de ${plural(nivel, 'bolsa', 'bolsas')}` : 'nível adequado'}${risco}</span></div>
+                <div class="barra${critico ? ' critica' : ''}"><span style="width:${Math.max(2, (disponiveis[valor] / maior) * 80)}%"></span>${disponiveis[valor]}</div>
+            </li>`;
+        }).join('')}</ul>`;
+
+        // Próximos da fila
+        const especialFila = estadoDaFonte('fila', 'Não foi possível carregar a fila', 3);
+        const proximos = (estado.dados.fila || []).slice(0, 5);
+        if (especialFila) {
+            fila.innerHTML = especialFila;
+        } else if (proximos.length === 0) {
+            fila.innerHTML = estadoVazio('prancheta', 'Fila vazia', 'Nenhuma solicitação aguardando atendimento.', 'tracejado');
+        } else {
+            fila.innerHTML = `<ol class="fila">${proximos.map((s, indice) => `<li>
+                    <span class="posicao">${indice + 1}º</span>
+                    <span class="tipo-coluna">${tipoHtml(s.tipoSanguineo, 'sm')}</span>
+                    <div class="corpo"><strong>${esc(s.nomeHospital)}</strong><span>${esc(resumoPedido(s))}</span></div>
+                    ${seloUrgencia(s.nivelUrgencia, true)}
+                </li>`).join('')}</ol>
+                ${estado.dados.fila.length > proximos.length
+                    ? `<p class="legenda" style="margin-top:10px">+ ${plural(estado.dados.fila.length - proximos.length, 'outra solicitação', 'outras solicitações')} na fila.</p>` : ''}`;
+        }
+
+        // Atividade recente
+        const especialHistorico = estadoDaFonte('historico', 'Não foi possível carregar o histórico', 3);
+        const recentes = (estado.dados.historico || []).slice(0, 5).map((o) => interpretarOperacao(o.operacao));
+        if (especialHistorico) {
+            atividade.innerHTML = especialHistorico;
+        } else if (recentes.length === 0) {
+            atividade.innerHTML = estadoVazio('historico', 'Nenhuma operação ainda',
+                'Cadastros, alocações, baixas e rotas aparecem aqui conforme a equipe usa o sistema.', 'tracejado');
+        } else {
+            atividade.innerHTML = `<ol class="linha-tempo compacta">${recentes.map((op) => `<li>
+                    <span class="marcador tom-${op.tom}">${icone(op.icone)}</span>
+                    <div class="corpo">
+                        <div class="linha"><span class="pilula tom-${op.tom}">${esc(op.categoria)}</span></div>
+                        <p class="texto">${esc(op.texto)}</p>
+                    </div>
+                </li>`).join('')}</ol>`;
+        }
+    }
+
     /* ---------- Moldura: menu, relógio, conexão ---------- */
 
     function renderizarMoldura() {
@@ -1746,6 +1978,7 @@
     }
 
     const RENDERIZADORES = {
+        'visao-geral': renderizarVisaoGeral,
         estoque: renderizarEstoque,
         solicitacoes: renderizarSolicitacoes,
         validade: renderizarValidade,
@@ -1760,7 +1993,7 @@
     }
 
     function irPara(pagina, focar) {
-        estado.pagina = PAGINAS.includes(pagina) ? pagina : 'estoque';
+        estado.pagina = PAGINAS.includes(pagina) ? pagina : PAGINA_INICIAL;
         document.querySelectorAll('[data-secao]').forEach((secao) => {
             secao.hidden = secao.dataset.secao !== estado.pagina;
         });

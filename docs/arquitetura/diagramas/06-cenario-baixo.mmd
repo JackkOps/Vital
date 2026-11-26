@@ -1,0 +1,10 @@
+flowchart LR
+    U["30 usuários no pico<br/>λ = 5 req/s"] -->|HTTPS 443| ALB["Application Load Balancer"]
+    V["20 veículos<br/>leituras por HTTPS"] -->|HTTPS 443| ALB
+    subgraph AZ1["us-east-1a"]
+        T1["Fargate · 1 tarefa<br/>0,5 vCPU / 1 GB<br/>monolito modular"]
+        DB[("RDS PostgreSQL<br/>db.t4g.micro Single-AZ<br/>20 GB gp3")]
+    end
+    ALB --> T1
+    T1 -->|"pool 5 conexões"| DB
+    T1 -.-> CW["CloudWatch Logs"]

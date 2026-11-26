@@ -1,0 +1,19 @@
+flowchart LR
+    U["300 usuários no pico<br/>λ = 50 req/s"] -->|HTTPS 443| ALB["Application Load Balancer<br/>2 zonas"]
+    V["100 veículos"] -->|"MQTT/TLS 8883"| IOT["AWS IoT Core"]
+    IOT -->|"regra → fila"| Q[["SQS telemetria"]]
+    subgraph AZ1["us-east-1a"]
+        T1["Fargate · tarefa 1<br/>1 vCPU / 2 GB"]
+        DBP[("RDS db.t4g.small<br/>primária")]
+    end
+    subgraph AZ2["us-east-1b"]
+        T2["Fargate · tarefa 2<br/>1 vCPU / 2 GB"]
+        DBS[("RDS espera<br/>(Multi-AZ)")]
+    end
+    ALB --> T1
+    ALB --> T2
+    Q --> T1
+    Q --> T2
+    T1 -->|pool 10| DBP
+    T2 -->|pool 10| DBP
+    DBP -. "replicação síncrona" .-> DBS

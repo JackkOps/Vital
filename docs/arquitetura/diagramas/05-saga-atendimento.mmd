@@ -1,0 +1,27 @@
+%%{init: {"theme":"default","sequence":{"wrap":true,"width":180,"noteMargin":12}}}%%
+sequenceDiagram
+    autonumber
+    participant ATE as Atendimento
+    participant EST as Estoque
+    participant LOG as Logística
+    participant CF as Cadeia Fria
+    ATE->>EST: reservar bolsa compatível (FEFO)
+    EST-->>ATE: BolsaReservada
+    Note over ATE,EST: alocações = quantidade pedida → ATENDIDA
+    ATE-)LOG: RequisicaoAtendida
+    alt rota viável dentro da janela
+        LOG-)CF: RemessaDespachada
+        CF-)LOG: leituras conformes
+        LOG-)ATE: RemessaEntregue
+    else sem rota ou janela estourada sem confirmação
+        LOG-)ATE: RotaInviavel
+        Note over ATE,EST: compensa: requisição volta para EM_ATENDIMENTO e desfaz as alocações
+        ATE-)EST: AlocacoesLiberadas
+        Note over EST,LOG: compensa: bolsas voltam para DISPONIVEL
+    else excursão térmica no trajeto
+        CF-)LOG: ExcursaoTermicaDetectada
+        CF-)EST: ExcursaoTermicaDetectada
+        Note over EST,LOG: compensa: baixa das bolsas da remessa (motivo: excursão térmica)
+        LOG-)ATE: RemessaPerdida
+        Note over ATE,EST: compensa: requisição volta para PENDENTE, no topo da fila, para nova alocação
+    end

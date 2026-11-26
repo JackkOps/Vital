@@ -240,7 +240,10 @@ services:
     volumes:
       - ./observability/tempo:/etc/tempo:ro,z
       - tempo_data:/var/tempo
-    mem_limit: 512m
+    # 512m era insuficiente: o Tempo chegou a 491 MiB (95,9% do limite), a um
+    # passo de ser morto pelo kernel. O consumo cresce com o volume de spans
+    # ingeridos, e este projeto gera muitos por causa do N+1 em listarEstoque().
+    mem_limit: 1g
     networks:
       - rotavital-net
 

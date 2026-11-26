@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Rota Vital — Observabilidade</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Noto Sans", "DejaVu Sans", Arial, sans-serif;
+    font-size: 10.5pt; line-height: 1.5; color: #1a1a1a; margin: 0;
+  }
+  h1, h2, h3 { color: #8b1a1a; line-height: 1.25; }
+  h1 { font-size: 20pt; margin: 0 0 4pt; }
+  h2 {
+    font-size: 14pt; margin: 22pt 0 8pt;
+    border-bottom: 2px solid #8b1a1a; padding-bottom: 3pt;
+    page-break-after: avoid;
+  }
+  h3 { font-size: 11.5pt; margin: 11pt 0 4pt; color: #333; page-break-after: avoid; }
+  p { margin: 0 0 7pt; text-align: justify; }
+  code {
+    font-family: "DejaVu Sans Mono", monospace; font-size: 9pt;
+    background: #f2f2f2; padding: 1px 4px; border-radius: 3px;
+  }
+  pre {
+    font-family: "DejaVu Sans Mono", monospace; font-size: 8pt;
+    background: #f7f7f7; border: 1px solid #ddd; border-left: 3px solid #8b1a1a;
+    padding: 8pt; overflow: hidden; white-space: pre; line-height: 1.35;
+    page-break-inside: avoid;
+  }
+  table {
+    width: 100%; border-collapse: collapse; margin: 8pt 0 12pt; font-size: 9pt;
+    page-break-inside: avoid;
+  }
+  th {
+    background: #8b1a1a; color: #fff; text-align: left;
+    padding: 5pt 6pt; font-weight: 600;
+  }
+  td { padding: 4pt 6pt; border-bottom: 1px solid #e0e0e0; vertical-align: top; }
+  tr:nth-child(even) td { background: #fafafa; }
+  figure { margin: 7pt 0 10pt; page-break-inside: avoid; text-align: center; }
+  figure img {
+    max-width: 100%; max-height: 92mm; width: auto;
+    border: 1px solid #bbb; border-radius: 3px;
+  }
+  figcaption {
+    font-size: 8.5pt; color: #555; margin-top: 4pt; font-style: italic;
+  }
+  .capa {
+    height: 247mm; display: flex; flex-direction: column;
+    justify-content: center; text-align: center; page-break-after: always;
+  }
+  .capa .inst { font-size: 12pt; color: #555; letter-spacing: 1px; }
+  .capa .tit { font-size: 27pt; color: #8b1a1a; margin: 14pt 0 4pt; font-weight: 700; }
+  .capa .sub { font-size: 14pt; color: #444; margin-bottom: 26pt; }
+  .capa .equipe { font-size: 9.5pt; margin: 0 auto; width: 78%; }
+  .capa .equipe td { border: none; padding: 2pt 5pt; }
+  .destaque {
+    background: #fdf4f4; border-left: 4px solid #8b1a1a;
+    padding: 8pt 11pt; margin: 10pt 0; page-break-inside: avoid;
+  }
+  .ok { color: #1a7a1a; font-weight: 600; }
+  .ruim { color: #b00; font-weight: 600; }
+  .quebra { page-break-before: always; }
+  footer { font-size: 8pt; color: #888; text-align: center; margin-top: 18pt; }
+</style>
+</head>
+<body>
+
+<div class="capa">
+  <div class="inst">CESAR SCHOOL — ANÁLISE E DESENVOLVIMENTO DE SISTEMAS</div>
+  <div class="inst">Infraestrutura de Comunicação</div>
+  <div class="tit">Rota Vital</div>
+  <div class="sub">Observabilidade com Actuator, Prometheus e Grafana</div>
+
+  <table class="equipe">
+    <tr><td>Allan Max de Jesus Rodrigues de Lima</td><td>amjrl@cesar.school</td></tr>
+    <tr><td>Boniek Araujo dos Santos Junior</td><td>basj@cesar.school</td></tr>
+    <tr><td>Caio Cesar Leandro Amorim</td><td>ccla@cesar.school</td></tr>
+    <tr><td>Luan Ventura Ferreira de Moura</td><td>lvfm2@cesar.school</td></tr>
+    <tr><td>Miguel Victor Lussac Barboza</td><td>mvlb@cesar.school</td></tr>
+    <tr><td>Pedro Augusto Carvalho Araujo</td><td>paca@cesar.school</td></tr>
+    <tr><td>Vinicius Pessoa de Albuquerque</td><td>vpa@cesar.school</td></tr>
+    <tr><td>Wesley Yuri da Silva</td><td>wys@cesar.school</td></tr>
+  </table>
+
+  <p style="margin-top:26pt; font-size:10pt; text-align:center;">
+    <strong>Repositório:</strong> https://github.com/JackkOps/Vital<br>
+    <strong>Branch:</strong> <code>feat/observability</code><br>
+    <strong>Grafana (acesso remoto):</strong> https://linhomachine.tail9034e2.ts.net
+  </p>
+  <p style="font-size:9pt; color:#666;">Recife, novembro de 2026</p>
+</div>
+
+<h2>1. O sistema e o que foi instrumentado</h2>
+
+<p>O <strong>Rota Vital</strong> é um sistema de gestão de hemocomponentes: controla o
+estoque de bolsas de sangue, recebe solicitações de hospitais, aloca bolsas compatíveis
+e calcula a rota de entrega entre unidades da rede usando o algoritmo de Dijkstra.</p>
+
+<p>A aplicação é uma API REST em <strong>Spring Boot 4.1.1</strong> (Java 21) com
+<strong>PostgreSQL 16</strong>, migrações versionadas em Flyway e 184 testes
+automatizados. A instrumentação cobre os <strong>três sinais</strong> da
+observabilidade, cada um com sua ferramenta e seu modo de transporte.</p>
+
+<table>
+  <tr><th>Sinal</th><th>Responde a pergunta</th><th>Ferramenta</th><th>Transporte</th></tr>
+  <tr><td>Métricas</td><td>Quanto? Com que frequência? Está piorando?</td><td>Prometheus</td><td><em>pull</em> (scrape a cada 15s)</td></tr>
+  <tr><td>Logs</td><td>O que exatamente aconteceu neste evento?</td><td>Loki + Alloy</td><td><em>push</em></td></tr>
+  <tr><td>Traces</td><td>Onde foi gasto o tempo desta requisição?</td><td>Tempo</td><td><em>push</em> (OTLP)</td></tr>
+</table>
+
+<div class="destaque">
+  <strong>Prometheus, Loki e Tempo não se comunicam entre si.</strong> Cada um
+  armazena um sinal de forma independente; a correlação entre eles acontece no
+  Grafana, na tela. Isso explica a regra de configuração: só quem faz <em>push</em>
+  (a aplicação, o Alloy) precisa saber o endereço do destino. O alvo de um
+  <em>pull</em> sequer sabe que está sendo observado.
+</div>
+
+<p>O que foi instrumentado na aplicação:</p>
+<ul>
+  <li><strong>Spring Boot Actuator</strong> expondo <code>health</code>,
+      <code>info</code>, <code>metrics</code> e <code>prometheus</code>;</li>
+  <li><strong>Micrometer</strong> publicando métricas de HTTP, JVM, pool de conexões
+      (HikariCP), Tomcat e repositórios Spring Data;</li>
+  <li><strong>métricas de negócio próprias</strong> (seção 3), criadas por anotação;</li>
+  <li><strong>OpenTelemetry</strong> gerando traces distribuídos com spans de HTTP,
+      camada de serviço e consultas JDBC;</li>
+  <li><strong>correlação log↔trace</strong>: todo log carrega <code>traceId</code> e
+      <code>spanId</code>, e o Grafana transforma esse id em link direto para o trace.</li>
+</ul>
+
+<h2 class="quebra">2. Arquitetura</h2>
+
+<pre>
+                        ┌──────────────────────────────┐
+                        │        GRAFANA  :3000        │
+                        │  (único serviço publicado)   │
+                        └───┬──────────┬───────────┬───┘
+                   consulta │          │           │
+          ┌─────────────────┘          │           └────────────────┐
+          v                            v                            v
+ ┌────────────────┐           ┌────────────────┐          ┌────────────────┐
+ │   PROMETHEUS   │           │      LOKI      │          │     TEMPO      │
+ │    métricas    │           │      logs      │          │     traces     │
+ │  :9090  (pull) │           │  :3100 (push)  │          │  :4318 (push)  │
+ └──┬────┬────┬───┘           └───────▲────────┘          └───────▲────────┘
+    │    │    │                       │                           │
+scrape   │    │ scrape            push│                       push│
+    │    │    │                       │                           │
+    v    │    v                 ┌─────┴──────┐                    │
+┌────────┐│┌──────────────┐     │   ALLOY    │                    │
+│  NODE  │││   cADVISOR   │     │  (coletor) │                    │
+│EXPORTER│││              │     └─────▲──────┘                    │
+│ :9100  │││    :8080     │           │ lê o stdout               │
+│ CPU/RAM│││ por contêiner│           │ dos 10 contêineres        │
+│ disco  │││              │           │                           │
+└────────┘│└──────────────┘    ┌──────┴───────────────────────────┴────┐
+          │                    │         API  (Spring Boot)            │
+          └───────────────────>│  :8080  API de negócio  (publicada)   │
+           /actuator/prometheus │  :9091  Actuator       (NÃO publicada)│
+                               └───────────────┬───────────────────────┘
+                                               │ JDBC
+                                     ┌─────────┴─────────┐
+                                     │  POSTGRESQL :5432 │
+                                     │  (NÃO publicada)  │
+                                     └───────────────────┘
+</pre>
+
+<h3>Serviços e exposição de portas</h3>
+
+<table>
+  <tr><th>Serviço</th><th>Imagem</th><th>Porta</th><th>Publicada?</th><th>Função</th></tr>
+  <tr><td>api</td><td>vital-api (própria)</td><td>8080</td><td>sim</td><td>API REST de negócio</td></tr>
+  <tr><td>api (Actuator)</td><td>—</td><td>9091</td><td><span class="ok">não</span></td><td><code>/actuator/*</code>, raspado internamente</td></tr>
+  <tr><td>db</td><td>postgres:16-alpine</td><td>5432</td><td><span class="ok">não</span></td><td>banco de dados</td></tr>
+  <tr><td>grafana</td><td>grafana/grafana:13.0</td><td>3000</td><td>sim</td><td>visualização</td></tr>
+  <tr><td>prometheus</td><td>prom/prometheus:v3.9.0</td><td>9090</td><td><span class="ok">não</span></td><td>métricas</td></tr>
+  <tr><td>loki</td><td>grafana/loki:3.7.10</td><td>3100</td><td><span class="ok">não</span></td><td>logs</td></tr>
+  <tr><td>alloy</td><td>grafana/alloy:v1.22.0</td><td>—</td><td><span class="ok">não</span></td><td>coleta de logs</td></tr>
+  <tr><td>tempo</td><td>grafana/tempo:2.10.10</td><td>3200/4318</td><td><span class="ok">não</span></td><td>traces</td></tr>
+  <tr><td>node-exporter</td><td>prom/node-exporter:v1.13.1</td><td>9100</td><td><span class="ok">não</span></td><td>métricas do host</td></tr>
+  <tr><td>cadvisor</td><td>cadvisor:v0.55.1</td><td>8080</td><td><span class="ok">não</span></td><td>métricas por contêiner</td></tr>
+  <tr><td>carga</td><td>python:3.13-alpine</td><td>—</td><td>—</td><td>gerador de tráfego</td></tr>
+</table>
+
+<p>Todas as imagens têm <strong>versão fixada</strong>, nunca <code>latest</code>:
+uma stack de observabilidade que muda sozinha a cada <code>pull</code> deixa de ser
+uma referência confiável.</p>
+
+<h2 class="quebra">3. Métricas de negócio</h2>
+
+<p>Criadas com Micrometer e instrumentadas <strong>por anotação</strong>
+(<code>@Timed</code>, <code>@Counted</code>, <code>@Observed</code> processadas por
+aspectos AOP). A decisão foi arquitetural: injetar <code>MeterRegistry</code> nos
+services exigiria alterar seus construtores, e os testes os instanciam diretamente —
+a suíte quebraria por um motivo alheio à regra de negócio.</p>
+
+<table>
+  <tr><th>Métrica</th><th>Tipo</th><th>O que mede</th><th>Tags</th></tr>
+  <tr><td><code>rotavital_bolsas_estoque</code></td><td>Gauge</td><td>bolsas em estoque no instante da coleta</td><td><code>status</code>, <code>componente</code></td></tr>
+  <tr><td><code>rotavital_solicitacoes_quantidade</code></td><td>Gauge</td><td>solicitações por situação e urgência</td><td><code>status</code>, <code>urgencia</code></td></tr>
+  <tr><td><code>rotavital_bolsas_alocadas_total</code></td><td>Counter</td><td>alocações acumuladas desde a subida</td><td><code>tipo_sanguineo</code></td></tr>
+  <tr><td><code>rotavital_rotas_calculo_seconds</code></td><td>Timer</td><td>tempo do cálculo de rota (Dijkstra)</td><td>histograma habilitado</td></tr>
+  <tr><td><code>rotavital_estoque_listagem_seconds</code></td><td>Timer</td><td>tempo de listar o estoque</td><td>—</td></tr>
+  <tr><td><code>rotavital_solicitacoes_listagem_seconds</code></td><td>Timer</td><td>tempo de listar solicitações</td><td>—</td></tr>
+</table>
+
+<div class="destaque">
+  <strong>Por que Gauge e não Counter para o estoque.</strong> Um <em>counter</em> só
+  cresce; responderia "quantas bolsas já passaram pelo sistema". A pergunta do negócio
+  é "quantas bolsas tenho agora", e esse número sobe e desce — isso é um
+  <em>gauge</em>. Escolher o tipo errado produz um painel que parece certo e informa
+  o oposto do pretendido.
+</div>
+
+<p>Os gauges são alimentados por um <code>MultiGauge</code> atualizado a cada 15
+segundos, que executa agregações <code>GROUP BY</code> diretamente no banco em vez de
+carregar entidades em memória — o custo da observabilidade não pode competir com o
+da aplicação.</p>
+
+<h2 class="quebra">4. Evidências</h2>
+
+<h3>4.1 Stack em execução</h3>
+<figure>
+  <img src="evidencias/e5/01-docker-compose-ps.png" alt="docker compose ps">
+  <figcaption>Figura 1 — <code>docker compose ps</code>: os 10 contêineres no ar.
+  Note que apenas <code>api</code> (8080) e <code>grafana</code> (3000) têm porta
+  publicada (<code>0.0.0.0:</code>); os demais expõem portas apenas na rede interna.</figcaption>
+</figure>
+
+<h3>4.2 Prometheus: alvos de coleta</h3>
+<figure>
+  <img src="evidencias/e5/02-prometheus-status-targets.png" alt="Status Targets">
+  <figcaption>Figura 2 — <em>Status → Target health</em>: <strong>4 de 4 alvos UP</strong>.
+  O alvo da aplicação aponta para <code>api:9091/actuator/prometheus</code> — a porta de
+  gerenciamento, inacessível de fora.</figcaption>
+</figure>
+
+<h3>4.3 Consulta PromQL de uma métrica de negócio</h3>
+<figure>
+  <img src="evidencias/e5/03-prometheus-consulta-promql-metrica-negocio.png" alt="PromQL">
+  <figcaption>Figura 3 — consulta <code>rotavital_bolsas_estoque</code> retornando
+  <strong>8 séries</strong>, uma por combinação de componente e status, com a tag
+  <code>application="rotavital"</code> aplicada globalmente.</figcaption>
+</figure>
+
+<h3 class="quebra">4.4 Dashboard da aplicação</h3>
+<figure>
+  <img src="evidencias/e5/04-dashboard-aplicacao.png" alt="Dashboard aplicação">
+  <figcaption>Figura 4 — 25 painéis: throughput, latência p95 por rota, requisições por
+  status HTTP (200/201/202/404/500/503), taxa de erro, heap, pausas de GC e conexões do
+  pool. Os códigos 5xx vêm de um endpoint de diagnóstico proposital, protegido por
+  <code>@ConditionalOnProperty</code>.</figcaption>
+</figure>
+
+<h3>4.5 Dashboard de infraestrutura</h3>
+<figure>
+  <img src="evidencias/e5/05-dashboard-infraestrutura.png" alt="Dashboard infra">
+  <figcaption>Figura 5 — host e contêineres lado a lado: CPU por modo, memória, carga,
+  disco, rede e consumo por contêiner. É o que permite distinguir "o sistema está lento"
+  de "<em>quem</em> está lento".</figcaption>
+</figure>
+
+<h3>4.6 Logs e traces</h3>
+<figure>
+  <img src="evidencias/e5/06-dashboard-logs-e-traces.png" alt="Dashboard logs">
+  <figcaption>Figura 6 — volume de logs por serviço e por nível, logs da aplicação Java
+  e um painel só com erros e avisos. Cada linha traz <code>traceId</code> e
+  <code>spanId</code>, que o Grafana converte em link para o trace no Tempo.</figcaption>
+</figure>
+
+<h3 class="quebra">4.7 Dashboards da comunidade</h3>
+<figure>
+  <img src="evidencias/e5/07-dashboard-comunidade-jvm-4701.png" alt="JVM 4701">
+  <figcaption>Figura 7 — JVM Micrometer (<strong>#4701</strong>), importado da
+  comunidade e alimentado pelas mesmas métricas do Actuator.</figcaption>
+</figure>
+<figure>
+  <img src="evidencias/e5/08-dashboard-comunidade-node-exporter-1860.png" alt="Node 1860">
+  <figcaption>Figura 8 — Node Exporter Full (<strong>#1860</strong>): CPU, RAM, swap e
+  disco do host.</figcaption>
+</figure>
+<figure>
+  <img src="evidencias/e5/09-dashboard-comunidade-cadvisor-14282.png" alt="cAdvisor 14282">
+  <figcaption>Figura 9 — cAdvisor (<strong>#14282</strong>): consumo por contêiner.</figcaption>
+</figure>
+
+<h2 class="quebra">5. Acesso remoto e segurança</h2>
+
+<h3>5.1 Como acessar</h3>
+<table>
+  <tr><th>Item</th><th>Valor</th></tr>
+  <tr><td>URL</td><td>https://linhomachine.tail9034e2.ts.net</td></tr>
+  <tr><td>Usuário de leitura</td><td><code>professor</code> (papel <strong>Viewer</strong>)</td></tr>
+  <tr><td>Senha</td><td>informada à parte, junto com a entrega</td></tr>
+  <tr><td>Mecanismo</td><td>Tailscale Funnel (HTTPS, certificado Let's Encrypt)</td></tr>
+  <tr><td>Requisito do avaliador</td><td><strong>nenhum</strong> — não é preciso instalar Tailscale</td></tr>
+</table>
+
+<p>O Funnel publica <strong>apenas a porta 3000</strong> num endereço HTTPS público.
+Verificou-se que o DNS público resolve o nome para endereços públicos
+(<code>209.177.145.97</code> e <code>.192</code>) e que o acesso forçado por esses
+endereços — ignorando o DNS local da máquina — responde <code>HTTP 200</code>. Logo,
+o caminho não passa pela rede privada do Tailscale, e qualquer navegador acessa.</p>
+
+<h3>5.2 Medidas de segurança adotadas</h3>
+<table>
+  <tr><th>Requisito</th><th>Como foi atendido</th></tr>
+  <tr><td><code>/actuator</code> não exposto</td><td><code>management.server.port=9091</code> — porta de gerenciamento separada e não publicada</td></tr>
+  <tr><td>Nunca expor <code>env</code>/<code>loggers</code></td><td>lista de endpoints restrita a <code>health, info, metrics, prometheus</code></td></tr>
+  <tr><td>Senha padrão do Grafana proibida</td><td>senha vem do <code>.env</code>; o compose usa <code>${VAR:?}</code> e <strong>aborta</strong> o <code>up</code> se ela faltar</td></tr>
+  <tr><td><code>.env</code> não versionado</td><td>apenas <code>.env.example</code> está no repositório</td></tr>
+  <tr><td>Menor privilégio</td><td>avaliador recebe papel Viewer; autocadastro desativado</td></tr>
+  <tr><td>Superfície mínima</td><td>Prometheus, Loki, Tempo e PostgreSQL sem porta publicada</td></tr>
+</table>
+
+<h3>5.3 Verificação da exposição pelo túnel</h3>
+<table>
+  <tr><th>Requisição pela URL pública</th><th>Resultado</th><th>Interpretação</th></tr>
+  <tr><td><code>/api/health</code></td><td>200</td><td>Grafana no ar</td></tr>
+  <tr><td><code>/api/search</code> sem credenciais</td><td><span class="ok">401</span></td><td>exige autenticação</td></tr>
+  <tr><td><code>/api/search</code> com usuário Viewer</td><td>200</td><td>avaliador vê os 6 dashboards</td></tr>
+  <tr><td><code>/actuator/prometheus</code></td><td><span class="ok">302</span></td><td>rota inexistente no Grafana</td></tr>
+  <tr><td><code>/api/v1/query</code> (API do Prometheus)</td><td><span class="ok">401</span></td><td>inalcançável</td></tr>
+  <tr><td>portas 9090, 3100, 3200, 8080, 9091, 5432</td><td><span class="ok">sem resposta</span></td><td>o Funnel publica só a 3000</td></tr>
+</table>
+
+<div class="destaque">
+  <strong>Vazamento encontrado e corrigido.</strong> Durante essa verificação,
+  <code>/metrics</code> — o endpoint de métricas do <em>próprio Grafana</em> —
+  respondia <span class="ruim">200 sem autenticação</span>, expondo 4.432 séries,
+  entre elas <code>grafana_build_info</code> com a versão exata do servidor: o
+  primeiro dado que um atacante usa para cruzar com vulnerabilidades conhecidas.
+  Corrigido com <code>GF_METRICS_ENABLED=false</code> e revalidado.
+</div>
+
+<h2 class="quebra">6. Dificuldades e lições aprendidas</h2>
+
+<h3>6.1 O trace revelou um defeito real de desempenho</h3>
+
+<p>Ao inspecionar um trace de <code>GET /api/bolsas</code>, a árvore de spans mostrou
+<strong>526 consultas ao banco numa única requisição</strong>:</p>
+
+<pre>
+http get /api/bolsas                 60,06 ms
+    connection                       59,47 ms
+    listar-estoque-de-bolsas         57,82 ms
+        query    1,12 ms   &lt;- a consulta principal
+        query    0,13 ms   &lt;- e mais 525 consultas
+        (... x526 no total)
+</pre>
+
+<p>É o clássico <strong>problema N+1</strong>: o método carrega as bolsas e, ao montar
+cada resposta, acessa um relacionamento <em>lazy</em>, disparando uma consulta por
+registro. O custo cresce linearmente com o estoque.</p>
+
+<p>A lição é o argumento mais forte a favor de observabilidade que encontramos no
+projeto: <strong>nenhuma métrica teria revelado isso</strong>. O painel de latência
+mostraria "p95 de 60 ms" e ninguém perguntaria mais nada. Só a árvore de spans mostra
+<em>onde</em> o tempo foi gasto. É a diferença entre saber que está lento e saber por quê.</p>
+
+<h3>6.2 A observabilidade pode derrubar o que observa</h3>
+
+<p>Com amostragem em 100%, aquele N+1 gerava mais de 4.000 spans por segundo. O
+exportador não deu conta e passou a registrar
+<code>dropped 119720 span(s) ... queue is full</code> — ou seja, o painel de logs
+exibia com destaque os erros do próprio sistema de observabilidade.</p>
+
+<p>Corrigido reduzindo a amostragem para 10% e ampliando a fila. Amostrar é a prática
+normal em produção justamente por isso: traces são caros e repetitivos, e uma amostra
+representativa responde às mesmas perguntas por um décimo do custo.</p>
+
+<h3>6.3 Armadilhas de ambiente que custaram tempo</h3>
+
+<table>
+  <tr><th>Sintoma</th><th>Causa real</th><th>Solução</th></tr>
+  <tr><td><code>permission denied</code> ao montar arquivos de configuração</td><td>SELinux em modo <em>enforcing</em> — <code>chmod</code> não resolve</td><td>sufixo <code>:z</code> nos volumes</td></tr>
+  <tr><td>Alloy sem acesso ao socket do Docker, mesmo como root</td><td>rótulo SELinux do contêiner</td><td><code>security_opt: [label:disable]</code>, preferido a <code>privileged</code></td></tr>
+  <tr><td>Grafana rejeitando a senha nova</td><td><code>GF_SECURITY_ADMIN_PASSWORD</code> só vale no <strong>primeiro</strong> boot; depois a senha vive no volume</td><td>remover o volume (tudo é provisionado) e subir de novo</td></tr>
+  <tr><td><code>jdbc.includes=connection,query</code> ignorado</td><td>os valores são o enum em <strong>MAIÚSCULAS</strong>; em minúsculas falha em silêncio</td><td><code>CONNECTION,QUERY</code></td></tr>
+  <tr><td>Métricas de negócio ausentes</td><td>banco vazio: agregação <code>GROUP BY</code> sem linhas não publica série</td><td>gerador de carga passou a escrever, não só ler</td></tr>
+  <tr><td>"O avaliador não vê dashboard nenhum"</td><td>a Home padrão do Grafana lista só favoritos e recentes — vazios para usuário novo</td><td>definir um <em>home dashboard</em> padrão</td></tr>
+</table>
+
+<p>A última merece destaque porque o diagnóstico errado era tentador. Parecia falta de
+permissão, mas a API consultada com as credenciais do próprio Viewer devolvia
+<strong>200 com os 6 dashboards</strong> — e não 403. Consultar a API com as
+credenciais do usuário afetado separa, em um único comando, um problema de permissão
+de um problema de apresentação.</p>
+
+<h3>6.4 Conceitos que o trabalho consolidou</h3>
+
+<p><strong><code>ports:</code> não é firewall.</strong> Ele apenas cria o
+encaminhamento do host para o contêiner. Qualquer serviço na mesma rede Docker
+alcança qualquer porta que esteja escutando, publicada ou não. A prova está nesta
+entrega: fechamos a porta do Actuator para o mundo e o Prometheus continuou raspando
+normalmente, porque ele nunca precisou da porta publicada.</p>
+
+<p><strong>Cardinalidade é o custo escondido.</strong> O <code>traceId</code> é enviado
+ao Loki como metadado estruturado, e não como rótulo: cada requisição tem um id único,
+e usá-lo como rótulo criaria uma série nova por requisição. A mesma disciplina vale
+para métricas — rótulo é para valor que se repete.</p>
+
+<footer>
+  Rota Vital — Observabilidade · CESAR School · novembro de 2026<br>
+  Documentação técnica completa em <code>docs/observabilidade.md</code> do repositório.
+</footer>
+
+</body>
+</html>

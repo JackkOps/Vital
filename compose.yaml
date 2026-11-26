@@ -89,8 +89,11 @@ services:
       - '--web.enable-remote-write-receiver'
     # PORTA NAO PUBLICADA (R5.1): o Grafana consulta o Prometheus pela rede
     # interna (http://prometheus:9090). Publicar a 9090 daria a qualquer um
-    # acesso de leitura a todas as metricas e a execucao de PromQL arbitrario.
-    # Para ver Status -> Targets durante o desenvolvimento, descomente:
+    # acesso de leitura a todas as metricas e execucao de PromQL arbitrario —
+    # inaceitavel com o tunel publico ligado.
+    # Foi aberta temporariamente apenas para capturar as evidencias do
+    # enunciado (Status -> Targets e uma consulta PromQL) e fechada em seguida.
+    # Para reabrir em desenvolvimento, descomente:
     # ports:
     #   - "9090:9090"
     networks:

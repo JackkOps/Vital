@@ -277,11 +277,18 @@ testes os instanciam diretamente.
 
 | Métrica | Tipo | O que mede | Tags |
 |---|---|---|---|
-| `rotavital_bolsas_estoque` | Gauge | bolsas em estoque **agora** | `status`, `componente`, `tipo_sanguineo` |
+| `rotavital_bolsas_estoque` | Gauge | bolsas em estoque **agora** | `status`, `componente` |
 | `rotavital_solicitacoes_quantidade` | Gauge | solicitações por situação | `status`, `urgencia` |
-| `rotavital_remessas_quantidade` | Gauge | remessas em trânsito | `status` |
 | `rotavital_bolsas_alocadas_total` | Counter | alocações acumuladas | `tipo_sanguineo` |
 | `rotavital_rotas_calculo_seconds` | Timer | tempo do Dijkstra | histograma habilitado |
+| `rotavital_estoque_listagem_seconds` | Timer | tempo de listar o estoque | — |
+| `rotavital_solicitacoes_listagem_seconds` | Timer | tempo de listar solicitações | — |
+
+Há também `rotavital_remessas_quantidade` (Gauge) implementada em
+`MetricasNegocio`, que só publica séries quando existem remessas registradas —
+agregações `GROUP BY` sem linhas não geram métrica. O fluxo de remessas não é
+exercitado pelo gerador de carga, então ela não aparece no Prometheus durante a
+demonstração, e nenhum painel depende dela.
 
 Gauge e não Counter para estoque: estoque sobe e desce; um counter só cresce e
 responderia "quantas bolsas já existiram", não "quantas tenho agora".

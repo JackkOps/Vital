@@ -81,15 +81,15 @@ Regra de bolso: *"isso pode diminuir?"* Não → Counter. Sim → Gauge. É dura
 | R4.1 OK | `docker compose up -d` sobe **tudo**, sem passo manual | E3 | 0,75 |
 | R4.2 OK | Um job no Prometheus por app e por exporter; todos UP | E3 | |
 | R4.3 OK | Datasources provisionados por arquivo em `grafana/provisioning` | E3 | |
-| R4.4 | Dashboard de aplicação (JVM/HTTP) com dados reais | E4 | |
-| R4.5 | Dashboard de infraestrutura (host/contêineres) com dados reais | E4 | |
-| R4.6 | JSON dos dashboards versionado em `grafana/dashboards/` | E4 | 0,75 |
+| R4.4 OK | Dashboard de aplicação (JVM/HTTP) com dados reais | E4 | |
+| R4.5 OK | Dashboard de infraestrutura (host/contêineres) com dados reais | E4 | |
+| R4.6 OK | JSON dos dashboards versionado em `grafana/dashboards/` | E4 | 0,75 |
 | R5.1 | `/actuator/**` **não** exposto publicamente | E7 | |
 | R5.2 | Senha do Grafana trocada, via `.env` não versionado | E7 | |
 | R6.1 | Logs de todas as apps no Loki, filtráveis por aplicação | E5 | 0,75 |
 | R6.2 | Traces no Tempo com múltiplos spans (controller -> service -> banco) | E6 | |
 | R6.3 | `traceId` nos logs e navegação log -> trace no Grafana | E6 | 0,75 |
-| R6.4 | Script de carga gerando logs e traces, **incluindo caso de erro** | E5/E6 | |
+| R6.4 OK | Script de carga gerando logs e traces, **incluindo caso de erro** | E5/E6 | |
 | R7.1 | Grafana acessível remotamente pelo professor | E7 | |
 | R7.2 | Usuário com papel **Viewer** criado | E7 | |
 | R7.3 | Gerador de carga rodando durante a janela de correção | E7 | 0,75 |
@@ -228,6 +228,47 @@ Nunca em `/`, `/proc` ou `/sys` do host — reetiquetar o sistema de arquivos ra
 o **nome do serviço** no `compose.yaml` (não o `container_name`). Divergência entre
 os dois arquivos é a causa nº 1 de target DOWN.
 
+### 3.8 PromQL: as cinco construções usadas nos dashboards
+
+Toda consulta dos painéis é combinação destas cinco ideias.
+
+**1. Seletor** — escolhe séries por nome e labels.
+
+    http_server_requests_seconds_count{job="rotavital-api", status="200"}
+
+`=` igual, `!=` diferente, `=~` casa regex, `!~` não casa regex.
+
+**2. `rate(...[5m])`** — obrigatório para *counter*. Um counter só cresce, então seu
+valor absoluto não diz nada ("1.432 requisições desde o boot"). `rate` devolve a
+variação média por segundo dentro da janela, resistindo a reinícios da aplicação.
+
+    sum(rate(http_server_requests_seconds_count{job="rotavital-api"}[5m]))
+
+Regra: **counter sempre entra em `rate()`; gauge nunca.**
+
+**3. `sum(...) by (label)`** — agrega várias séries, mantendo apenas os labels listados.
+Sem `by`, viram um número só; com `by (uri)`, uma linha por rota.
+
+**4. `histogram_quantile(0.95, ...)`** — calcula percentil a partir dos buckets.
+Exige `by (le)` (*less or equal*, o label dos buckets) e só funciona se os buckets
+existirem — é o que a propriedade `percentiles-histogram` habilitou.
+
+    histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{...}[5m])) by (le))
+
+Por que p95 em vez de média: a média esconde picos. Se 95 requisições levam 10ms e
+5 levam 2s, a média dá 109ms — número que ninguém experimentou. O p95 revela os 2s.
+
+**5. Divisão para proporções** — numerador e denominador com a mesma agregação:
+
+    sum(rate(http_server_requests_seconds_count{status=~"4..|5.."}[5m]))
+    / sum(rate(http_server_requests_seconds_count[5m]))
+
+**Truque do Node Exporter:** ele não expõe "uso de CPU", expõe tempo **ocioso**.
+Daí `1 - avg(rate(node_cpu_seconds_total{mode="idle"}[5m]))`.
+
+**Pegadinha de médias sem histograma:** quando não há buckets (GC, repositories),
+a média sai de `rate(_sum) / rate(_count)` — nunca de `_sum` sozinho.
+
 ---
 
 ## 4. Diferenças Spring Boot 4.1.1 vs. o enunciado (3.3.5)
@@ -318,6 +359,33 @@ nada dependa de algo ainda inexistente.
 ---
 
 ## 8. Histórico
+
+- **2026-11-26 (F3 e F4 — E4 CONCLUÍDA)** — Criado `scripts/gerador_carga.py`
+  (somente biblioteca padrão do Python: 8 workers, ~30 req/s, 3% de erro proposital
+  em rotas inexistentes, relatório de p50/p95 a cada 10s). O script revelou que
+  `/api/alocacoes` não possui `GET`: com ela na lista a taxa de erro media era
+  12,8% em vez de 3%, o que invalidaria o painel de erros.
+
+  Criados 2 dashboards versionados em `observability/grafana/dashboards/`:
+
+  | Dashboard | Painéis | Cobre |
+  |---|---|---|
+  | Aplicação (JVM & HTTP) | 15 | R2.1, R2.2, R2.3, R4.4 |
+  | Infraestrutura (Host & Contêineres) | 14 | R3.1, R3.2, R4.5 |
+
+  **As 43 consultas PromQL foram validadas uma a uma contra o Prometheus: 43 de 43
+  retornam dados, zero painel vazio.** Três precisaram correção após a validação:
+  `jvm_gc_pause_seconds_bucket` e `spring_data_repository_invocations_seconds_bucket`
+  não existem (histograma foi habilitado só para `http.server.requests`), então usam
+  média `rate(_sum)/rate(_count)` e `_max`; e `container_fs_usage_bytes` não possui
+  o label `name` (é por dispositivo do host), substituída pela divisão de CPU do
+  contêiner em `user` x `system`.
+
+  Armadilha nova encontrada: alterar o `uid` de um datasource já provisionado quebra
+  o boot do Grafana (`Datasource provisioning error: data source not found`), porque o
+  registro antigo persiste no volume `grafana_data`. Solução: bloco `deleteDatasources`
+  no provisionamento + limpeza do volume. O `uid` ficou **fixo** (`prometheus`) porque
+  os JSONs dos dashboards o referenciam; sem fixar, os painéis quebram em outra máquina.
 
 - **2026-11-25 (F2 — E2 e E3 CONCLUÍDAS)** — `compose.yaml` estendido com
   Prometheus v3.9.0, Node Exporter v1.13.1, cAdvisor v0.55.1 e Grafana 13.0

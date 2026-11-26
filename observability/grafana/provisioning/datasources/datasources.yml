@@ -9,9 +9,20 @@
 
 apiVersion: 1
 
+# Remove versões anteriores antes de recriar. Sem isto, mudar o 'uid' de um
+# datasource já provisionado quebra o boot do Grafana com
+# "Datasource provisioning error: data source not found", porque o registro
+# antigo continua no banco interno (volume grafana_data).
+deleteDatasources:
+  - name: Prometheus
+    orgId: 1
+
 datasources:
   - name: Prometheus
     type: prometheus
+    uid: prometheus            # uid FIXO: os JSONs dos dashboards referenciam
+                               # esta string. Sem fixar, o Grafana sorteia um uid
+                               # e os painéis quebram ao subir em outra máquina.
     access: proxy              # o Grafana (servidor) consulta, não o navegador
     url: http://prometheus:9090
     isDefault: true

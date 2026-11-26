@@ -21,11 +21,15 @@ scrape_configs:
   # --- Aplicação Java (Spring Boot Actuator) -------------------------------
   # Único alvo que precisa de 'metrics_path': o padrão do Prometheus é
   # /metrics, mas o Actuator publica em /actuator/prometheus.
-  # URL final = http://api:8080/actuator/prometheus
+  #
+  # PORTA 9091, não 8080: por segurança (R5.1) o Actuator foi movido para uma
+  # porta de gerenciamento própria, que não é publicada no host. O Prometheus
+  # alcança porque está na mesma rede Docker; o mundo externo, não.
+  # URL final = http://api:9091/actuator/prometheus
   - job_name: 'rotavital-api'
     metrics_path: '/actuator/prometheus'
     static_configs:
-      - targets: ['api:8080']
+      - targets: ['api:9091']
 
   # --- Métricas do HOST (CPU, RAM, disco, rede do Fedora) -----------------
   # Roda em contêiner, mas lê /proc e /sys do host montados como volume.

@@ -84,15 +84,15 @@ Regra de bolso: *"isso pode diminuir?"* Não → Counter. Sim → Gauge. É dura
 | R4.4 OK | Dashboard de aplicação (JVM/HTTP) com dados reais | E4 | |
 | R4.5 OK | Dashboard de infraestrutura (host/contêineres) com dados reais | E4 | |
 | R4.6 OK | JSON dos dashboards versionado em `grafana/dashboards/` | E4 | 0,75 |
-| R5.1 | `/actuator/**` **não** exposto publicamente | E7 | |
-| R5.2 | Senha do Grafana trocada, via `.env` não versionado | E7 | |
+| R5.1 OK | `/actuator/**` **não** exposto publicamente | E7 | |
+| R5.2 OK | Senha do Grafana trocada, via `.env` não versionado | E7 | |
 | R6.1 OK | Logs de todas as apps no Loki, filtráveis por aplicação | E5 | 0,75 |
 | R6.2 OK | Traces no Tempo com múltiplos spans (controller -> service -> banco) | E6 | |
 | R6.3 OK | `traceId` nos logs e navegação log -> trace no Grafana | E6 | 0,75 |
 | R6.4 OK | Script de carga gerando logs e traces, **incluindo caso de erro** | E5/E6 | |
-| R7.1 | Grafana acessível remotamente pelo professor | E7 | |
-| R7.2 | Usuário com papel **Viewer** criado | E7 | |
-| R7.3 | Gerador de carga rodando durante a janela de correção | E7 | 0,75 |
+| R7.1 OK | Grafana acessível remotamente pelo professor | E7 | |
+| R7.2 OK | Usuário com papel **Viewer** criado | E7 | |
+| R7.3 OK | Gerador de carga rodando durante a janela de correção | E7 | 0,75 |
 | R8.1 | README com pré-requisitos, comandos, portas/URLs | E8 | |
 | R8.2 | PDF: capa, descrição, diagrama, evidências datadas, lições | E8 | 0,75 |
 | A1 OK | >= 2 métricas de negócio com Micrometer, painel próprio | Adic. | +1,00 |
@@ -233,6 +233,9 @@ Nunca em `/`, `/proc` ou `/sys` do host — reetiquetar o sistema de arquivos ra
 | `jdbc.includes=connection,query` não surtiu efeito | Os valores são o **enum em MAIÚSCULAS**; em minúsculas a propriedade é silenciosamente ignorada | `jdbc.includes=CONNECTION,QUERY` + `jdbc.resultset-operations.enabled=false` |
 | Nenhum log de nível ERROR na aplicação | O Spring trata `ResponseStatusException` como erro esperado e não emite log ERROR | `log.error(...)` explícito antes de lançar |
 | traceId não aparecia na resposta da API do Loki | O metadado existe, mas a serialização padrão não o inclui | header `X-Loki-Response-Encoding-Flags: categorize-labels` (o Grafana já envia) |
+
+| Grafana rejeitava a senha nova (`401 Invalid username or password`) | **`GF_SECURITY_ADMIN_PASSWORD` só tem efeito no PRIMEIRO boot.** Depois a senha vive no volume `grafana_data` e a variável é ignorada | apagar o volume e recriar (tudo é provisionado), ou `grafana cli admin reset-admin-password` |
+| `SyntaxError` no script do Viewer | Aspas duplas do Python dentro de string Bash com escaping | usar `%`-format e `aspas simples` no `python3 -c` |
 
 **Regra de ouro do acoplamento:** o valor em `targets:` do `prometheus.yml` deve ser
 o **nome do serviço** no `compose.yaml` (não o `container_name`). Divergência entre
@@ -389,6 +392,192 @@ relacionamento numa só viagem ao banco.
 **Observação metodológica:** nenhuma métrica teria apontado isso. O painel de latência
 mostraria "p95 de 60 ms" sem explicar o porquê; só a árvore de spans mostra *onde* o
 tempo foi gasto. É a diferença entre saber que está lento e saber por quê.
+
+---
+
+## 5.2 Segurança e acesso remoto (E7)
+
+### O que estava exposto antes
+
+Diagnóstico feito do próprio host, antes de qualquer ajuste:
+
+| Porta | Serviço | Situação | Risco |
+|---|---|---|---|
+| 8080 | API + **`/actuator/*`** | HTTP 200 | `/actuator/env` entregaria a senha do banco |
+| 9090 | Prometheus | HTTP 200 | leitura de todas as métricas e PromQL arbitrário |
+| 5432 | **PostgreSQL** | porta aberta | o banco inteiro alcançável |
+| 3000 | Grafana | HTTP 200 | correto, é o único que deve ficar |
+
+Enquanto tudo isso valia apenas para `localhost`, o impacto era baixo. **A partir do
+momento em que a máquina entra numa VPN ou ganha um túnel público, cada uma dessas
+portas passa a ser alcançável.** Por isso o fechamento veio ANTES de expor.
+
+### Solução: porta de gerenciamento separada
+
+Em vez de fechar a porta da aplicação (o que tornaria a API inacessível), o Actuator
+foi movido para uma porta própria:
+
+    management.server.port=9091
+
+A 8080 continua servindo a API de negócio; a **9091 não é publicada** no compose.
+Resultado verificado:
+
+| Verificação | De fora (host) | De dentro da rede Docker |
+|---|---|---|
+| `GET :8080/api/bolsas` | **200** | 200 |
+| `GET :8080/actuator/prometheus` | **404** (saiu de lá) | 404 |
+| `GET :9091/actuator/prometheus` | **sem resposta** | **200** |
+| `GET :9090/-/healthy` (Prometheus) | **sem resposta** | 200 |
+| Porta 5432 (Postgres) | **fechada** | alcançável por DNS `db:5432` |
+| `GET :3000` (Grafana) | **200** | 200 |
+
+E a coleta não quebrou: **4 de 4 targets UP**, agora em
+`http://api:9091/actuator/prometheus`.
+
+Isso é a demonstração prática de que `ports:` **não é firewall**: ele só cria o NAT
+host→contêiner. Vizinhos da mesma rede alcançam qualquer porta que esteja escutando,
+com ou sem `ports:`.
+
+### Usuário de leitura (R7.2)
+
+O Grafana provisiona datasources e dashboards por arquivo, mas **não usuários** —
+a criação é pela API de administração. Daí o script
+`scripts/criar_usuario_viewer.sh`, idempotente (rodar duas vezes não duplica nada).
+
+Por que não entregar o admin ao professor: princípio do menor privilégio. Permissões
+verificadas na prática, com o usuário `professor` real:
+
+| Ação | Resultado | Esperado |
+|---|---|---|
+| Listar dashboards | **200** | pode ver |
+| Listar datasources | 200 (sem nenhum campo sensível) | aceitável |
+| Criar/editar dashboard | **403** | bloqueado |
+| Criar datasource | **403** | bloqueado |
+| Criar usuário | **403** | bloqueado |
+
+Papéis conferidos: `admin` = Admin, `professor` = Viewer.
+
+Observação: o Viewer **lista** os datasources, mas a resposta não traz
+`secureJsonData`, `password` nem `basicAuthPassword` — e os três datasources deste
+projeto não têm credencial alguma (são alcançados pela rede interna, sem autenticação).
+Nada sensível é exposto.
+
+**Armadilha importante para a entrega:** `GF_SECURITY_ADMIN_PASSWORD` só é aplicada
+quando o Grafana cria o usuário admin, no primeiro boot. Trocar a senha no `.env`
+depois **não surte efeito**, porque ela passa a viver no volume `grafana_data`. Para
+aplicar uma senha nova: remover o volume e subir de novo (seguro, pois datasources e
+dashboards são provisionados por arquivo) ou usar
+`grafana cli admin reset-admin-password`.
+
+Esse incidente serviu de **teste de reprodutibilidade** (R4.1): com o volume apagado,
+um único `docker compose up -d` reconstruiu 3 datasources e 6 dashboards sem nenhum
+passo manual — exatamente o que acontecerá na máquina de quem clonar o repositório.
+
+### Acesso remoto: Tailscale
+
+| Opção | Professor precisa | URL | HTTPS | Exposição |
+|---|---|---|---|---|
+| Tailscale puro (VPN) | instalar app + aceitar convite | IP `100.x.y.z:3000` | não | só a tailnet |
+| **Tailscale Funnel** | **nada, só o link** | `https://<maquina>.<tailnet>.ts.net` | **sim** | internet |
+
+**Decisão: Funnel.** Justificativa: o enunciado exige acesso durante a janela de
+correção, e cada passo extra exigido do professor (instalar app, aceitar convite,
+aprovar dispositivo) é risco de perder os 0,75 pontos por algo que não é técnico.
+
+Contrapartida aceita e mitigada: com Funnel o Grafana fica na internet aberta, então
+a senha passa a ser a única barreira. Mitigações aplicadas:
+- senha do admin vinda do `.env` não versionado, com `${VAR:?}` no compose, que faz
+  o `up` **falhar** se ela não existir (em vez de subir com `admin/admin`);
+- `GF_USERS_ALLOW_SIGN_UP=false` (ninguém cria conta sozinho);
+- professor recebe usuário **Viewer**, não admin;
+- apenas a porta 3000 é publicada — Prometheus, Loki, Tempo e `/actuator` ficam na
+  rede interna, fora do alcance do túnel.
+
+### Configuração aplicada
+
+```
+sudo systemctl enable --now tailscaled     # daemon sobe junto com o sistema
+sudo tailscale up                          # autentica a maquina na tailnet
+sudo tailscale funnel --bg 3000            # publica SO a porta 3000, em background
+```
+
+O `--bg` grava a configuração no estado do `tailscaled`
+(`/var/lib/tailscale/tailscaled.state`), então o túnel **sobrevive a reboot** e não
+fica preso a um terminal aberto.
+
+**URL de acesso:** `https://linhomachine.tail9034e2.ts.net`
+**Usuário para o professor:** `professor` (papel Viewer), senha no `.env`.
+**Certificado:** Let's Encrypt, emitido automaticamente, válido até 24/02/2027.
+
+### Evidência de que o túnel expõe APENAS o Grafana
+
+Testes feitos pelo caminho público (DNS + TLS + proxy da Tailscale):
+
+| Requisição pela URL pública | Resultado | Leitura |
+|---|---|---|
+| `/api/health` | 200 | Grafana no ar |
+| `/login` | 200 | tela de login |
+| `/api/search` **sem credenciais** | **401** | exige autenticação |
+| `/api/search` com usuário Viewer | **200** | professor vê os 6 dashboards |
+| `/actuator/prometheus` | 302 (login) | rota não existe no Grafana |
+| `/api/v1/query?query=up` | 401 | API do Prometheus inalcançável |
+| `/loki/api/v1/labels` | 302 | API do Loki inalcançável |
+| portas 9090, 3100, 3200, 8080, 9091, 5432 no domínio público | **nenhuma responde** | o Funnel publica só a 3000 |
+
+**Vazamento encontrado e corrigido:** `/metrics` do próprio Grafana respondia **200
+sem autenticação**, expondo 4.432 séries — entre elas `grafana_build_info` com a
+versão exata (13.0.14), que é o primeiro dado usado para cruzar com CVEs conhecidas,
+além de contagem de usuários e organizações. Corrigido com `GF_METRICS_ENABLED=false`
+(revalidado: passou a 302). Também desligadas as chamadas de telemetria e verificação
+de atualização do Grafana.
+
+### "O professor entrou e não apareceu dashboard nenhum"
+
+Sintoma observado no primeiro acesso com o usuário Viewer: a tela inicial mostrava
+apenas "Starred dashboards" e "Recently viewed dashboards", ambos vazios.
+
+**Não era permissão.** A API consultada com as credenciais do próprio Viewer
+devolvia **200 com os 6 dashboards**; se fosse falta de permissão, viria 403. O que
+acontece é que a Home padrão do Grafana lista só favoritos e vistos recentemente —
+e para um usuário recém-criado ambos estão necessariamente vazios. Os dashboards
+estavam acessíveis o tempo todo pelo menu lateral **Dashboards**.
+
+Como foi resolvido, para não depender de o avaliador procurar o menu:
+
+    GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH:
+      /var/lib/grafana/dashboards/rotavital-aplicacao.json
+
+Agora quem abre a URL cai direto no dashboard da aplicação, com 25 painéis e dados.
+
+**Lição:** diante de "não aparece nada", consultar a API com as credenciais do
+usuário afetado separa em um comando o problema de permissão (403) do problema de
+apresentação (200 com a lista cheia).
+
+### O professor precisa instalar Tailscale?
+
+**Não** — e isso foi verificado, não suposto:
+
+| Verificação | Resultado |
+|---|---|
+| `dig @8.8.8.8 linhomachine.tail9034e2.ts.net` | `209.177.145.97`, `209.177.145.192` |
+| Esses IPs são da tailnet (`100.x`)? | **Não, são públicos** |
+| `curl --resolve` forçando o IP público | **HTTP 200** |
+
+O resolvedor público do Google conhece o nome e devolve **IPs públicos** dos
+servidores da Tailscale. Forçando o acesso por esses IPs — isto é, ignorando o
+MagicDNS da máquina local — o Grafana respondeu 200. Portanto o caminho não passa
+pela tailnet.
+
+Diferença entre as duas modalidades:
+
+- **Tailscale puro:** endereço `100.88.126.98`, faixa privada de CGNAT que só existe
+  dentro da tailnet → o app seria obrigatório.
+- **Funnel:** a Tailscale recebe o tráfego HTTPS em servidores públicos dela e o
+  encaminha pelo túnel até a máquina → **qualquer navegador acessa, sem app**, e o
+  certificado é um Let's Encrypt legítimo.
+
+**Risco residual:** a máquina precisa estar ligada e conectada durante a correção.
+Sem alternativa num cenário caseiro; a opção robusta seria uma VM em nuvem.
 
 ---
 

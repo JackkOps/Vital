@@ -86,16 +86,16 @@ Regra de bolso: *"isso pode diminuir?"* Não → Counter. Sim → Gauge. É dura
 | R4.6 OK | JSON dos dashboards versionado em `grafana/dashboards/` | E4 | 0,75 |
 | R5.1 | `/actuator/**` **não** exposto publicamente | E7 | |
 | R5.2 | Senha do Grafana trocada, via `.env` não versionado | E7 | |
-| R6.1 | Logs de todas as apps no Loki, filtráveis por aplicação | E5 | 0,75 |
-| R6.2 | Traces no Tempo com múltiplos spans (controller -> service -> banco) | E6 | |
-| R6.3 | `traceId` nos logs e navegação log -> trace no Grafana | E6 | 0,75 |
+| R6.1 OK | Logs de todas as apps no Loki, filtráveis por aplicação | E5 | 0,75 |
+| R6.2 OK | Traces no Tempo com múltiplos spans (controller -> service -> banco) | E6 | |
+| R6.3 OK | `traceId` nos logs e navegação log -> trace no Grafana | E6 | 0,75 |
 | R6.4 OK | Script de carga gerando logs e traces, **incluindo caso de erro** | E5/E6 | |
 | R7.1 | Grafana acessível remotamente pelo professor | E7 | |
 | R7.2 | Usuário com papel **Viewer** criado | E7 | |
 | R7.3 | Gerador de carga rodando durante a janela de correção | E7 | 0,75 |
 | R8.1 | README com pré-requisitos, comandos, portas/URLs | E8 | |
 | R8.2 | PDF: capa, descrição, diagrama, evidências datadas, lições | E8 | 0,75 |
-| A1 | >= 2 métricas de negócio com Micrometer, painel próprio | Adic. | +1,00 |
+| A1 OK | >= 2 métricas de negócio com Micrometer, painel próprio | Adic. | +1,00 |
 
 ### Adaptações justificadas
 
@@ -224,6 +224,16 @@ para Ubuntu/Debian). Material direto para a seção "dificuldades encontradas" d
 Nunca em `/`, `/proc` ou `/sys` do host — reetiquetar o sistema de arquivos raiz
 é destrutivo. Por isso os volumes do `node-exporter` e do `cadvisor` não o levam.
 
+| `'dependencies.dependency.version' is missing` para `spring-boot-starter-aop` | No Boot 4 o starter foi renomeado; o nome antigo existe no Maven Central mas **não é gerenciado pelo BOM 4.x** | usar **`spring-boot-starter-aspectj`** |
+| Métricas de negócio não apareciam no `/actuator/prometheus` | Banco vazio: `GROUP BY` sem linhas = MultiGauge sem séries. Não havia erro algum — simplesmente não havia o que publicar | gerador de carga passou a fazer **escrita** (POST) e a semear o banco |
+| Nome exportado `rotavital_bolsas_estoque_bolsas` | `baseUnit("bolsas")` é anexado ao fim do nome pelo Micrometer | remover `baseUnit` quando o nome já carrega a unidade |
+| `List<Row<capture of ?>> cannot be converted to List<Row<?>>` | Inferência de genéricos em `.map(...).toList()` encadeado | montar `List<MultiGauge.Row<?>>` com laço e `ArrayList` |
+
+| Alloy: `permission denied while trying to connect to the docker API` | SELinux: mesmo como root, o processo roda com label `container_t`, sem acesso ao socket do daemon | `security_opt: [label:disable]` (mais cirúrgico que `privileged: true`) |
+| `jdbc.includes=connection,query` não surtiu efeito | Os valores são o **enum em MAIÚSCULAS**; em minúsculas a propriedade é silenciosamente ignorada | `jdbc.includes=CONNECTION,QUERY` + `jdbc.resultset-operations.enabled=false` |
+| Nenhum log de nível ERROR na aplicação | O Spring trata `ResponseStatusException` como erro esperado e não emite log ERROR | `log.error(...)` explícito antes de lançar |
+| traceId não aparecia na resposta da API do Loki | O metadado existe, mas a serialização padrão não o inclui | header `X-Loki-Response-Encoding-Flags: categorize-labels` (o Grafana já envia) |
+
 **Regra de ouro do acoplamento:** o valor em `targets:` do `prometheus.yml` deve ser
 o **nome do serviço** no `compose.yaml` (não o `container_name`). Divergência entre
 os dois arquivos é a causa nº 1 de target DOWN.
@@ -301,21 +311,84 @@ exige dependência extra no **tracing** (F7), via `spring-boot-starter-opentelem
 
 ---
 
-## 5. Métricas de negócio (candidatas, +1,0 ponto)
+## 5. Métricas de negócio (adicional, +1,0 ponto)
 
-O enunciado pede no mínimo 2. Candidatas mapeadas a partir dos services existentes,
-priorizando as que amarram com as estruturas de dados do PI:
+Tabela no formato exigido pelo item 5 do PDF (nome, tipo, o que mede).
 
-| Nome proposto | Tipo | O que mede | Origem no código |
-|---|---|---|---|
-| `rotavital.bolsas.alocadas` | Counter | Bolsas alocadas a solicitações | `AlocacaoBolsaService` |
-| `rotavital.solicitacoes.fila` | Gauge | Solicitações aguardando (FIFO) | `FilaRequisicoes` |
-| `rotavital.estoque.disponivel` | Gauge | Bolsas disponíveis por tipo/componente | `ListaEstoque` / `BolsaRepository` |
-| `rotavital.bolsas.descartadas` | Counter | Baixas, rotulado por `MotivoBaixa` | `ValidadeBolsaService` |
-| `rotavital.rotas.calculo` | Timer | Duração do cálculo de rota (Dijkstra) | `RotaService` / `HeapMinimo` |
+| Nome exportado | Tipo | O que mede | Tags | Origem |
+|---|---|---|---|---|
+| `rotavital_bolsas_estoque` | **Gauge** | Bolsas em estoque agora | `componente`, `status` | `GROUP BY` sobre `bolsa` |
+| `rotavital_solicitacoes_quantidade` | **Gauge** | Solicitações por situação | `status`, `urgencia` | `GROUP BY` sobre `solicitacao_sangue` |
+| `rotavital_remessas_quantidade` | **Gauge** | Remessas em transporte | `status`, `condicao` | `GROUP BY` sobre `remessa` |
+| `rotavital_bolsas_alocadas_total` | **Counter** | Alocações realizadas | `result`, `exception`, `method` | `@Counted` em `AlocacaoBolsaService.alocarBolsaCompativel` |
+| `rotavital_rotas_calculo_seconds` | **Timer** | Duração do cálculo de rota (Dijkstra) | `method`, `exception` | `@Timed` em `RotaService.calcular` |
 
-A definir: quais implementar e quais tags usar (atenção a **cardinalidade** — tag com
-muitos valores distintos, como id de bolsa, explode o Prometheus).
+### Por que cada tipo
+
+- **Gauge** para estoque e filas: o valor **sobe e desce** (bolsa entra por doação, sai
+  por alocação ou descarte). Um Counter responderia "bolsas já cadastradas na
+  história", que não é a pergunta operacional — a pergunta é "quanto tenho agora".
+- **Counter** para alocações: é um evento acumulado que nunca decresce. Nunca se lê o
+  valor absoluto; lê-se `rate(...)`, que responde "alocações por minuto".
+- **Timer** para o cálculo de rota: a pergunta é "quanto tempo levou". Com
+  `percentiles-histogram` habilitado para esta métrica, dá p95 — e comparar p95 com a
+  média mostra o quanto a média esconde os piores casos.
+
+### Decisão de implementação: anotações em vez de injeção
+
+Instrumentar via `MeterRegistry` injetado exigiria **um parâmetro novo no construtor**
+de cada service. Os testes existentes instanciam os services diretamente
+(`new AlocacaoBolsaService(...)`), então a mudança de assinatura quebraria a suíte
+inteira por um motivo sem relação com regra de negócio.
+
+Solução: `spring-boot-starter-aspectj` + beans `TimedAspect` e `CountedAspect`
+(`config/MetricasAspectosConfig`). Instrumentar passou a ser **uma anotação no
+método**; o código de negócio não conhece o Micrometer e os construtores ficaram
+intactos. **Resultado: 184 testes seguem passando.**
+
+Limitação conhecida: aspectos funcionam por proxy, logo só valem em chamadas que
+atravessam o proxy do Spring (controller -> service). Chamada entre métodos da mesma
+classe não é interceptada.
+
+### Cardinalidade
+
+As tags têm domínio pequeno e fechado: 4 status x 4 componentes = 16 séries no
+máximo; 4 status x 3 urgências = 12. **Identificador de bolsa como tag criaria uma
+série nova por bolsa, para sempre**, e degradaria o Prometheus. Nunca usar id como tag.
+
+## 5.1 Achado de performance: problema N+1 em `listarEstoque()`
+
+A instrumentação de traces **revelou um defeito real de desempenho** no projeto —
+o melhor argumento possível a favor de observabilidade, e material direto para a
+seção "lições aprendidas" do PDF.
+
+Árvore de spans de uma requisição a `GET /api/bolsas`:
+
+```
+http get /api/bolsas                 60,06 ms
+    connection                       59,47 ms
+    listar-estoque-de-bolsas         57,82 ms
+        query                         1,12 ms   <- a consulta principal
+        query                         0,13 ms   <- e mais 525 consultas...
+        query                         0,08 ms
+        (... x526 no total)
+```
+
+**Diagnóstico:** `BolsaService.listarEstoque()` busca as bolsas e, ao montar cada
+`BolsaResponse`, acessa o relacionamento `solicitacao`, que é *lazy*. Cada acesso
+dispara uma consulta nova. Uma requisição = 1 consulta + N consultas (N = número de
+bolsas). É o clássico **problema N+1**.
+
+**Impacto medido:** 526 consultas e ~58 ms numa rota que deveria custar uma consulta
+e poucos milissegundos. O custo cresce linearmente com o estoque.
+
+**Correção sugerida (fora do escopo desta entrega, pois altera regra de negócio):**
+usar `JOIN FETCH` na consulta do repositório, ou `@EntityGraph`, para trazer o
+relacionamento numa só viagem ao banco.
+
+**Observação metodológica:** nenhuma métrica teria apontado isso. O painel de latência
+mostraria "p95 de 60 ms" sem explicar o porquê; só a árvore de spans mostra *onde* o
+tempo foi gasto. É a diferença entre saber que está lento e saber por quê.
 
 ---
 
@@ -359,6 +432,62 @@ nada dependa de algo ainda inexistente.
 ---
 
 ## 8. Histórico
+
+- **2026-11-26 (F6 e F7 — E5 e E6 CONCLUÍDAS)** — Logs e traces no ar.
+
+  **Logs (E5):** `loki` 3.7.10 (armazena) + `alloy` v1.22.0 (coleta). O Alloy
+  descobre os contêineres pelo socket do Docker, lê o stdout de cada um, rotula com
+  `service`/`container`/`project`/`level` e empurra para o Loki. Resultado: logs dos
+  **9 contêineres**, filtráveis por aplicação (R6.1). Dashboard novo
+  `rotavital-logs.json` com 6 painéis; 5 de 6 consultas LogQL com dados na criação.
+
+  **Traces (E6):** `tempo` 2.10.10 recebendo via OTLP na 4318. Na aplicação,
+  `spring-boot-starter-opentelemetry` (**uma** dependência — no Boot 3.x seriam
+  três), amostragem em 100% e o endereço do Tempo via variável de ambiente no
+  compose, não no `application.properties`, porque varia por ambiente.
+
+  **Correlação (R6.3) comprovada ponta a ponta:**
+
+  | Etapa | Evidência |
+  |---|---|
+  | Log no Loki | `{service="api", level="ERROR"}` com metadado `traceId=16e834f9...` |
+  | Mesmo id no Tempo | `GET /api/traces/16e834f9...` devolveu o trace |
+  | Hierarquia de spans | `http get /api/bolsas` -> `connection` -> `listar-estoque-de-bolsas` -> `query` |
+
+  O `traceId` vai como **metadado estruturado**, não como label: cada requisição tem
+  um traceId único, e usá-lo como label criaria uma série nova por requisição — o
+  mesmo erro de cardinalidade que vale para métricas.
+
+  Para gerar a hierarquia de spans foram necessárias duas peças além do HTTP:
+  `ObservedAspect` + `@Observed` (camada de service) e a biblioteca
+  `datasource-micrometer-spring-boot` 2.3.1 (spans de JDBC).
+
+- **2026-11-26 (F5 — ADICIONAL CONCLUÍDO, +1,0)** — Implementadas 5 métricas de
+  negócio (ver seção 5): 3 Gauges via `MultiGauge`, 1 Counter e 1 Timer.
+  Arquivos novos: `metrics/ConsultasMetricasNegocio.java`,
+  `metrics/MetricasNegocio.java`, `config/MetricasAspectosConfig.java` e
+  `controller/DiagnosticoController.java`.
+
+  Criado `/api/diagnostico/erro` (HTTP 500) e `/api/diagnostico/indisponivel` (503),
+  protegidos por `@ConditionalOnProperty`. Motivo: o painel de taxa de erro exigido
+  pelo enunciado filtra `status=~"5.."`, e o gerador só produzia 404 (4xx, erro de
+  *cliente*). Sem uma falha de servidor real aquele painel ficaria em zero.
+
+  Gerador de carga ganhou operações de **escrita** (POST de bolsa, solicitação +
+  alocação, cálculo de rota) e a opção `--semear`, porque com banco vazio as métricas
+  de negócio não publicam série nenhuma.
+
+  | Verificação | Resultado |
+  |---|---|
+  | Build com as mudanças | BUILD SUCCESS |
+  | Testes | **184 de 184 passando** |
+  | Séries `rotavital_*` expostas | 89 |
+  | Painéis no dashboard de aplicação | 25 |
+  | Queries validadas | **39 de 39 com dados** |
+
+  Também habilitados `server.tomcat.mbeanregistry.enabled=true` (preenche
+  `tomcat_threads_*`, antes vazio) e `--collector.processes` no Node Exporter
+  (preenche painéis de PIDs do dashboard 1860).
 
 - **2026-11-26 (F3 e F4 — E4 CONCLUÍDA)** — Criado `scripts/gerador_carga.py`
   (somente biblioteca padrão do Python: 8 workers, ~30 req/s, 3% de erro proposital

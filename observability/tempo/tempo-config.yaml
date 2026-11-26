@@ -1,0 +1,66 @@
+# ============================================================================
+# Tempo — armazenamento de TRACES (Rota Vital)
+#
+# Diferente do Prometheus (que faz PULL), o Tempo RECEBE: a aplicação empurra
+# os spans via OTLP. Por isso a aplicação precisa conhecer o endereço do Tempo,
+# enquanto o Prometheus é quem conhece o endereço da aplicação.
+#
+# Um TRACE é o caminho completo de UMA requisição; cada etapa é um SPAN, com
+# início, fim e pai — o que forma a árvore vista como "waterfall" no Grafana.
+# ============================================================================
+
+server:
+  http_listen_port: 3200
+  log_level: warn
+
+distributor:
+  receivers:
+    otlp:
+      protocols:
+        # 4318 = OTLP sobre HTTP; 4317 = OTLP sobre gRPC.
+        # São as portas padronizadas pela especificação OpenTelemetry.
+        http:
+          endpoint: 0.0.0.0:4318
+        grpc:
+          endpoint: 0.0.0.0:4317
+
+ingester:
+  # Fecha o bloco a cada 5 min para que traces recentes fiquem consultáveis logo.
+  # O padrão é maior e, em demonstração, daria a impressão de que nada chegou.
+  max_block_duration: 5m
+
+compactor:
+  compaction:
+    block_retention: 48h       # 2 dias: trace é volumoso e perde valor rápido
+
+storage:
+  trace:
+    backend: local             # disco local; em produção seria S3/GCS
+    local:
+      path: /var/tempo/blocks
+    wal:
+      path: /var/tempo/wal     # write-ahead log: protege spans ainda não gravados
+
+# Gera métricas a partir dos spans (RED: Rate, Errors, Duration) e as envia ao
+# Prometheus. É o que permite pular de um gráfico de latência para o trace lento.
+metrics_generator:
+  registry:
+    external_labels:
+      source: tempo
+  storage:
+    path: /var/tempo/generator/wal
+    remote_write:
+      - url: http://prometheus:9090/api/v1/write
+        send_exemplars: true
+  traces_storage:
+    path: /var/tempo/generator/traces
+
+overrides:
+  defaults:
+    metrics_generator:
+      processors:
+        - service-graphs       # mapa de dependências entre serviços
+        - span-metrics         # métricas de latência/erro por span
+
+usage_report:
+  reporting_enabled: false

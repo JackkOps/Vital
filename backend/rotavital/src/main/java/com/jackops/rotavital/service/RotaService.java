@@ -37,6 +37,8 @@ import com.jackops.rotavital.repository.RotaRepository;
 import com.jackops.rotavital.repository.SolicitacaoSangueRepository;
 import com.jackops.rotavital.repository.TrechoRepository;
 
+import io.micrometer.core.annotation.Timed;
+
 /**
  * História 3 - Cálculo de rota de distribuição. Monta o grafo da rede, usa o
  * Dijkstra para o menor tempo entre cada par de locais e escolhe a ordem de
@@ -80,6 +82,8 @@ public class RotaService {
     }
 
     @Transactional
+    @Timed(value = "rotavital.rotas.calculo",
+           description = "Duracao do calculo de rota otimizada (Dijkstra sobre o grafo da rede)")
     public RotaResponse calcular(CalculoRotaRequest request) {
         LocalRede origem = localRepository.findById(request.origemId())
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Local de origem não encontrado"));

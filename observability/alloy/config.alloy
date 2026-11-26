@@ -1,0 +1,109 @@
+// ============================================================================
+// Grafana Alloy — coletor de logs (Rota Vital)
+//
+// Por que existe: o Loki só armazena. Alguém precisa ler o stdout dos
+// contêineres e empurrar para ele. Esse alguém é o Alloy.
+//
+// Por que Alloy e não as alternativas:
+//   - Promtail: fim de vida em 02/03/2026.
+//   - Driver de log do Docker: exige 'docker plugin install' (passo manual que
+//     fere o requisito de subir tudo com um comando) e tem bug conhecido de
+//     travar o daemon do Docker.
+//   - Appender dentro da aplicação Java: só capturaria os logs da api,
+//     deixando Postgres, Prometheus e Grafana de fora.
+//
+// Sintaxe: linguagem própria do Alloy, parecida com HCL. Os blocos formam um
+// pipeline, cada um referenciando a saída do anterior.
+// ============================================================================
+
+// 1. DESCOBERTA — pergunta ao Docker quais contêineres existem.
+discovery.docker "containers" {
+  host             = "unix:///var/run/docker.sock"
+  refresh_interval = "15s"
+}
+
+// 2. ROTULAGEM — transforma metadados do Docker em labels do Loki.
+//    Sem isto, todo log cairia numa pilha única, sem como filtrar por
+//    aplicação (exigência do requisito R6.1).
+discovery.relabel "containers" {
+  targets = discovery.docker.containers.targets
+
+  // O Docker entrega o nome com barra inicial ("/rotavital-api") — removida aqui.
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/(.*)"
+    target_label  = "container"
+  }
+
+  // Nome do SERVIÇO no compose (api, db, prometheus...). É o label mais útil
+  // para filtrar, porque não muda se o container_name for renomeado.
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
+    target_label  = "service"
+  }
+
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_project"]
+    target_label  = "project"
+  }
+}
+
+// 3. LEITURA — acompanha o stdout/stderr de cada contêiner descoberto.
+loki.source.docker "containers" {
+  host             = "unix:///var/run/docker.sock"
+  targets          = discovery.relabel.containers.output
+  forward_to       = [loki.process.enriquecer.receiver]
+  refresh_interval = "15s"
+}
+
+// 4. PROCESSAMENTO — extrai informação de dentro da linha de log.
+loki.process "enriquecer" {
+  // Marca a origem da stack, permitindo separar estes logs de outros que
+  // venham a ser enviados ao mesmo Loki no futuro.
+  stage.static_labels {
+    values = {
+      stack = "rotavital",
+    }
+  }
+
+  // Extrai o nível de log das linhas do Spring Boot, cujo padrão é:
+  //   2026-11-26T04:53:53.051Z  INFO [rotavital,<traceId>,<spanId>] 1 --- [...]
+  // Capturar o nível permite consultas como {service="api"} | level="ERROR".
+  stage.regex {
+    expression = "(?P<nivel>(TRACE|DEBUG|INFO|WARN|ERROR))"
+  }
+
+  stage.labels {
+    values = {
+      level = "nivel",
+    }
+  }
+
+  // Extrai o traceId que o Micrometer Tracing injeta no padrão de log do
+  // Spring Boot. É o que permitirá o salto log -> trace no Tempo (F7).
+  // O formato do Boot é [nomeApp,traceId,spanId] — 32 hexadecimais no traceId.
+  stage.regex {
+    expression = "\\[\\S*,(?P<traceid>[0-9a-f]{32}),(?P<spanid>[0-9a-f]{16})\\]"
+  }
+
+  // traceId vai como METADADO ESTRUTURADO, não como label.
+  // Motivo: cada requisição tem um traceId único; usá-lo como label criaria uma
+  // série nova por requisição e destruiria o desempenho do Loki — o mesmo
+  // problema de cardinalidade que vale para métricas.
+  stage.structured_metadata {
+    values = {
+      traceId = "traceid",
+      spanId  = "spanid",
+    }
+  }
+
+  forward_to = [loki.write.destino.receiver]
+}
+
+// 5. ESCRITA — empurra para o Loki. Este é o "push" do modelo.
+loki.write "destino" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+  external_labels = {}
+}

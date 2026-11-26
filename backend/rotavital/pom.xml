@@ -111,6 +111,34 @@
     		<artifactId>micrometer-registry-prometheus</artifactId>
 			<scope>runtime</scope>
   		</dependency>
+		<!-- Habilita @Timed e @Counted do Micrometer sem alterar construtores.
+		     No Spring Boot 4 este starter foi renomeado de 'spring-boot-starter-aop'
+		     para 'spring-boot-starter-aspectj'; o nome antigo existe no Maven Central
+		     mas NÃO é gerenciado pelo BOM 4.x, e o build falha pedindo <version>. -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-aspectj</artifactId>
+		</dependency>
+		<!-- Tracing distribuido via OpenTelemetry + OTLP (destino: Tempo).
+		     No Spring Boot 4 este UNICO starter substitui o conjunto de
+		     dependencias avulsas que o Boot 3.x exigia: ja traz a API do
+		     OpenTelemetry, o micrometer-tracing-bridge-otel e o exportador OTLP.
+		     A ponte alternativa (Zipkin/Brave) sera REMOVIDA no Boot 4.2. -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-opentelemetry</artifactId>
+		</dependency>
+		<!-- Spans de JDBC: instrumenta o DataSource para que cada consulta ao
+		     Postgres apareca como um span filho dentro do trace da requisicao.
+		     Sem isto o trace tem apenas o span HTTP, e o requisito R6.2 pede
+		     multiplos spans (controller -> service -> banco).
+		     Versao declarada explicitamente porque NAO e gerenciada pelo BOM
+		     do Spring Boot (a serie 2.x e a compativel com o Boot 4). -->
+		<dependency>
+			<groupId>net.ttddyy.observation</groupId>
+			<artifactId>datasource-micrometer-spring-boot</artifactId>
+			<version>2.3.1</version>
+		</dependency>
 	</dependencies>
 
 	<build>

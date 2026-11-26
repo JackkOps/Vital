@@ -35,6 +35,10 @@ services:
       SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
       SERVER_PORT: 8080
+      # Endereco do Tempo para onde a aplicacao EMPURRA os traces (modelo push).
+      # Fica aqui, e nao no application.properties, porque varia por ambiente:
+      # rodando fora do Docker nao existe host 'tempo'.
+      MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT: http://tempo:4318/v1/traces
     ports:
       - "${SERVER_PORT:-8080}:8080"
     healthcheck:
@@ -67,6 +71,10 @@ services:
       - '--storage.tsdb.path=/prometheus'
       - '--storage.tsdb.retention.time=15d'
       - '--web.enable-lifecycle'   # permite recarregar config sem reiniciar
+      # Aceita remote_write. Necessário porque o metrics_generator do Tempo
+      # envia métricas derivadas dos spans (span-metrics e service-graphs)
+      # para cá — sem esta flag o Prometheus responde 404 ao Tempo.
+      - '--web.enable-remote-write-receiver'
     ports:
       # TEMPORÁRIO (desenvolvimento): necessário para ver /targets no navegador.
       # Fechar antes da entrega — o R5.1 só permite o Grafana exposto.
@@ -93,6 +101,9 @@ services:
       - '--path.rootfs=/host/root'
       # Ignora sistemas de arquivos virtuais, que poluiriam as métricas de disco.
       - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+      # Coletores desligados por padrão. Habilitados porque preenchem painéis do
+      # dashboard 1860 (PIDs, estados de processo) que ficariam vazios sem eles.
+      - '--collector.processes'
     networks:
       - rotavital-net
 
@@ -139,6 +150,94 @@ services:
     networks:
       - rotavital-net
 
+  # Armazenamento de LOGS. Só armazena e indexa: não coleta nada.
+  # Quem lê os logs dos contêineres e empurra para cá é o Alloy.
+  loki:
+    image: grafana/loki:3.7.10
+    container_name: rotavital-loki
+    restart: unless-stopped
+    command: -config.file=/etc/loki/loki-config.yaml
+    volumes:
+      - ./observability/loki:/etc/loki:ro,z
+      - loki_data:/loki
+    # Limite de memória: num host com swap sob pressão, é melhor o Docker matar
+    # este contêiner do que o kernel escolher uma vítima no desktop.
+    mem_limit: 512m
+    networks:
+      - rotavital-net
+
+  # Coletor de logs: descobre contêineres pelo socket do Docker, lê o stdout de
+  # cada um, rotula por serviço e empurra para o Loki.
+  alloy:
+    image: grafana/alloy:v1.22.0
+    container_name: rotavital-alloy
+    restart: unless-stopped
+    depends_on:
+      - loki
+    # Precisa de root para ler /var/run/docker.sock (pertence a root:docker).
+    user: root
+    # SELinux: mesmo como root, o processo roda com o label 'container_t', que
+    # não tem permissão de falar com o socket do daemon Docker ('permission
+    # denied while trying to connect to the docker API'). 'label:disable' desliga
+    # o rótulo SELinux apenas deste contêiner.
+    # Preferido a 'privileged: true' (usado no cAdvisor) porque resolve exatamente
+    # o impedimento, sem conceder todas as capabilities do kernel.
+    security_opt:
+      - label:disable
+    command:
+      - run
+      - --server.http.listen-addr=0.0.0.0:12345
+      - --storage.path=/var/lib/alloy/data
+      - /etc/alloy/config.alloy
+    volumes:
+      - ./observability/alloy:/etc/alloy:ro,z
+      # Socket do Docker em somente-leitura. SEM ':z': reetiquetar o socket do
+      # daemon afetaria o próprio Docker.
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - alloy_data:/var/lib/alloy/data
+    mem_limit: 256m
+    networks:
+      - rotavital-net
+
+  # Armazenamento de TRACES. RECEBE via OTLP (push) — não busca nada.
+  tempo:
+    image: grafana/tempo:2.10.10
+    container_name: rotavital-tempo
+    restart: unless-stopped
+    command: -config.file=/etc/tempo/tempo-config.yaml
+    volumes:
+      - ./observability/tempo:/etc/tempo:ro,z
+      - tempo_data:/var/tempo
+    mem_limit: 512m
+    networks:
+      - rotavital-net
+
+  # Gerador de carga. Sobe junto com o ambiente para que os dashboards nunca
+  # estejam vazios — inclusive durante a janela de correção (R7.3), sem depender
+  # de alguém lembrar de executar um script.
+  # Para desligar temporariamente:  docker compose stop carga
+  carga:
+    image: python:3.13-alpine
+    container_name: rotavital-carga
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    volumes:
+      - ./scripts:/scripts:ro,z
+    # Dentro da rede do Docker o alvo é o nome do SERVIÇO, não localhost.
+    # --duracao 0 = roda indefinidamente.
+    command: >
+      python3 /scripts/gerador_carga.py
+      --url http://api:8080
+      --rps ${CARGA_RPS:-10}
+      --erro ${CARGA_TAXA_ERRO:-0.03}
+      --escrita ${CARGA_TAXA_ESCRITA:-0.08}
+      --semear ${CARGA_SEMEAR:-160}
+      --duracao 0
+    networks:
+      - rotavital-net
+
 volumes:
   postgres_data:
     name: rotavital_postgres_data
@@ -146,6 +245,12 @@ volumes:
     name: rotavital_prometheus_data
   grafana_data:
     name: rotavital_grafana_data
+  loki_data:
+    name: rotavital_loki_data
+  alloy_data:
+    name: rotavital_alloy_data
+  tempo_data:
+    name: rotavital_tempo_data
 
 networks:
   rotavital-net:

@@ -178,6 +178,20 @@ Todos os registros e logs comprobatórios são organizados na pasta [`docs/evide
   7. [Testes rodando dentro do build multi-stage (`--no-cache`: 72 testes, `BUILD SUCCESS`)](docs/evidencias/e1/07-testes-no-build.png)
 * **E2 (TDD):** [`docs/evidencias/e2/README.md`](docs/evidencias/e2/README.md) *(Suíte local implementada com 72 testes verdes, logs duráveis e hashes SHA-256 versionados; execução na esteira remota do GitHub Actions aguarda push)*.
 * **E3 (Deploy):** `docs/evidencias/e3/` *(Workflow `.github/workflows/ci.yml` pronto; aguardando push para o GitHub para coleta de prints da execução vermelha que barra merge e verde que publica)*.
+* **E5 (Observabilidade):** [`docs/evidencias/e5/`](docs/evidencias/e5/) — 12 capturas com data/hora visível:
+  1. [`date && docker compose ps` com os 10 contêineres](docs/evidencias/e5/01-docker-compose-ps.png)
+  2. [`/actuator/prometheus` da aplicação (porta de gerenciamento 9091)](docs/evidencias/e5/11-actuator-prometheus.png)
+  3. [Prometheus — *Status → Targets* com 4/4 UP](docs/evidencias/e5/02-prometheus-status-targets.png)
+  4. [Consulta PromQL de métrica de negócio (`rotavital_bolsas_estoque`)](docs/evidencias/e5/03-prometheus-consulta-promql-metrica-negocio.png)
+  5. [Dashboard da aplicação com dados](docs/evidencias/e5/04-dashboard-aplicacao.png)
+  6. [Dashboard de infraestrutura com dados](docs/evidencias/e5/05-dashboard-infraestrutura.png)
+  7. [Dashboard de logs e traces com dados](docs/evidencias/e5/06-dashboard-logs-e-traces.png)
+  8. [JVM Micrometer — comunidade #4701](docs/evidencias/e5/07-dashboard-comunidade-jvm-4701.png)
+  9. [Node Exporter Full — comunidade #1860](docs/evidencias/e5/08-dashboard-comunidade-node-exporter-1860.png)
+  10. [cAdvisor — comunidade #14282](docs/evidencias/e5/09-dashboard-comunidade-cadvisor-14282.png)
+  11. [Acesso remoto via Tailscale Funnel, autenticado como Viewer](docs/evidencias/e5/12-acesso-remoto-tailscale-viewer.png)
+
+  **Relatório completo em PDF:** [`docs/Rota-Vital-Observabilidade.pdf`](docs/Rota-Vital-Observabilidade.pdf) (15 páginas).
 
 ---
 

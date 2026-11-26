@@ -226,66 +226,78 @@ da aplicação.</p>
 <h3>4.1 Stack em execução</h3>
 <figure>
   <img src="evidencias/e5/01-docker-compose-ps.png" alt="docker compose ps">
-  <figcaption>Figura 1 — <code>docker compose ps</code>: os 10 contêineres no ar.
-  Note que apenas <code>api</code> (8080) e <code>grafana</code> (3000) têm porta
-  publicada (<code>0.0.0.0:</code>); os demais expõem portas apenas na rede interna.</figcaption>
+  <figcaption>Figura 1 — <code>date &amp;&amp; docker compose ps</code> em
+  26/11/2026, 04:46. Os 10 contêineres no ar. Apenas <code>api</code> (8080) e
+  <code>grafana</code> (3000) têm porta publicada (<code>0.0.0.0:</code>); os demais
+  mostram a porta sem endereço de host, ou seja, acessíveis somente na rede interna
+  do Docker.</figcaption>
 </figure>
 
-<h3>4.2 Prometheus: alvos de coleta</h3>
+<h3>4.2 Endpoint <code>/actuator/prometheus</code> da aplicação</h3>
+<figure>
+  <img src="evidencias/e5/11-actuator-prometheus.png" alt="actuator prometheus">
+  <figcaption>Figura 2 — saída de <code>/actuator/prometheus</code> em 26/11/2026,
+  04:46, consultada <em>de dentro</em> do contêiner, na porta de gerenciamento 9091.
+  Cada série carrega a tag <code>application="rotavital"</code>, aplicada globalmente
+  por <code>management.metrics.tags.application</code> — é ela que permite distinguir
+  as métricas desta aplicação quando várias publicam no mesmo Prometheus.</figcaption>
+</figure>
+
+<h3>4.3 Prometheus: alvos de coleta</h3>
 <figure>
   <img src="evidencias/e5/02-prometheus-status-targets.png" alt="Status Targets">
-  <figcaption>Figura 2 — <em>Status → Target health</em>: <strong>4 de 4 alvos UP</strong>.
+  <figcaption>Figura 3 — <em>Status → Target health</em>: <strong>4 de 4 alvos UP</strong>.
   O alvo da aplicação aponta para <code>api:9091/actuator/prometheus</code> — a porta de
   gerenciamento, inacessível de fora.</figcaption>
 </figure>
 
-<h3>4.3 Consulta PromQL de uma métrica de negócio</h3>
+<h3>4.4 Consulta PromQL de uma métrica de negócio</h3>
 <figure>
   <img src="evidencias/e5/03-prometheus-consulta-promql-metrica-negocio.png" alt="PromQL">
-  <figcaption>Figura 3 — consulta <code>rotavital_bolsas_estoque</code> retornando
+  <figcaption>Figura 4 — consulta <code>rotavital_bolsas_estoque</code> retornando
   <strong>8 séries</strong>, uma por combinação de componente e status, com a tag
   <code>application="rotavital"</code> aplicada globalmente.</figcaption>
 </figure>
 
-<h3 class="quebra">4.4 Dashboard da aplicação</h3>
+<h3 class="quebra">4.5 Dashboard da aplicação</h3>
 <figure>
   <img src="evidencias/e5/04-dashboard-aplicacao.png" alt="Dashboard aplicação">
-  <figcaption>Figura 4 — 25 painéis: throughput, latência p95 por rota, requisições por
+  <figcaption>Figura 5 — 25 painéis: throughput, latência p95 por rota, requisições por
   status HTTP (200/201/202/404/500/503), taxa de erro, heap, pausas de GC e conexões do
   pool. Os códigos 5xx vêm de um endpoint de diagnóstico proposital, protegido por
   <code>@ConditionalOnProperty</code>.</figcaption>
 </figure>
 
-<h3>4.5 Dashboard de infraestrutura</h3>
+<h3>4.6 Dashboard de infraestrutura</h3>
 <figure>
   <img src="evidencias/e5/05-dashboard-infraestrutura.png" alt="Dashboard infra">
-  <figcaption>Figura 5 — host e contêineres lado a lado: CPU por modo, memória, carga,
+  <figcaption>Figura 6 — host e contêineres lado a lado: CPU por modo, memória, carga,
   disco, rede e consumo por contêiner. É o que permite distinguir "o sistema está lento"
   de "<em>quem</em> está lento".</figcaption>
 </figure>
 
-<h3>4.6 Logs e traces</h3>
+<h3>4.7 Logs e traces</h3>
 <figure>
   <img src="evidencias/e5/06-dashboard-logs-e-traces.png" alt="Dashboard logs">
-  <figcaption>Figura 6 — volume de logs por serviço e por nível, logs da aplicação Java
+  <figcaption>Figura 7 — volume de logs por serviço e por nível, logs da aplicação Java
   e um painel só com erros e avisos. Cada linha traz <code>traceId</code> e
   <code>spanId</code>, que o Grafana converte em link para o trace no Tempo.</figcaption>
 </figure>
 
-<h3 class="quebra">4.7 Dashboards da comunidade</h3>
+<h3 class="quebra">4.8 Dashboards da comunidade</h3>
 <figure>
   <img src="evidencias/e5/07-dashboard-comunidade-jvm-4701.png" alt="JVM 4701">
-  <figcaption>Figura 7 — JVM Micrometer (<strong>#4701</strong>), importado da
+  <figcaption>Figura 8 — JVM Micrometer (<strong>#4701</strong>), importado da
   comunidade e alimentado pelas mesmas métricas do Actuator.</figcaption>
 </figure>
 <figure>
   <img src="evidencias/e5/08-dashboard-comunidade-node-exporter-1860.png" alt="Node 1860">
-  <figcaption>Figura 8 — Node Exporter Full (<strong>#1860</strong>): CPU, RAM, swap e
+  <figcaption>Figura 9 — Node Exporter Full (<strong>#1860</strong>): CPU, RAM, swap e
   disco do host.</figcaption>
 </figure>
 <figure>
   <img src="evidencias/e5/09-dashboard-comunidade-cadvisor-14282.png" alt="cAdvisor 14282">
-  <figcaption>Figura 9 — cAdvisor (<strong>#14282</strong>): consumo por contêiner.</figcaption>
+  <figcaption>Figura 10 — cAdvisor (<strong>#14282</strong>): consumo por contêiner.</figcaption>
 </figure>
 
 <h2 class="quebra">5. Acesso remoto e segurança</h2>
@@ -299,6 +311,16 @@ da aplicação.</p>
   <tr><td>Mecanismo</td><td>Tailscale Funnel (HTTPS, certificado Let's Encrypt)</td></tr>
   <tr><td>Requisito do avaliador</td><td><strong>nenhum</strong> — não é preciso instalar Tailscale</td></tr>
 </table>
+
+<figure>
+  <img src="evidencias/e5/12-acesso-remoto-tailscale-viewer.png" alt="acesso remoto">
+  <figcaption>Figura 11 — acesso remoto em funcionamento, 26/11/2026 às 04:48:
+  a URL pública <code>linhomachine.tail9034e2.ts.net</code> na barra de endereços,
+  a sessão autenticada como <strong>Professor</strong> (papel Viewer) e o dashboard
+  da aplicação carregando dados em tempo real — 8,6 req/s, p95 de 372 ms e taxa de
+  erro de 2,71%. O painel de status HTTP mostra as seis famílias de resposta
+  (200, 201, 202, 404, 500, 503).</figcaption>
+</figure>
 
 <p>O Funnel publica <strong>apenas a porta 3000</strong> num endereço HTTPS público.
 Verificou-se que o DNS público resolve o nome para endereços públicos

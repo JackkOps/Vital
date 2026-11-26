@@ -93,8 +93,8 @@ Regra de bolso: *"isso pode diminuir?"* Não → Counter. Sim → Gauge. É dura
 | R7.1 OK | Grafana acessível remotamente pelo professor | E7 | |
 | R7.2 OK | Usuário com papel **Viewer** criado | E7 | |
 | R7.3 OK | Gerador de carga rodando durante a janela de correção | E7 | 0,75 |
-| R8.1 | README com pré-requisitos, comandos, portas/URLs | E8 | |
-| R8.2 | PDF: capa, descrição, diagrama, evidências datadas, lições | E8 | 0,75 |
+| R8.1 OK | README com pré-requisitos, comandos, portas/URLs | E8 | |
+| R8.2 OK | PDF: capa, descrição, diagrama, evidências datadas, lições | E8 | 0,75 |
 | A1 OK | >= 2 métricas de negócio com Micrometer, painel próprio | Adic. | +1,00 |
 
 ### Adaptações justificadas

@@ -178,6 +178,166 @@ Todos os registros e logs comprobatórios são organizados na pasta [`docs/evide
   7. [Testes rodando dentro do build multi-stage (`--no-cache`: 72 testes, `BUILD SUCCESS`)](docs/evidencias/e1/07-testes-no-build.png)
 * **E2 (TDD):** [`docs/evidencias/e2/README.md`](docs/evidencias/e2/README.md) *(Suíte local implementada com 72 testes verdes, logs duráveis e hashes SHA-256 versionados; execução na esteira remota do GitHub Actions aguarda push)*.
 * **E3 (Deploy):** `docs/evidencias/e3/` *(Workflow `.github/workflows/ci.yml` pronto; aguardando push para o GitHub para coleta de prints da execução vermelha que barra merge e verde que publica)*.
+* **E5 (Observabilidade):** [`docs/evidencias/e5/`](docs/evidencias/e5/) — 12 capturas com data/hora visível:
+  1. [`date && docker compose ps` com os 10 contêineres](docs/evidencias/e5/01-docker-compose-ps.png)
+  2. [`/actuator/prometheus` da aplicação (porta de gerenciamento 9091)](docs/evidencias/e5/11-actuator-prometheus.png)
+  3. [Prometheus — *Status → Targets* com 4/4 UP](docs/evidencias/e5/02-prometheus-status-targets.png)
+  4. [Consulta PromQL de métrica de negócio (`rotavital_bolsas_estoque`)](docs/evidencias/e5/03-prometheus-consulta-promql-metrica-negocio.png)
+  5. [Dashboard da aplicação com dados](docs/evidencias/e5/04-dashboard-aplicacao.png)
+  6. [Dashboard de infraestrutura com dados](docs/evidencias/e5/05-dashboard-infraestrutura.png)
+  7. [Dashboard de logs e traces com dados](docs/evidencias/e5/06-dashboard-logs-e-traces.png)
+  8. [JVM Micrometer — comunidade #4701](docs/evidencias/e5/07-dashboard-comunidade-jvm-4701.png)
+  9. [Node Exporter Full — comunidade #1860](docs/evidencias/e5/08-dashboard-comunidade-node-exporter-1860.png)
+  10. [cAdvisor — comunidade #14282](docs/evidencias/e5/09-dashboard-comunidade-cadvisor-14282.png)
+  11. [Acesso remoto via Tailscale Funnel, autenticado como Viewer](docs/evidencias/e5/12-acesso-remoto-tailscale-viewer.png)
+
+  **Relatório completo em PDF:** [`docs/Rota-Vital-Observabilidade.pdf`](docs/Rota-Vital-Observabilidade.pdf) (15 páginas).
+
+---
+
+### 8. 📊 Observabilidade — Métricas, Logs e Traces (Entrega 05)
+
+Instrumentação completa da aplicação com os **três sinais** da observabilidade,
+usando a stack Prometheus + Grafana + Loki + Tempo.
+
+#### 8.1 Arquitetura
+
+```text
+                          ┌──────────────────────────────┐
+                          │          GRAFANA :3000       │
+                          │   (único serviço exposto)    │
+                          └───┬──────────┬───────────┬───┘
+                     consulta │          │           │
+            ┌─────────────────┘          │           └────────────────┐
+            v                            v                            v
+   ┌────────────────┐           ┌────────────────┐          ┌────────────────┐
+   │  PROMETHEUS    │           │      LOKI      │          │     TEMPO      │
+   │  métricas      │           │     logs       │          │    traces      │
+   │  (pull/scrape) │           │    (push)      │          │  (push OTLP)   │
+   └───┬───┬───┬────┘           └────────▲───────┘          └───────▲────────┘
+       │   │   │                         │                          │
+  scrape│   │   │scrape              push│                      push│
+       │   │   │                         │                          │
+       v   │   v                   ┌─────┴──────┐                   │
+┌──────────┐ │ ┌──────────────┐    │   ALLOY    │                   │
+│   NODE   │ │ │   cADVISOR   │    │  (coletor) │                   │
+│ EXPORTER │ │ │              │    └─────▲──────┘                   │
+│  :9100   │ │ │    :8080     │          │ lê stdout                │
+│ host:CPU │ │ │ por contêiner│          │ de todos                 │
+│ RAM/disco│ │ └──────────────┘          │                          │
+└──────────┘ │                   ┌───────┴──────────────────────────┴────┐
+             │                   │        API (Spring Boot)              │
+             └──────────────────>│  :8080  API de negócio                │
+              /actuator/prometheus│  :9091  Actuator (NÃO publicada)     │
+                                 └───────────────────────────────────────┘
+```
+
+**Prometheus, Loki e Tempo não conversam entre si.** Cada um guarda um sinal; a
+integração acontece no Grafana, na tela. O Prometheus **puxa** (pull) as métricas;
+Loki e Tempo **recebem** (push) — por isso só quem empurra precisa do endereço.
+
+#### 8.2 Como rodar
+
+```bash
+cp .env.example .env          # defina GRAFANA_ADMIN_PASSWORD (obrigatório)
+docker compose up -d --build  # sobe os 10 contêineres
+```
+
+O `up` **falha de propósito** se `GRAFANA_ADMIN_PASSWORD` não estiver definida —
+é a proteção contra subir com a senha padrão `admin/admin`.
+
+Para criar o usuário de leitura (papel Viewer):
+
+```bash
+./scripts/criar_usuario_viewer.sh
+```
+
+#### 8.3 Serviços e portas
+
+| Serviço | Porta | Publicada no host? | Função |
+|---|---|---|---|
+| `api` | 8080 | sim | API de negócio |
+| `api` (Actuator) | 9091 | **não** | `/actuator/*`, raspado pelo Prometheus |
+| `db` | 5432 | **não** | PostgreSQL |
+| `grafana` | 3000 | **sim** | visualização (único exposto) |
+| `prometheus` | 9090 | **não** | métricas |
+| `loki` | 3100 | **não** | logs |
+| `tempo` | 3200 / 4318 | **não** | traces |
+| `node-exporter` | 9100 | **não** | métricas do host |
+| `cadvisor` | 8080 | **não** | métricas por contêiner |
+| `carga` | — | — | gerador de tráfego contínuo |
+
+Apenas o Grafana é publicado: os demais são alcançados pela rede interna do Docker.
+
+#### 8.4 Dashboards
+
+Seis dashboards provisionados por arquivo (recriados automaticamente em qualquer
+máquina, sem importação manual), na pasta **Rota Vital**:
+
+| Dashboard | Painéis | Origem |
+|---|---|---|
+| Rota Vital — Aplicação (JVM & HTTP) | 25 | próprio |
+| Rota Vital — Infraestrutura (Host & Contêineres) | 14 | próprio |
+| Rota Vital — Logs & Traces | 6 | próprio |
+| JVM Micrometer | — | comunidade #4701 |
+| Node Exporter Full | — | comunidade #1860 |
+| cAdvisor | — | comunidade #14282 |
+
+#### 8.5 Métricas de negócio
+
+Criadas com Micrometer, instrumentadas **por anotação** (`@Timed`, `@Counted`,
+`@Observed` + aspectos AOP) para não alterar os construtores dos services — os
+testes os instanciam diretamente.
+
+| Métrica | Tipo | O que mede | Tags |
+|---|---|---|---|
+| `rotavital_bolsas_estoque` | Gauge | bolsas em estoque **agora** | `status`, `componente` |
+| `rotavital_solicitacoes_quantidade` | Gauge | solicitações por situação | `status`, `urgencia` |
+| `rotavital_bolsas_alocadas_total` | Counter | alocações acumuladas | `tipo_sanguineo` |
+| `rotavital_rotas_calculo_seconds` | Timer | tempo do Dijkstra | histograma habilitado |
+| `rotavital_estoque_listagem_seconds` | Timer | tempo de listar o estoque | — |
+| `rotavital_solicitacoes_listagem_seconds` | Timer | tempo de listar solicitações | — |
+
+Há também `rotavital_remessas_quantidade` (Gauge) implementada em
+`MetricasNegocio`, que só publica séries quando existem remessas registradas —
+agregações `GROUP BY` sem linhas não geram métrica. O fluxo de remessas não é
+exercitado pelo gerador de carga, então ela não aparece no Prometheus durante a
+demonstração, e nenhum painel depende dela.
+
+Gauge e não Counter para estoque: estoque sobe e desce; um counter só cresce e
+responderia "quantas bolsas já existiram", não "quantas tenho agora".
+
+#### 8.6 Segurança
+
+- `/actuator/**` **não é exposto**: movido para a porta de gerenciamento 9091, que
+  não é publicada. A 8080 serve apenas a API de negócio.
+- Senha do Grafana vem do `.env` (não versionado). O compose usa `${VAR:?}`, que
+  **aborta** o `up` se a senha não existir.
+- `GF_USERS_ALLOW_SIGN_UP=false` — ninguém cria conta sozinho.
+- `GF_METRICS_ENABLED=false` — o `/metrics` do próprio Grafana não exige
+  autenticação e expunha a versão exata do servidor.
+- Portas do Prometheus, Loki, Tempo e PostgreSQL fechadas no host.
+- Professor recebe usuário com papel **Viewer**: lê dashboards, não edita nada.
+
+#### 8.7 Acesso remoto
+
+Publicado com **Tailscale Funnel**, que expõe somente a porta 3000 num endereço
+HTTPS com certificado Let's Encrypt:
+
+```bash
+sudo systemctl enable --now tailscaled
+sudo tailscale up
+sudo tailscale funnel --bg 3000
+```
+
+Quem acessa **não precisa instalar nada** — o Funnel publica na internet pública,
+ao contrário do Tailscale comum, que exigiria o app para entrar na tailnet.
+
+#### 8.8 Documentação detalhada
+
+O relatório completo — decisões, conceitos, armadilhas de ambiente, consultas
+PromQL e LogQL comentadas, e o achado de performance (problema **N+1** descoberto
+pelos traces) — está em [`docs/observabilidade.md`](docs/observabilidade.md).
 
 ---
 

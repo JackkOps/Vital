@@ -21,6 +21,8 @@ import com.jackops.rotavital.model.enums.StatusSolicitacao;
 import com.jackops.rotavital.repository.BolsaRepository;
 import com.jackops.rotavital.repository.SolicitacaoSangueRepository;
 
+import io.micrometer.observation.annotation.Observed;
+
 import jakarta.annotation.PostConstruct;
 
 @Service
@@ -74,6 +76,8 @@ public class SolicitacaoSangueService {
     }
 
     @Transactional(readOnly = true)
+    @Observed(name = "rotavital.solicitacoes.listagem",
+              contextualName = "listar-solicitacoes")
     public List<SolicitacaoResponse> listar() {
         return solicitacaoRepository.findAllByOrderByIdAsc().stream()
                 .map(this::paraResponse)

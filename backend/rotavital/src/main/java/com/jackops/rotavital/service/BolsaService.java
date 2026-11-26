@@ -18,6 +18,8 @@ import com.jackops.rotavital.model.Bolsa;
 import com.jackops.rotavital.model.enums.StatusBolsa;
 import com.jackops.rotavital.repository.BolsaRepository;
 
+import io.micrometer.observation.annotation.Observed;
+
 import jakarta.annotation.PostConstruct;
 
 @Service
@@ -68,6 +70,8 @@ public class BolsaService {
     }
 
     @Transactional(readOnly = true)
+    @Observed(name = "rotavital.estoque.listagem",
+              contextualName = "listar-estoque-de-bolsas")
     public List<BolsaResponse> listarEstoque() {
         recarregarLista();
         return Arrays.stream(listaEstoque.listar()).map(this::paraResponse).toList();

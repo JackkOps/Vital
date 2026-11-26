@@ -1,0 +1,91 @@
+# ============================================================================
+# Grafana — provisionamento de datasources
+#
+# "Provisionar" = configurar por arquivo, sem ninguém clicar na interface.
+# Exigido pelo requisito R4.3 e necessário para o R4.1 (subir sem passo manual).
+#
+# Os endereços usam o DNS interno do Docker (nome do serviço no compose).
+# ============================================================================
+
+apiVersion: 1
+
+# Remove versões anteriores antes de recriar. Sem isto, mudar o 'uid' de um
+# datasource já provisionado quebra o boot do Grafana com
+# "Datasource provisioning error: data source not found", porque o registro
+# antigo continua no banco interno (volume grafana_data).
+deleteDatasources:
+  - name: Prometheus
+    orgId: 1
+  - name: Loki
+    orgId: 1
+  - name: Tempo
+    orgId: 1
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    uid: prometheus            # uid FIXO: os JSONs dos dashboards referenciam
+                               # esta string. Sem fixar, o Grafana sorteia um uid
+                               # e os painéis quebram ao subir em outra máquina.
+    access: proxy              # o Grafana (servidor) consulta, não o navegador
+    url: http://prometheus:9090
+    isDefault: true
+    jsonData:
+      # Deve ser >= scrape_interval do prometheus.yml, senão os gráficos
+      # mostram degraus em vez de linha contínua.
+      timeInterval: 15s
+    editable: false            # evita alguém alterar pela UI e divergir do Git
+
+  - name: Loki
+    type: loki
+    uid: loki
+    access: proxy
+    url: http://loki:3100
+    editable: false
+    jsonData:
+      maxLines: 1000
+      # CORRELAÇÃO LOG -> TRACE (requisito R6.3).
+      # O Alloy guarda o traceId como metadado estruturado de cada linha. Este
+      # bloco faz o Grafana transformar esse valor em um LINK clicável que abre
+      # o trace correspondente no Tempo — é o salto "vi um erro no log, quero
+      # ver o caminho inteiro daquela requisição".
+      derivedFields:
+        - name: TraceID
+          matcherType: label
+          matcherRegex: traceId
+          url: '${__value.raw}'
+          datasourceUid: tempo
+          urlDisplayLabel: 'Ver trace no Tempo'
+
+  - name: Tempo
+    type: tempo
+    uid: tempo
+    access: proxy
+    url: http://tempo:3200
+    editable: false
+    jsonData:
+      # CORRELAÇÃO TRACE -> LOG (o caminho inverso do derivedFields do Loki).
+      # Permite, a partir de um span, abrir os logs daquela mesma requisição.
+      tracesToLogsV2:
+        datasourceUid: loki
+        spanStartTimeShift: '-5m'
+        spanEndTimeShift: '5m'
+        filterByTraceID: true
+        tags:
+          - key: service.name
+            value: service
+      # CORRELAÇÃO TRACE -> MÉTRICA: do span para o gráfico de latência.
+      tracesToMetrics:
+        datasourceUid: prometheus
+        spanStartTimeShift: '-5m'
+        spanEndTimeShift: '5m'
+      # Mapa de dependências entre serviços, construído pelo metrics_generator
+      # do Tempo a partir dos spans e armazenado no Prometheus.
+      serviceMap:
+        datasourceUid: prometheus
+      nodeGraph:
+        enabled: true
+      search:
+        hide: false
+      lokiSearch:
+        datasourceUid: loki

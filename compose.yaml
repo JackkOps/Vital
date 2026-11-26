@@ -7,8 +7,11 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-rotavital}
       POSTGRES_USER: ${POSTGRES_USER:-rotavital_user}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-rotavital_pass}
-    ports:
-      - "${DB_PORT:-5432}:5432"
+    # PORTA DO BANCO NAO PUBLICADA (R5.1). A 'api' alcanca o Postgres pelo DNS
+    # interno (jdbc:postgresql://db:5432) sem precisar de porta no host.
+    # Para inspecionar com DBeaver durante o desenvolvimento, descomente:
+    # ports:
+    #   - "${DB_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -35,10 +38,23 @@ services:
       SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
       SERVER_PORT: 8080
+      # Endereco do Tempo para onde a aplicacao EMPURRA os traces (modelo push).
+      # Fica aqui, e nao no application.properties, porque varia por ambiente:
+      # rodando fora do Docker nao existe host 'tempo'.
+      MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT: http://tempo:4318/v1/traces
+      # Fila do BatchSpanProcessor. O padrão (2048) estourava e o exportador
+      # passou a registrar "dropped 119720 span(s) ... queue is full".
+      # Com a amostragem reduzida a 10% o volume já cai muito; a fila e o lote
+      # maiores absorvem os picos sem descartar dado.
+      OTEL_BSP_MAX_QUEUE_SIZE: "8192"
+      OTEL_BSP_MAX_EXPORT_BATCH_SIZE: "1024"
+      OTEL_BSP_SCHEDULE_DELAY: "2000"
     ports:
       - "${SERVER_PORT:-8080}:8080"
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/api/bolsas || exit 1"]
+      # Usa /actuator/health na porta de gerenciamento, que e o endpoint feito
+      # para isso: verifica banco e disco, em vez de bater numa rota de negocio.
+      test: ["CMD-SHELL", "wget -qO- http://localhost:9091/actuator/health || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -46,9 +62,233 @@ services:
     networks:
       - rotavital-net
 
+  # ==========================================================================
+  # OBSERVABILIDADE
+  # ==========================================================================
+
+  # Banco de séries temporais. Faz PULL: busca as métricas nos alvos listados
+  # em observability/prometheus/prometheus.yml. A aplicação não sabe que existe.
+  prometheus:
+    image: prom/prometheus:v3.9.0
+    container_name: rotavital-prometheus
+    restart: unless-stopped
+    volumes:
+      # ':ro' = somente leitura.  ':z' = reetiqueta para o SELinux do Fedora
+      # permitir que o contêiner leia (sem isso: "permission denied").
+      - ./observability/prometheus:/etc/prometheus:ro,z
+      # Volume nomeado: os dados sobrevivem a 'docker compose down'.
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=15d'
+      - '--web.enable-lifecycle'   # permite recarregar config sem reiniciar
+      # Aceita remote_write. Necessário porque o metrics_generator do Tempo
+      # envia métricas derivadas dos spans (span-metrics e service-graphs)
+      # para cá — sem esta flag o Prometheus responde 404 ao Tempo.
+      - '--web.enable-remote-write-receiver'
+    # PORTA NAO PUBLICADA (R5.1): o Grafana consulta o Prometheus pela rede
+    # interna (http://prometheus:9090). Publicar a 9090 daria a qualquer um
+    # acesso de leitura a todas as metricas e execucao de PromQL arbitrario —
+    # inaceitavel com o tunel publico ligado.
+    # Foi aberta temporariamente apenas para capturar as evidencias do
+    # enunciado (Status -> Targets e uma consulta PromQL) e fechada em seguida.
+    # Para reabrir em desenvolvimento, descomente:
+    # ports:
+    #   - "9090:9090"
+    networks:
+      - rotavital-net
+
+  # Exporter de métricas do HOST (o Fedora): CPU, RAM, disco, rede.
+  # Roda em contêiner, mas lê /proc e /sys do host montados abaixo.
+  # ATENÇÃO: estes volumes NÃO levam ':z' — reetiquetar '/' do host seria
+  # destrutivo. /proc e /sys já têm contexto legível pelo contêiner.
+  node-exporter:
+    image: prom/node-exporter:v1.13.1
+    container_name: rotavital-node-exporter
+    restart: unless-stopped
+    pid: host                      # vê os processos do host, não só os seus
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/host/root:ro,rslave
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--path.rootfs=/host/root'
+      # Ignora sistemas de arquivos virtuais, que poluiriam as métricas de disco.
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+      # Coletores desligados por padrão. Habilitados porque preenchem painéis do
+      # dashboard 1860 (PIDs, estados de processo) que ficariam vazios sem eles.
+      - '--collector.processes'
+    networks:
+      - rotavital-net
+
+  # Exporter de métricas POR CONTÊINER: quanto a 'api' gasta, quanto o 'db' gasta.
+  # É o que permite distinguir "o sistema está lento" de "QUEM está lento".
+  # Precisa de acesso amplo ao Docker e ao cgroup do host — daí o 'privileged'.
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.55.1
+    container_name: rotavital-cadvisor
+    restart: unless-stopped
+    privileged: true               # exigido no Fedora (SELinux + cgroup v2)
+    devices:
+      - /dev/kmsg                  # buffer de mensagens do kernel
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    networks:
+      - rotavital-net
+
+  # Interface de visualização. Não armazena métricas: consulta Prometheus
+  # (e, nas próximas fases, Loki e Tempo) e desenha.
+  grafana:
+    image: grafana/grafana:13.0
+    container_name: rotavital-grafana
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+    environment:
+      # R5.2: senha vem do .env, nunca 'admin/admin' nem valor no Git.
+      # O ':?' faz o 'docker compose up' FALHAR se a variável não existir —
+      # melhor falhar explicitamente do que subir com senha padrão.
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?defina GRAFANA_ADMIN_PASSWORD no .env}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      # Desliga o endpoint /metrics do PRÓPRIO Grafana. Ele não exige autenticação
+      # e, com o Funnel ligado, ficava público expondo 4.432 séries — entre elas
+      # a versão exata (grafana_build_info), que é o primeiro dado que se procura
+      # para cruzar com CVEs conhecidas, além de contagem de usuários e orgs.
+      # Não é perda: monitorar o Grafana não é requisito desta entrega. Se fosse,
+      # a alternativa correta seria mantê-lo ligado com
+      # GF_METRICS_BASIC_AUTH_USERNAME/PASSWORD e um job autenticado no Prometheus.
+      GF_METRICS_ENABLED: "false"
+      # Faz a tela inicial ser o dashboard da aplicação, em vez da Home padrão.
+      # A Home do Grafana só lista favoritos e "vistos recentemente" — ambos
+      # vazios para um usuário recém-criado, dando a falsa impressão de que ele
+      # não tem acesso a nada. Quem abrir o link cai direto num painel com dados.
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/rotavital-aplicacao.json
+      # Impede que o Grafana consulte a internet para checar atualizações e
+      # listar plugins — reduz a superfície e o ruído de rede.
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      GF_ANALYTICS_CHECK_FOR_PLUGIN_UPDATES: "false"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+    volumes:
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro,z
+      - ./observability/grafana/dashboards:/var/lib/grafana/dashboards:ro,z
+      - grafana_data:/var/lib/grafana
+    ports:
+      - "${GRAFANA_PORT:-3000}:3000"
+    networks:
+      - rotavital-net
+
+  # Armazenamento de LOGS. Só armazena e indexa: não coleta nada.
+  # Quem lê os logs dos contêineres e empurra para cá é o Alloy.
+  loki:
+    image: grafana/loki:3.7.10
+    container_name: rotavital-loki
+    restart: unless-stopped
+    command: -config.file=/etc/loki/loki-config.yaml
+    volumes:
+      - ./observability/loki:/etc/loki:ro,z
+      - loki_data:/loki
+    # Limite de memória: num host com swap sob pressão, é melhor o Docker matar
+    # este contêiner do que o kernel escolher uma vítima no desktop.
+    mem_limit: 512m
+    networks:
+      - rotavital-net
+
+  # Coletor de logs: descobre contêineres pelo socket do Docker, lê o stdout de
+  # cada um, rotula por serviço e empurra para o Loki.
+  alloy:
+    image: grafana/alloy:v1.22.0
+    container_name: rotavital-alloy
+    restart: unless-stopped
+    depends_on:
+      - loki
+    # Precisa de root para ler /var/run/docker.sock (pertence a root:docker).
+    user: root
+    # SELinux: mesmo como root, o processo roda com o label 'container_t', que
+    # não tem permissão de falar com o socket do daemon Docker ('permission
+    # denied while trying to connect to the docker API'). 'label:disable' desliga
+    # o rótulo SELinux apenas deste contêiner.
+    # Preferido a 'privileged: true' (usado no cAdvisor) porque resolve exatamente
+    # o impedimento, sem conceder todas as capabilities do kernel.
+    security_opt:
+      - label:disable
+    command:
+      - run
+      - --server.http.listen-addr=0.0.0.0:12345
+      - --storage.path=/var/lib/alloy/data
+      - /etc/alloy/config.alloy
+    volumes:
+      - ./observability/alloy:/etc/alloy:ro,z
+      # Socket do Docker em somente-leitura. SEM ':z': reetiquetar o socket do
+      # daemon afetaria o próprio Docker.
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - alloy_data:/var/lib/alloy/data
+    mem_limit: 256m
+    networks:
+      - rotavital-net
+
+  # Armazenamento de TRACES. RECEBE via OTLP (push) — não busca nada.
+  tempo:
+    image: grafana/tempo:2.10.10
+    container_name: rotavital-tempo
+    restart: unless-stopped
+    command: -config.file=/etc/tempo/tempo-config.yaml
+    volumes:
+      - ./observability/tempo:/etc/tempo:ro,z
+      - tempo_data:/var/tempo
+    # 512m era insuficiente: o Tempo chegou a 491 MiB (95,9% do limite), a um
+    # passo de ser morto pelo kernel. O consumo cresce com o volume de spans
+    # ingeridos, e este projeto gera muitos por causa do N+1 em listarEstoque().
+    mem_limit: 1g
+    networks:
+      - rotavital-net
+
+  # Gerador de carga. Sobe junto com o ambiente para que os dashboards nunca
+  # estejam vazios — inclusive durante a janela de correção (R7.3), sem depender
+  # de alguém lembrar de executar um script.
+  # Para desligar temporariamente:  docker compose stop carga
+  carga:
+    image: python:3.13-alpine
+    container_name: rotavital-carga
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    volumes:
+      - ./scripts:/scripts:ro,z
+    # Dentro da rede do Docker o alvo é o nome do SERVIÇO, não localhost.
+    # --duracao 0 = roda indefinidamente.
+    command: >
+      python3 /scripts/gerador_carga.py
+      --url http://api:8080
+      --rps ${CARGA_RPS:-10}
+      --erro ${CARGA_TAXA_ERRO:-0.03}
+      --escrita ${CARGA_TAXA_ESCRITA:-0.08}
+      --semear ${CARGA_SEMEAR:-160}
+      --duracao 0
+    networks:
+      - rotavital-net
+
 volumes:
   postgres_data:
     name: rotavital_postgres_data
+  prometheus_data:
+    name: rotavital_prometheus_data
+  grafana_data:
+    name: rotavital_grafana_data
+  loki_data:
+    name: rotavital_loki_data
+  alloy_data:
+    name: rotavital_alloy_data
+  tempo_data:
+    name: rotavital_tempo_data
 
 networks:
   rotavital-net:

@@ -21,6 +21,8 @@ import com.jackops.rotavital.model.enums.TipoSanguineo;
 import com.jackops.rotavital.repository.BolsaRepository;
 import com.jackops.rotavital.repository.SolicitacaoSangueRepository;
 
+import io.micrometer.core.annotation.Counted;
+
 @Service
 public class AlocacaoBolsaService {
 
@@ -49,6 +51,8 @@ public class AlocacaoBolsaService {
      * da quantidade.
      */
     @Transactional
+    @Counted(value = "rotavital.bolsas.alocadas",
+             description = "Bolsas de sangue alocadas a solicitacoes (metrica de negocio)")
     public RespostaAlocacaoBolsa alocarBolsaCompativel(Long solicitacaoId) {
         SolicitacaoSangue solicitacao = solicitacaoSangueRepository.travarPorId(solicitacaoId)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Solicitação não encontrada"));

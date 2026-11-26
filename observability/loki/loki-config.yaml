@@ -1,0 +1,59 @@
+# ============================================================================
+# Loki — armazenamento de logs (Rota Vital)
+#
+# Modo "single binary": todos os componentes do Loki num processo só. É o modo
+# indicado para um ambiente deste tamanho; o modo distribuído existe para
+# clusters e exigiria vários contêineres sem nenhum ganho aqui.
+#
+# IMPORTANTE: o Loki apenas ARMAZENA. Ele não coleta nada — quem lê os logs dos
+# contêineres e empurra para cá é o Grafana Alloy (ver observability/alloy/).
+# ============================================================================
+
+auth_enabled: false            # sem multi-tenancy: ambiente único e interno
+
+server:
+  http_listen_port: 3100
+  grpc_listen_port: 9096
+  log_level: warn              # 'info' geraria log do Loki sobre o log, poluindo
+
+common:
+  instance_addr: 127.0.0.1
+  path_prefix: /loki
+  storage:
+    filesystem:                # disco local; S3/GCS seria para produção
+      chunks_directory: /loki/chunks
+      rules_directory: /loki/rules
+  replication_factor: 1        # uma só réplica: não há cluster
+  ring:
+    kvstore:
+      store: inmemory          # o anel de membros cabe na memória do processo
+
+schema_config:
+  configs:
+    - from: 2024-01-01
+      store: tsdb              # índice TSDB, padrão atual do Loki 3.x
+      object_store: filesystem
+      schema: v13
+      index:
+        prefix: index_
+        period: 24h
+
+limits_config:
+  retention_period: 72h        # 3 dias. Mais que isso encheria o disco sem uso
+  reject_old_samples: false    # aceita log com timestamp atrasado
+  allow_structured_metadata: true
+  volume_enabled: true         # habilita a aba "Volume" do Grafana Explore
+
+compactor:
+  working_directory: /loki/compactor
+  delete_request_store: filesystem
+  retention_enabled: true      # sem isto o retention_period acima é ignorado
+
+ruler:
+  storage:
+    local:
+      directory: /loki/rules
+
+# Desliga o relatório de uso anônimo para a Grafana Labs.
+analytics:
+  reporting_enabled: false

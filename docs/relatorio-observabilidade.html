@@ -395,6 +395,33 @@ exibia com destaque os erros do próprio sistema de observabilidade.</p>
 normal em produção justamente por isso: traces são caros e repetitivos, e uma amostra
 representativa responde às mesmas perguntas por um décimo do custo.</p>
 
+<h3>6.2.1 O mesmo defeito cobrou a conta duas vezes</h3>
+
+<p>Ao revisar o consumo de disco, o volume do Tempo havia chegado a
+<strong>20,4 GB</strong> em algumas horas. A medição de um trace real explicou o
+porquê:</p>
+
+<table>
+  <tr><th>Medida</th><th>Valor observado</th></tr>
+  <tr><td>Tamanho médio de um span</td><td>720 bytes</td></tr>
+  <tr><td>Maior trace capturado</td><td><strong>3.944 spans = 2.775 KB</strong></td></tr>
+  <tr><td>Trace equivalente sem o N+1 (~5 spans)</td><td>3,6 KB</td></tr>
+  <tr><td>Fator de inflação</td><td><strong>≈ 770×</strong></td></tr>
+</table>
+
+<p>Um span, isoladamente, é minúsculo — menos de 1 KB. O custo nunca esteve no
+tamanho da unidade, e sim na <strong>quantidade</strong>: cada consulta SQL
+desnecessária do N+1 virou um span gravado em disco. Multiplicado por milhares de
+requisições ao longo de uma noite, com amostragem em 100%, chegou-se a cerca de
+3 GB por hora.</p>
+
+<div class="destaque">
+  O mesmo defeito cobrou a conta <strong>duas vezes</strong>: uma na latência da API,
+  outra no armazenamento da própria observabilidade. Depois da amostragem em 10%, a
+  taxa caiu para <strong>140 MB/hora</strong> — cerca de 3,3 GB por dia, com limpeza
+  automática pela retenção de 48 horas configurada no compactador do Tempo.
+</div>
+
 <h3>6.3 Armadilhas de ambiente que custaram tempo</h3>
 
 <table>

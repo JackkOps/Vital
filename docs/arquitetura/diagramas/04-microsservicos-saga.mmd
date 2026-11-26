@@ -1,0 +1,15 @@
+flowchart LR
+    U["Navegador"] -->|HTTPS| ALB["ALB<br/>roteamento por caminho"]
+    ALB -->|/api/requisicoes| ATE["atendimento-service"]
+    ALB -->|/api/bolsas| EST["estoque-service"]
+    ALB -->|"/api/rotas, /api/remessas"| LOG["logistica-service"]
+    ALB -->|/api/indicadores| IND["indicadores-service"]
+    ATE -->|"REST síncrono<br/>POST /reservas"| EST
+    SENS["Sensores"] -->|"MQTT/TLS 8883"| IOT["AWS IoT Core"] -->|regra| Q1[["SQS telemetria"]] --> CF["cadeiafria-service"]
+    ATE & EST & LOG & CF -.-> SNS{{"SNS · tópicos de eventos<br/>(publicados via outbox)"}}
+    SNS -. "1 fila SQS por consumidor" .-> CONS["consumidores:<br/>atendimento · estoque · logística<br/>cadeia fria · indicadores"]
+    ATE --- DB2[("db atendimento")]
+    EST --- DB1[("db estoque")]
+    LOG --- DB3[("db logística")]
+    CF --- DB4[("db cadeia fria")]
+    IND --- DB5[("db indicadores<br/>modelo de leitura")]

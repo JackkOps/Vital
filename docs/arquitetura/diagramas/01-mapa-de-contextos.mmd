@@ -1,0 +1,25 @@
+flowchart TB
+    classDef core fill:#fde2e1,stroke:#c0392b,stroke-width:2px,color:#000
+    classDef sup fill:#e3f0fb,stroke:#2e86c1,color:#000
+    classDef gen fill:#eeeeee,stroke:#7f8c8d,color:#000
+    classDef ext fill:#fff,stroke:#555,stroke-dasharray:4 3,color:#000
+
+    SENS["Sensores dos veículos<br/>(sistema externo, MQTT)"]:::ext
+    IAM["Identidade e Acesso<br/>(genérico)"]:::gen
+    EST["Estoque<br/>(suporte)"]:::sup
+    ATE["Atendimento<br/>(core)"]:::core
+    LOG["Logística<br/>(core)"]:::core
+    CF["Cadeia Fria<br/>(core)"]:::core
+    IND["Indicadores<br/>(suporte)"]:::sup
+
+    EST -- "U: OHS · consulta e reserva de bolsas<br/>D: cliente-fornecedor" --> ATE
+    EST <-. "Shared Kernel<br/>TipoSanguineo, TipoComponente" .-> ATE
+    ATE -- "U: Published Language (eventos)<br/>RequisicaoAtendida → D: cliente-fornecedor" --> LOG
+    LOG -- "U: RemessaDespachada<br/>D: cliente-fornecedor" --> CF
+    SENS -- "U: payload do sensor<br/>D: Camada Anticorrupção (ACL)" --> CF
+    CF -- "U: ExcursaoTermicaDetectada<br/>D: cliente-fornecedor" --> LOG
+    CF -- "U: ExcursaoTermicaDetectada<br/>D: conformista" --> EST
+    EST -- "eventos · D: conformista" --> IND
+    ATE -- "eventos · D: conformista" --> IND
+    LOG -- "eventos · D: conformista" --> IND
+    IAM -- "U: OHS (token OIDC)<br/>D: ACL em cada contexto" --> ATE

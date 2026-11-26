@@ -1,0 +1,26 @@
+flowchart TB
+    subgraph T1["Tier físico 1 · navegador do usuário"]
+        SPA["Frontend React (Vite)<br/>telas"]
+    end
+    subgraph T2["Tier físico 2 · container da API (Spring Boot, Java 21)"]
+        direction TB
+        subgraph AP["Camada de apresentação"]
+            CTRL["Controllers REST<br/>BolsaController · RequisicaoController · RotaController ..."]
+        end
+        subgraph NE["Camada de negócio"]
+            APP["Aplicação: casos de uso<br/>CadastrarBolsa · AlocarBolsa · CalcularRota ..."]
+            DOM["Domínio: agregados, objetos de valor,<br/>eventos e interfaces de repositório"]
+            APP --> DOM
+        end
+        subgraph DA["Camada de dados"]
+            REPO["Repositórios JPA · gateways · publicador de eventos"]
+        end
+        CTRL --> APP
+        APP -->|"usa por interface"| REPO
+        REPO -. "implementa interfaces do domínio" .-> DOM
+    end
+    subgraph T3["Tier físico 3 · banco"]
+        PG[("PostgreSQL 16")]
+    end
+    SPA -->|"HTTPS + JSON"| CTRL
+    REPO -->|"JDBC 5432"| PG

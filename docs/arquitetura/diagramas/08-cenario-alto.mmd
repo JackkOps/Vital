@@ -1,0 +1,15 @@
+flowchart LR
+    U["3.000 usuários no pico<br/>λ = 500 req/s"] -->|HTTPS| ALB["ALB · roteamento por caminho<br/>2 zonas"]
+    V["1.500 veículos"] -->|MQTT/TLS| IOT["AWS IoT Core"] --> Q[["SQS telemetria"]]
+    ALB --> ATE["atendimento ×4"]
+    ALB --> EST["estoque ×3"]
+    ALB --> LOG["logística ×2"]
+    ALB --> IND["indicadores ×2"]
+    Q --> CF["cadeia fria ×2"]
+    ATE --- D1[("db.t4g.medium<br/>Multi-AZ")]
+    EST --- D2[("db.t4g.medium<br/>Multi-AZ")]
+    LOG --- D3[("db.t4g.small<br/>Multi-AZ")]
+    CF --- D4[("db.m7g.large<br/>Multi-AZ")]
+    IND --- D5[("db.t4g.small<br/>Single-AZ")]
+    ATE & EST & LOG & CF -.-> SNS{{"eventos de domínio<br/>SNS → filas SQS"}}
+    SNS -.-> IND

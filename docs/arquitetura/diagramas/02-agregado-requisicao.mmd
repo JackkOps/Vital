@@ -1,0 +1,62 @@
+classDiagram
+    direction LR
+    class Requisicao {
+        <<Raiz do agregado>>
+        RequisicaoId id
+        HospitalId hospital
+        TipoComponente componente
+        TipoSanguineo tipoReceptor
+        Quantidade quantidade
+        NivelUrgencia urgencia
+        StatusRequisicao status
+        Instant criadaEm
+        Instant atendidaEm
+        +alocar(BolsaCandidata, LocalDate hoje)
+        +cancelarAlocacao(BolsaId)
+        +cancelar()
+        +faltam() int
+    }
+    class Alocacao {
+        <<Entidade>>
+        AlocacaoId id
+        BolsaId bolsa
+        LocalDate validadeDaBolsa
+        Instant alocadaEm
+    }
+    class BolsaCandidata {
+        <<Objeto de valor>>
+        BolsaId id
+        TipoSanguineo tipoDoador
+        TipoComponente componente
+        LocalDate validade
+    }
+    class TipoSanguineo {
+        <<Objeto de valor · Shared Kernel>>
+        Abo abo
+        FatorRh rh
+        +podeReceberDe(TipoSanguineo doador) boolean
+    }
+    class Quantidade {
+        <<Objeto de valor>>
+        int valor  [1..10]
+    }
+    class NivelUrgencia {
+        <<Objeto de valor>>
+        ELETIVA · URGENTE · EMERGENCIA
+        +prioridade() int
+    }
+    class StatusRequisicao {
+        <<Objeto de valor>>
+        PENDENTE · EM_ATENDIMENTO · ATENDIDA · CANCELADA
+    }
+    class SeletorFefo {
+        <<Serviço de domínio>>
+        +escolher(List~BolsaCandidata~, Requisicao, LocalDate validadeMinima) Optional~BolsaCandidata~
+    }
+    Requisicao "1" *-- "0..10" Alocacao : contém
+    Requisicao --> TipoSanguineo
+    Requisicao --> Quantidade
+    Requisicao --> NivelUrgencia
+    Requisicao --> StatusRequisicao
+    SeletorFefo ..> BolsaCandidata : ordena por validade
+    Requisicao ..> BolsaCandidata : valida invariantes

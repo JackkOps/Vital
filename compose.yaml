@@ -46,9 +46,106 @@ services:
     networks:
       - rotavital-net
 
+  # ==========================================================================
+  # OBSERVABILIDADE
+  # ==========================================================================
+
+  # Banco de séries temporais. Faz PULL: busca as métricas nos alvos listados
+  # em observability/prometheus/prometheus.yml. A aplicação não sabe que existe.
+  prometheus:
+    image: prom/prometheus:v3.9.0
+    container_name: rotavital-prometheus
+    restart: unless-stopped
+    volumes:
+      # ':ro' = somente leitura.  ':z' = reetiqueta para o SELinux do Fedora
+      # permitir que o contêiner leia (sem isso: "permission denied").
+      - ./observability/prometheus:/etc/prometheus:ro,z
+      # Volume nomeado: os dados sobrevivem a 'docker compose down'.
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=15d'
+      - '--web.enable-lifecycle'   # permite recarregar config sem reiniciar
+    ports:
+      # TEMPORÁRIO (desenvolvimento): necessário para ver /targets no navegador.
+      # Fechar antes da entrega — o R5.1 só permite o Grafana exposto.
+      - "9090:9090"
+    networks:
+      - rotavital-net
+
+  # Exporter de métricas do HOST (o Fedora): CPU, RAM, disco, rede.
+  # Roda em contêiner, mas lê /proc e /sys do host montados abaixo.
+  # ATENÇÃO: estes volumes NÃO levam ':z' — reetiquetar '/' do host seria
+  # destrutivo. /proc e /sys já têm contexto legível pelo contêiner.
+  node-exporter:
+    image: prom/node-exporter:v1.13.1
+    container_name: rotavital-node-exporter
+    restart: unless-stopped
+    pid: host                      # vê os processos do host, não só os seus
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/host/root:ro,rslave
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--path.rootfs=/host/root'
+      # Ignora sistemas de arquivos virtuais, que poluiriam as métricas de disco.
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    networks:
+      - rotavital-net
+
+  # Exporter de métricas POR CONTÊINER: quanto a 'api' gasta, quanto o 'db' gasta.
+  # É o que permite distinguir "o sistema está lento" de "QUEM está lento".
+  # Precisa de acesso amplo ao Docker e ao cgroup do host — daí o 'privileged'.
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.55.1
+    container_name: rotavital-cadvisor
+    restart: unless-stopped
+    privileged: true               # exigido no Fedora (SELinux + cgroup v2)
+    devices:
+      - /dev/kmsg                  # buffer de mensagens do kernel
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    networks:
+      - rotavital-net
+
+  # Interface de visualização. Não armazena métricas: consulta Prometheus
+  # (e, nas próximas fases, Loki e Tempo) e desenha.
+  grafana:
+    image: grafana/grafana:13.0
+    container_name: rotavital-grafana
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+    environment:
+      # R5.2: senha vem do .env, nunca 'admin/admin' nem valor no Git.
+      # O ':?' faz o 'docker compose up' FALHAR se a variável não existir —
+      # melhor falhar explicitamente do que subir com senha padrão.
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?defina GRAFANA_ADMIN_PASSWORD no .env}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro,z
+      - ./observability/grafana/dashboards:/var/lib/grafana/dashboards:ro,z
+      - grafana_data:/var/lib/grafana
+    ports:
+      - "${GRAFANA_PORT:-3000}:3000"
+    networks:
+      - rotavital-net
+
 volumes:
   postgres_data:
     name: rotavital_postgres_data
+  prometheus_data:
+    name: rotavital_prometheus_data
+  grafana_data:
+    name: rotavital_grafana_data
 
 networks:
   rotavital-net:

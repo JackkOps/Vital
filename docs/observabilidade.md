@@ -76,11 +76,11 @@ Regra de bolso: *"isso pode diminuir?"* Não → Counter. Sim → Gauge. É dura
 | R2.1 OK | `http_server_requests_seconds` presente | E2 | |
 | R2.2 OK | Métricas de JVM (heap, GC, threads), CPU do processo, uptime | E2 | |
 | R2.3 OK | `hikaricp_connections_*` presentes (o projeto usa Postgres) | E2 | |
-| R3.1 | Node Exporter rodando, target UP | E2 | |
-| R3.2 | cAdvisor rodando, target UP | E2 | 0,75 |
-| R4.1 | `docker compose up -d` sobe **tudo**, sem passo manual | E3 | 0,75 |
-| R4.2 | Um job no Prometheus por app e por exporter; todos UP | E3 | |
-| R4.3 | Datasources provisionados por arquivo em `grafana/provisioning` | E3 | |
+| R3.1 OK | Node Exporter rodando, target UP | E2 | |
+| R3.2 OK | cAdvisor rodando, target UP | E2 | 0,75 |
+| R4.1 OK | `docker compose up -d` sobe **tudo**, sem passo manual | E3 | 0,75 |
+| R4.2 OK | Um job no Prometheus por app e por exporter; todos UP | E3 | |
+| R4.3 OK | Datasources provisionados por arquivo em `grafana/provisioning` | E3 | |
 | R4.4 | Dashboard de aplicação (JVM/HTTP) com dados reais | E4 | |
 | R4.5 | Dashboard de infraestrutura (host/contêineres) com dados reais | E4 | |
 | R4.6 | JSON dos dashboards versionado em `grafana/dashboards/` | E4 | 0,75 |
@@ -105,6 +105,12 @@ Regra de bolso: *"isso pode diminuir?"* Não → Counter. Sim → Gauge. É dura
   e criar as pastas de observabilidade na raiz.
 - **Nº de aplicações:** a equipe tem **uma** aplicação web Java. O frontend é React/Vite,
   não é aplicação Java, logo não entra em R1–R2.
+- **Pasta `observability/`:** em vez de `prometheus/`, `grafana/`, `loki/` e `tempo/`
+  soltas na raiz (como o enunciado sugere), as quatro ficam agrupadas em
+  `observability/`. Justificativa: coesão — são um subsistema único, e quatro pastas
+  soltas poluem a raiz, que já tem `backend/`, `frontend/`, `docs/`, `scripts/` e
+  `estruturas-c/`. **Risco aceito:** o enunciado cita o caminho literal
+  `grafana/dashboards/`; o caminho real é `observability/grafana/dashboards/`.
 - **Versão do Spring Boot:** o enunciado foi escrito para Boot 3.3.5; o projeto usa 4.1.1.
   As dependências e propriedades diferem (ver seção 4).
 
@@ -202,6 +208,26 @@ A doc do Boot 4.1 confirma: com Micrometer Tracing no classpath, o Spring Boot
 Isso atende R6.3 sem código. O que resta é configurar o Grafana para transformar
 o `traceId` do Loki em link para o Tempo (campo derivado no datasource).
 
+### 3.7 Armadilhas do ambiente Fedora (descobertas na prática)
+
+Problemas reais encontrados que NÃO aparecem na maioria dos tutoriais (escritos
+para Ubuntu/Debian). Material direto para a seção "dificuldades encontradas" do PDF.
+
+| Problema | Causa | Solução |
+|---|---|---|
+| `docker compose` não existia | Fedora empacota o plugin separado do engine | `dnf install docker-compose` (v5.7.1) |
+| `sudo` e `docker` falhavam no terminal do VS Code | VS Code é Flatpak; terminal roda em sandbox sem acesso ao host | `flatpak override --talk-name=org.freedesktop.Flatpak` + perfil `flatpak-spawn --host bash` |
+| `permission denied` ao montar config | **SELinux Enforcing**: pasta com contexto `user_home_t`, ilegível por `container_t`. `chmod` não resolve | sufixo **`:z`** no volume (`:ro,z` em configs) |
+| `unexpected promtool` | A imagem tem ENTRYPOINT fixo `/bin/prometheus`; o que vem após a imagem são argumentos | `--entrypoint promtool` |
+
+**Regra de ouro do SELinux aprendida:** usar `:z` apenas em pastas do projeto.
+Nunca em `/`, `/proc` ou `/sys` do host — reetiquetar o sistema de arquivos raiz
+é destrutivo. Por isso os volumes do `node-exporter` e do `cadvisor` não o levam.
+
+**Regra de ouro do acoplamento:** o valor em `targets:` do `prometheus.yml` deve ser
+o **nome do serviço** no `compose.yaml` (não o `container_name`). Divergência entre
+os dois arquivos é a causa nº 1 de target DOWN.
+
 ---
 
 ## 4. Diferenças Spring Boot 4.1.1 vs. o enunciado (3.3.5)
@@ -292,6 +318,29 @@ nada dependa de algo ainda inexistente.
 ---
 
 ## 8. Histórico
+
+- **2026-11-25 (F2 — E2 e E3 CONCLUÍDAS)** — `compose.yaml` estendido com
+  Prometheus v3.9.0, Node Exporter v1.13.1, cAdvisor v0.55.1 e Grafana 13.0
+  (versões fixadas, sem `latest`, para reprodutibilidade). Criados
+  `observability/prometheus/prometheus.yml` (4 jobs) e o provisionamento do Grafana
+  (`datasources/datasources.yml` + `dashboards/dashboards.yml`). Senha do Grafana
+  movida para o `.env` com `:?` no compose, que faz o `up` falhar se ela faltar.
+
+  | Verificação | Resultado |
+  |---|---|
+  | `promtool check config` | SUCCESS |
+  | `docker compose config` | válido |
+  | Targets UP | **4 de 4** (rotavital-api, node, cadvisor, prometheus) |
+  | Datasource no Grafana | provisionado automaticamente, default |
+  | Séries: `rotavital-api` | 545 |
+  | Séries: `node` (host) | 1.254 |
+  | Séries: `cadvisor` (contêineres) | 8.972 |
+  | Séries: `prometheus` | 730 |
+  | **Total coletado** | **11.501 séries** |
+
+  Pendência de segurança: a porta 9090 do Prometheus está publicada
+  temporariamente para desenvolvimento e deve ser fechada na F8 (R5.1), e a senha
+  do Grafana no `.env` local ainda é placeholder.
 
 - **2026-11-25 (F1 — E1 e E2 CONCLUÍDAS)** — Adicionadas as dependências
   `spring-boot-starter-actuator` e `micrometer-registry-prometheus` (escopo `runtime`)

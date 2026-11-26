@@ -1,0 +1,22 @@
+# ============================================================================
+# Grafana — provedor de dashboards
+#
+# Este arquivo NÃO contém painel nenhum. Ele apenas diz ao Grafana:
+# "carregue todo JSON de dashboard que estiver nesta pasta".
+# Os painéis em si ficam em observability/grafana/dashboards/*.json (R4.6).
+# ============================================================================
+
+apiVersion: 1
+
+providers:
+  - name: 'rotavital'
+    orgId: 1
+    folder: 'Rota Vital'       # pasta que aparece no menu do Grafana
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30  # relê a pasta a cada 30s (bom em desenvolvimento)
+    allowUiUpdates: true       # permite editar na UI para depois exportar o JSON
+    options:
+      # Caminho DENTRO do contêiner (ver o volume deste serviço no compose).
+      path: /var/lib/grafana/dashboards
+      foldersFromFilesStructure: false

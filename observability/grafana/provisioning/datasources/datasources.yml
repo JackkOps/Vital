@@ -1,0 +1,22 @@
+# ============================================================================
+# Grafana — provisionamento de datasources
+#
+# "Provisionar" = configurar por arquivo, sem ninguém clicar na interface.
+# Exigido pelo requisito R4.3 e necessário para o R4.1 (subir sem passo manual).
+#
+# Os endereços usam o DNS interno do Docker (nome do serviço no compose).
+# ============================================================================
+
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy              # o Grafana (servidor) consulta, não o navegador
+    url: http://prometheus:9090
+    isDefault: true
+    jsonData:
+      # Deve ser >= scrape_interval do prometheus.yml, senão os gráficos
+      # mostram degraus em vez de linha contínua.
+      timeInterval: 15s
+    editable: false            # evita alguém alterar pela UI e divergir do Git

@@ -1,0 +1,49 @@
+# ============================================================================
+# Prometheus — configuração de coleta (Rota Vital)
+#
+# Este arquivo responde apenas DE ONDE e QUANDO buscar métricas.
+# Ele nunca lista métricas: um scrape traz todas as séries que o alvo expõe.
+#
+# REGRA IMPORTANTE: o valor em 'targets' é o nome do SERVIÇO no compose.yaml.
+# Nome do serviço no compose == hostname aqui. Se divergir, o target fica DOWN.
+# ============================================================================
+
+global:
+  # De quanto em quanto tempo buscar cada alvo.
+  # 15s é o padrão de facto: 1s geraria 15x mais dados sem conclusão diferente,
+  # porque rate()/histogram_quantile() já suavizam numa janela de tempo.
+  scrape_interval: 15s
+  # Frequência de avaliação de regras de alerta (não usamos regras ainda).
+  evaluation_interval: 15s
+
+scrape_configs:
+
+  # --- Aplicação Java (Spring Boot Actuator) -------------------------------
+  # Único alvo que precisa de 'metrics_path': o padrão do Prometheus é
+  # /metrics, mas o Actuator publica em /actuator/prometheus.
+  # URL final = http://api:8080/actuator/prometheus
+  - job_name: 'rotavital-api'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['api:8080']
+
+  # --- Métricas do HOST (CPU, RAM, disco, rede do Fedora) -----------------
+  # Roda em contêiner, mas lê /proc e /sys do host montados como volume.
+  # job_name 'node' é a convenção esperada pelos dashboards da comunidade.
+  - job_name: 'node'
+    static_configs:
+      - targets: ['node-exporter:9100']
+
+  # --- Métricas POR CONTÊINER (cAdvisor) ----------------------------------
+  # Usa a porta 8080 igual à api: não há conflito porque cada contêiner tem
+  # IP próprio na rede rotavital_network.
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+
+  # --- O próprio Prometheus (auto-monitoramento) --------------------------
+  # Aqui 'localhost' está correto: é resolvido DE DENTRO do contêiner do
+  # Prometheus, e aponta para ele mesmo.
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']

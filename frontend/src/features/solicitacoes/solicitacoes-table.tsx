@@ -1,68 +1,106 @@
+import * as React from "react";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardHeader } from "@/components/ui/card";
+import { tabela } from "@/components/ui/stat";
+import { Paginacao, usePaginacao } from "@/components/ui/pagination";
 import { EmptyState } from "@/components/layout/empty-state";
-import { DESCRICAO_COMPONENTE, DESCRICAO_TIPO_SANGUINEO, type SolicitacaoResponse } from "@/api/types";
+import {
+  DESCRICAO_COMPONENTE,
+  DESCRICAO_TIPO_SANGUINEO,
+  type SolicitacaoResponse,
+  type StatusSolicitacao,
+} from "@/api/types";
 import { STATUS_SOLICITACAO_INFO, URGENCIA_INFO } from "@/lib/domain";
+import { cn } from "@/lib/utils";
 import { ClipboardList } from "lucide-react";
+import { codigoSolicitacao } from "./fila-atendimento";
 
-function codigo(id: number) {
-  return `SOLIC-${String(id).padStart(4, "0")}`;
-}
+const ABAS: { valor: StatusSolicitacao | ""; label: string }[] = [
+  { valor: "", label: "Todas" },
+  { valor: "PENDENTE", label: "Pendentes" },
+  { valor: "EM_ATENDIMENTO", label: "Em atendimento" },
+  { valor: "ATENDIDA", label: "Atendidas" },
+  { valor: "CANCELADA", label: "Canceladas" },
+];
 
 export function SolicitacoesTable({ solicitacoes }: { solicitacoes: SolicitacaoResponse[] }) {
-  const lista = [...solicitacoes].sort((a, b) => b.id - a.id);
+  const [aba, setAba] = React.useState<StatusSolicitacao | "">("");
+  const [pagina, setPagina] = React.useState(1);
+  const ordenadas = [...solicitacoes].sort((a, b) => b.id - a.id);
+  const lista = aba ? ordenadas.filter((s) => s.status === aba) : ordenadas;
+  const paginacao = usePaginacao(lista, pagina, 10);
+  const contar = (v: StatusSolicitacao | "") => (v ? solicitacoes.filter((s) => s.status === v).length : solicitacoes.length);
 
   return (
-    <div className="rounded-panel border border-border bg-surface">
-      <div className="flex items-center gap-3 border-b border-border px-5 py-4">
-        <h2 className="text-[0.95rem] font-semibold text-ink">Todas as solicitações</h2>
-        <span className="text-xs tabular text-ink-muted">{lista.length}</span>
+    <Card>
+      <CardHeader index="04" title="Todas as" accent="solicitações" />
+      <div role="tablist" aria-label="Filtrar por status" className="scrollbar-none flex gap-1.5 overflow-x-auto border-b border-border bg-background/40 px-5 py-3">
+        {ABAS.map((a) => (
+          <button
+            key={a.label}
+            type="button"
+            role="tab"
+            aria-selected={aba === a.valor}
+            onClick={() => { setAba(a.valor); setPagina(1); }}
+            className={cn(
+              "flex flex-none items-center gap-1.5 rounded-full border px-3 py-1 text-[13px] font-medium transition-colors",
+              aba === a.valor ? "border-ink bg-ink text-background" : "border-border-strong text-ink-muted hover:border-ink hover:text-ink",
+            )}
+          >
+            {a.label}
+            <span className="font-mono text-[10.5px] opacity-60">{contar(a.valor)}</span>
+          </button>
+        ))}
       </div>
 
       {lista.length === 0 ? (
         <EmptyState
           icon={ClipboardList}
-          title="Nenhuma solicitação registrada"
-          description='Use o formulário "Registrar solicitação" para colocar o primeiro pedido na fila.'
+          title={aba ? "Nada nesta etapa" : "Nenhuma solicitação registrada"}
+          description={aba ? "Escolha outra aba para ver os demais pedidos." : 'Use "Registrar pedido" para colocar o primeiro pedido na fila.'}
         />
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full whitespace-nowrap text-left text-sm">
-            <thead>
-              <tr className="border-b border-border text-xs text-ink-muted">
-                <th className="px-5 py-2.5 font-medium">Código</th>
-                <th className="px-5 py-2.5 font-medium">Hospital</th>
-                <th className="px-5 py-2.5 font-medium">Tipo</th>
-                <th className="px-5 py-2.5 font-medium">Componente</th>
-                <th className="px-5 py-2.5 font-medium">Urgência</th>
-                <th className="px-5 py-2.5 font-medium">Alocadas</th>
-                <th className="px-5 py-2.5 font-medium">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {lista.map((s) => {
-                const status = STATUS_SOLICITACAO_INFO[s.status];
-                const urgencia = URGENCIA_INFO[s.nivelUrgencia];
-                return (
-                  <tr key={s.id} className="border-b border-border last:border-0 hover:bg-surface-muted/60">
-                    <td className="px-5 py-2.5 font-mono text-[13px] font-semibold text-info">{codigo(s.id)}</td>
-                    <td className="px-5 py-2.5 text-ink">{s.nomeHospital}</td>
-                    <td className="px-5 py-2.5 text-ink-muted">{DESCRICAO_TIPO_SANGUINEO[s.tipoSanguineo]}</td>
-                    <td className="px-5 py-2.5 text-ink-muted">{DESCRICAO_COMPONENTE[s.tipoComponente]}</td>
-                    <td className="px-5 py-2.5"><Badge tone={urgencia.tone}>{urgencia.label}</Badge></td>
-                    <td className="px-5 py-2.5 tabular text-ink-muted">{s.bolsasAlocadas}/{s.quantidade}</td>
-                    <td className="px-5 py-2.5">
-                      <Badge tone={status.tone}>
-                        <status.icon className="size-3" />
-                        {status.label}
-                      </Badge>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+        <>
+          <div className="overflow-x-auto">
+            <table className={tabela.table}>
+              <thead>
+                <tr className={tabela.headRow}>
+                  <th className={tabela.th}>Código</th>
+                  <th className={tabela.th}>Hospital</th>
+                  <th className={tabela.th}>Tipo</th>
+                  <th className={tabela.th}>Componente</th>
+                  <th className={tabela.th}>Urgência</th>
+                  <th className={cn(tabela.th, "text-right")}>Alocadas</th>
+                  <th className={tabela.th}>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginacao.visiveis.map((s) => {
+                  const status = STATUS_SOLICITACAO_INFO[s.status];
+                  const urgencia = URGENCIA_INFO[s.nivelUrgencia];
+                  return (
+                    <tr key={s.id} className={tabela.row}>
+                      <td className={cn(tabela.td, "font-mono text-[12.5px] text-brand")}>{codigoSolicitacao(s.id)}</td>
+                      <td className={cn(tabela.td, "font-medium text-ink")}>{s.nomeHospital}</td>
+                      <td className={cn(tabela.td, "font-mono text-[13px] text-ink")}>{DESCRICAO_TIPO_SANGUINEO[s.tipoSanguineo]}</td>
+                      <td className={cn(tabela.td, "text-ink-muted")}>{DESCRICAO_COMPONENTE[s.tipoComponente]}</td>
+                      <td className={tabela.td}><Badge tone={urgencia.tone}>{urgencia.label}</Badge></td>
+                      <td className={cn(tabela.td, "text-right tabular text-ink-muted")}>{s.bolsasAlocadas}/{s.quantidade}</td>
+                      <td className={tabela.td}>
+                        <Badge tone={status.tone}>
+                          <status.icon className="size-3" />
+                          {status.label}
+                        </Badge>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          <Paginacao {...paginacao} total={lista.length} onChange={setPagina} />
+        </>
       )}
-    </div>
+    </Card>
   );
 }

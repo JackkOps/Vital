@@ -2,6 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { DESCRICAO_COMPONENTE, type IndicadoresResponse } from "@/api/types";
 import { formatarHoras, formatarPercentual } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { Stat } from "@/components/ui/stat";
 import { AlertTriangle, CheckCircle2 } from "lucide-react";
 
 export function PeriodoPanel({ indicadores }: { indicadores: IndicadoresResponse }) {
@@ -9,23 +10,13 @@ export function PeriodoPanel({ indicadores }: { indicadores: IndicadoresResponse
 
   return (
     <div>
-      <div className="mb-4 grid gap-4 sm:grid-cols-2">
-        <div>
-          <p className="text-xs text-ink-muted">Taxa de descarte por vencimento</p>
-          <p className="text-xl font-bold tabular text-ink">
-            {formatarPercentual(indicadores.taxaDescarteVencimento, 1)}
-          </p>
-        </div>
-        <div>
-          <p className="text-xs text-ink-muted">Tempo médio de atendimento</p>
-          <p className="text-xl font-bold tabular text-ink">
-            {formatarHoras(indicadores.tempoMedioAtendimentoHoras)}
-          </p>
-        </div>
+      <div className="mb-6 grid grid-cols-2 gap-6 border-b border-border pb-6">
+        <Stat value={formatarPercentual(indicadores.taxaDescarteVencimento, 1)} label="Descarte por vencimento" />
+        <Stat value={formatarHoras(indicadores.tempoMedioAtendimentoHoras)} label="Tempo médio de atendimento" tone="ink" />
       </div>
 
       {criticos.length > 0 && (
-        <p className="mb-3 flex items-start gap-2 rounded-control border border-emergencia/25 bg-emergencia-soft/50 px-3 py-2 text-sm text-emergencia">
+        <p className="mb-3 flex items-start gap-2 rounded-panel border border-emergencia/30 bg-emergencia-soft px-3.5 py-2.5 text-sm text-emergencia">
           <AlertTriangle className="mt-0.5 size-4 flex-none" />
           <span>
             <strong>Estoque crítico:</strong> {criticos.map((c) => DESCRICAO_COMPONENTE[c.tipoComponente]).join(", ")}{" "}
@@ -37,12 +28,12 @@ export function PeriodoPanel({ indicadores }: { indicadores: IndicadoresResponse
       <div className="overflow-x-auto">
         <table className="w-full whitespace-nowrap text-left text-sm">
           <thead>
-            <tr className="border-b border-border text-xs text-ink-muted">
-              <th className="px-3 py-2 font-medium">Componente</th>
-              <th className="px-3 py-2 text-right font-medium">Disponíveis</th>
-              <th className="px-3 py-2 text-right font-medium">Faltam alocar</th>
-              <th className="px-3 py-2 font-medium">Situação</th>
-              <th className="px-3 py-2 text-right font-medium">
+            <tr className="border-b border-border text-[11.5px] text-ink-faint">
+              <th className="px-3 py-2.5 font-medium">Componente</th>
+              <th className="px-3 py-3 text-right font-medium">Disponíveis</th>
+              <th className="px-3 py-3 text-right font-medium">Faltam alocar</th>
+              <th className="px-3 py-2.5 font-medium">Situação</th>
+              <th className="px-3 py-3 text-right font-medium">
                 Risco em {indicadores.horizonteDesabastecimentoDias}d
               </th>
             </tr>
@@ -53,16 +44,16 @@ export function PeriodoPanel({ indicadores }: { indicadores: IndicadoresResponse
                 key={c.tipoComponente}
                 className={cn("border-b border-border last:border-0", c.estoqueCritico && "bg-emergencia-soft/30")}
               >
-                <td className="px-3 py-2 text-ink">{DESCRICAO_COMPONENTE[c.tipoComponente]}</td>
-                <td className="px-3 py-2 text-right tabular text-ink-muted">{c.bolsasDisponiveis}</td>
-                <td className="px-3 py-2 text-right tabular text-ink-muted">{c.demandaEmAberto}</td>
+                <td className="px-3 py-3 text-ink">{DESCRICAO_COMPONENTE[c.tipoComponente]}</td>
+                <td className="px-3 py-3 text-right tabular text-ink-muted">{c.bolsasDisponiveis}</td>
+                <td className="px-3 py-3 text-right tabular text-ink-muted">{c.demandaEmAberto}</td>
                 <td className="px-3 py-2">
                   <Badge tone={c.estoqueCritico ? "emergencia" : "ok"}>
                     {c.estoqueCritico ? <AlertTriangle className="size-3" /> : <CheckCircle2 className="size-3" />}
                     {c.estoqueCritico ? "Estoque crítico" : "Adequado"}
                   </Badge>
                 </td>
-                <td className="px-3 py-2 text-right tabular text-ink-muted">
+                <td className="px-3 py-3 text-right tabular text-ink-muted">
                   {formatarPercentual(c.probabilidadeDesabastecimento, 1)}
                 </td>
               </tr>

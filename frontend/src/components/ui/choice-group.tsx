@@ -5,23 +5,44 @@ interface Opcao<T extends string> {
   label: string;
 }
 
-/** Grupo de opções únicas em formato de pílula — usado para campos curtos e fechados. */
+/**
+ * Grupo de opções únicas em pílulas — para campos curtos e fechados.
+ * Navegável por setas, como um radiogroup nativo.
+ */
 export function ChoiceGroup<T extends string>({
   name,
   value,
   onChange,
   opcoes,
   className,
+  mono,
 }: {
   name: string;
   value: T | "";
   onChange: (value: T) => void;
   opcoes: Opcao<T>[];
   className?: string;
+  mono?: boolean;
 }) {
+  function onKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
+    if (!["ArrowRight", "ArrowLeft", "ArrowDown", "ArrowUp"].includes(e.key)) return;
+    e.preventDefault();
+    const atual = Math.max(0, opcoes.findIndex((o) => o.value === value));
+    const passo = e.key === "ArrowRight" || e.key === "ArrowDown" ? 1 : -1;
+    const proxima = opcoes[(atual + passo + opcoes.length) % opcoes.length];
+    onChange(proxima.value);
+    const botoes = e.currentTarget.querySelectorAll<HTMLButtonElement>("[role=radio]");
+    botoes[(atual + passo + opcoes.length) % opcoes.length]?.focus();
+  }
+
   return (
-    <div role="radiogroup" aria-label={name} className={cn("flex flex-wrap gap-1.5", className)}>
-      {opcoes.map((opcao) => {
+    <div
+      role="radiogroup"
+      aria-label={name}
+      onKeyDown={onKeyDown}
+      className={cn("flex flex-wrap gap-1.5", className)}
+    >
+      {opcoes.map((opcao, i) => {
         const ativo = value === opcao.value;
         return (
           <button
@@ -29,12 +50,14 @@ export function ChoiceGroup<T extends string>({
             type="button"
             role="radio"
             aria-checked={ativo}
+            tabIndex={ativo || (!value && i === 0) ? 0 : -1}
             onClick={() => onChange(opcao.value)}
             className={cn(
-              "rounded-control border px-2.5 py-1 text-xs font-semibold transition-colors",
+              "h-8 rounded-full border px-3 text-[13px] font-medium transition-colors",
+              mono && "min-w-11 font-mono text-[12.5px]",
               ativo
-                ? "border-brand bg-brand-soft text-brand"
-                : "border-border-strong bg-surface text-ink-muted hover:bg-surface-muted",
+                ? "border-brand bg-brand text-brand-foreground"
+                : "border-border-strong text-ink-muted hover:border-ink hover:text-ink",
             )}
           >
             {opcao.label}

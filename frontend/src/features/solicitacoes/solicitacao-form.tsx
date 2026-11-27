@@ -1,7 +1,9 @@
 import * as React from "react";
-import { Button } from "@/components/ui/button";
-import { Input, Select } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button, ButtonArrow } from "@/components/ui/button";
+import { Card, CardHeader } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { FieldLegend, Label } from "@/components/ui/label";
+import { FormError } from "@/components/ui/stat";
 import { ChoiceGroup } from "@/components/ui/choice-group";
 import {
   DESCRICAO_COMPONENTE,
@@ -15,8 +17,9 @@ import {
   type TipoComponente,
   type TipoSanguineo,
 } from "@/api/types";
-import { useCadastrarSolicitacao } from "@/hooks/use-api";
-import { Plus } from "lucide-react";
+import { useCadastrarSolicitacao, useSolicitacoes } from "@/hooks/use-api";
+import { cn } from "@/lib/utils";
+import { Minus, Plus } from "lucide-react";
 
 const vazio: CadastroSolicitacaoRequest = {
   nomeHospital: "",
@@ -26,14 +29,28 @@ const vazio: CadastroSolicitacaoRequest = {
   nivelUrgencia: "" as NivelUrgencia,
 };
 
+const COR_URGENCIA: Record<NivelUrgencia, { ativo: string; ponto: string }> = {
+  EMERGENCIA: { ativo: "border-emergencia bg-emergencia text-white", ponto: "bg-emergencia" },
+  URGENTE: { ativo: "border-alerta bg-alerta text-white", ponto: "bg-alerta" },
+  ELETIVA: { ativo: "border-ink bg-ink text-background", ponto: "bg-ink-faint" },
+};
+
 export function SolicitacaoForm() {
   const [form, setForm] = React.useState<CadastroSolicitacaoRequest>(vazio);
   const [erro, setErro] = React.useState<string | null>(null);
   const cadastrar = useCadastrarSolicitacao();
+  const { data: todas } = useSolicitacoes();
+  const hospitaisConhecidos = [...new Set((todas ?? []).map((s) => s.nomeHospital))].sort((a, b) =>
+    a.localeCompare(b, "pt-BR"),
+  );
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setErro(null);
+    if (!form.nomeHospital.trim()) {
+      setErro("Informe o hospital solicitante.");
+      return;
+    }
     if (!form.tipoSanguineo || !form.tipoComponente || !form.nivelUrgencia) {
       setErro("Selecione o tipo sanguíneo, o componente e a urgência.");
       return;
@@ -44,88 +61,107 @@ export function SolicitacaoForm() {
     });
   }
 
+  const quantidade = (delta: number) =>
+    setForm((f) => ({ ...f, quantidade: Math.min(10, Math.max(1, f.quantidade + delta)) }));
+
   return (
-    <form onSubmit={handleSubmit} className="rounded-panel border border-border bg-surface p-5" noValidate>
-      <div className="mb-4">
-        <h2 className="text-[0.95rem] font-semibold text-ink">Registrar solicitação</h2>
-        <p className="mt-0.5 text-xs text-ink-muted">
-          Emergências entram à frente das urgentes e eletivas; no mesmo nível vale a ordem de chegada.
-        </p>
-      </div>
+    <Card>
+      <CardHeader index="01" title="Registrar" accent="pedido" />
+      <form onSubmit={handleSubmit} className="space-y-5 p-5" noValidate>
+        {erro && <FormError>{erro}</FormError>}
 
-      {erro && (
-        <p role="alert" className="mb-4 rounded-control bg-emergencia-soft px-3 py-2 text-sm text-emergencia">
-          {erro}
-        </p>
-      )}
-
-      <div className="space-y-4">
-        <div className="space-y-1.5">
+        <div className="space-y-2">
           <Label htmlFor="solic-hospital">Hospital *</Label>
           <Input
             id="solic-hospital"
             required
+            list="hospitais-conhecidos"
+            autoComplete="off"
             placeholder="Nome do hospital"
             value={form.nomeHospital}
             onChange={(e) => setForm((f) => ({ ...f, nomeHospital: e.target.value }))}
           />
+          <datalist id="hospitais-conhecidos">
+            {hospitaisConhecidos.map((h) => (
+              <option key={h} value={h} />
+            ))}
+          </datalist>
         </div>
 
-        <div className="space-y-1.5">
-          <Label>Tipo sanguíneo do paciente *</Label>
+        <div className="space-y-2">
+          <FieldLegend>Urgência *</FieldLegend>
+          <div role="radiogroup" aria-label="Urgência" className="grid grid-cols-3 gap-1.5">
+            {NIVEIS_URGENCIA.map((n) => {
+              const ativo = form.nivelUrgencia === n;
+              return (
+                <button
+                  key={n}
+                  type="button"
+                  role="radio"
+                  aria-checked={ativo}
+                  onClick={() => setForm((f) => ({ ...f, nivelUrgencia: n }))}
+                  className={cn(
+                    "flex h-9 items-center justify-center gap-1.5 rounded-full border text-[13px] font-medium transition-colors",
+                    ativo ? COR_URGENCIA[n].ativo : "border-border-strong text-ink-muted hover:border-ink hover:text-ink",
+                  )}
+                >
+                  {!ativo && <span className={cn("size-1.5 rounded-full", COR_URGENCIA[n].ponto)} />}
+                  {DESCRICAO_URGENCIA[n]}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <FieldLegend>Tipo sanguíneo do paciente *</FieldLegend>
           <ChoiceGroup
-            name="tipoSanguineo"
+            name="Tipo sanguíneo do paciente"
+            mono
             value={form.tipoSanguineo}
             onChange={(v) => setForm((f) => ({ ...f, tipoSanguineo: v }))}
             opcoes={TIPOS_SANGUINEOS.map((t) => ({ value: t, label: DESCRICAO_TIPO_SANGUINEO[t] }))}
           />
         </div>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="solic-componente">Componente *</Label>
-          <Select
-            id="solic-componente"
-            required
-            value={form.tipoComponente}
-            onChange={(e) =>
-              setForm((f) => ({ ...f, tipoComponente: e.target.value as TipoComponente }))
-            }
-          >
-            <option value="" disabled>Selecione o componente</option>
-            {TIPOS_COMPONENTE.map((c) => (
-              <option key={c} value={c}>{DESCRICAO_COMPONENTE[c]}</option>
-            ))}
-          </Select>
-        </div>
-
-        <div className="space-y-1.5">
-          <Label htmlFor="solic-quantidade">Quantidade de bolsas *</Label>
-          <Input
-            id="solic-quantidade"
-            type="number"
-            min={1}
-            max={10}
-            required
-            className="w-28"
-            value={form.quantidade}
-            onChange={(e) => setForm((f) => ({ ...f, quantidade: Number(e.target.value) }))}
-          />
-        </div>
-
-        <div className="space-y-1.5">
-          <Label>Urgência *</Label>
+        <div className="space-y-2">
+          <FieldLegend>Componente *</FieldLegend>
           <ChoiceGroup
-            name="nivelUrgencia"
-            value={form.nivelUrgencia}
-            onChange={(v) => setForm((f) => ({ ...f, nivelUrgencia: v }))}
-            opcoes={NIVEIS_URGENCIA.map((n) => ({ value: n, label: DESCRICAO_URGENCIA[n] }))}
+            name="Componente"
+            value={form.tipoComponente}
+            onChange={(v) => setForm((f) => ({ ...f, tipoComponente: v }))}
+            opcoes={TIPOS_COMPONENTE.map((c) => ({ value: c, label: DESCRICAO_COMPONENTE[c] }))}
           />
         </div>
 
-        <Button type="submit" className="w-full" disabled={cadastrar.isPending}>
-          <Plus /> Registrar solicitação
-        </Button>
-      </div>
-    </form>
+        <div className="flex items-end justify-between gap-4 border-t border-border pt-5">
+          <div className="space-y-2">
+            <Label htmlFor="solic-quantidade">Bolsas *</Label>
+            <div className="flex items-center rounded-full border border-border-strong">
+              <button type="button" onClick={() => quantidade(-1)} className="grid size-9 place-items-center rounded-full text-ink-muted hover:text-ink disabled:opacity-30" disabled={form.quantidade <= 1} aria-label="Diminuir quantidade">
+                <Minus className="size-3.5" />
+              </button>
+              <input
+                id="solic-quantidade"
+                type="number"
+                min={1}
+                max={10}
+                inputMode="numeric"
+                className="w-8 bg-transparent text-center text-[15px] font-medium tabular outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+                value={form.quantidade}
+                onChange={(e) => setForm((f) => ({ ...f, quantidade: Math.min(10, Math.max(1, Number(e.target.value) || 1)) }))}
+              />
+              <button type="button" onClick={() => quantidade(1)} className="grid size-9 place-items-center rounded-full text-ink-muted hover:text-ink disabled:opacity-30" disabled={form.quantidade >= 10} aria-label="Aumentar quantidade">
+                <Plus className="size-3.5" />
+              </button>
+            </div>
+          </div>
+          <Button type="submit" disabled={cadastrar.isPending}>
+            {cadastrar.isPending ? "Registrando…" : "Registrar"}
+            <ButtonArrow />
+          </Button>
+        </div>
+      </form>
+    </Card>
   );
 }

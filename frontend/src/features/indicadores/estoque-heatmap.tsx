@@ -8,9 +8,12 @@ import {
 } from "@/api/types";
 
 function corCelula(n: number): CSSProperties {
-  if (n === 0) return { border: "1.5px solid var(--color-emergencia)", background: "transparent" };
-  const pct = Math.min(100, 12 + n * 3);
-  return { background: `color-mix(in srgb, var(--color-ok) ${pct}%, var(--color-surface))` };
+  if (n === 0) return { boxShadow: "inset 0 0 0 1.5px var(--color-emergencia)", background: "transparent", color: "var(--color-emergencia)" };
+  const pct = Math.min(100, 10 + n * 9);
+  return {
+    background: `color-mix(in srgb, var(--color-brand) ${pct}%, var(--color-surface))`,
+    color: pct > 55 ? "var(--color-brand-foreground)" : "var(--color-ink)",
+  };
 }
 
 export function EstoqueHeatmap({
@@ -45,7 +48,7 @@ export function EstoqueHeatmap({
               const total = componentes.reduce((soma, c) => soma + quantidade(c, tipo), 0);
               return (
                 <tr key={tipo}>
-                  <th scope="row" className="px-3 py-1.5 text-left font-mono text-sm font-semibold text-ink-muted">
+                  <th scope="row" className="px-3 py-1.5 text-left font-mono text-[13px] font-medium text-ink">
                     {DESCRICAO_TIPO_SANGUINEO[tipo]}
                   </th>
                   {componentes.map((c) => {
@@ -54,42 +57,42 @@ export function EstoqueHeatmap({
                       <td
                         key={c}
                         style={corCelula(n)}
-                        className="rounded-control px-3 py-1.5 text-center text-sm font-semibold tabular text-ink"
+                        className="rounded-control px-3 py-2 text-center text-sm font-medium tabular"
                         aria-label={`${DESCRICAO_TIPO_SANGUINEO[tipo]}, ${DESCRICAO_COMPONENTE[c]}: ${n}`}
                       >
                         {n === 0 ? "×" : n <= 2 ? `↓ ${n}` : n}
                       </td>
                     );
                   })}
-                  <td className="px-3 py-1.5 text-center text-sm font-bold tabular text-ink">{total}</td>
+                  <td className="px-3 py-1.5 text-center text-sm font-medium tabular text-ink">{total}</td>
                 </tr>
               );
             })}
             <tr>
               <th scope="row" className="px-3 py-2 text-left text-xs font-semibold text-ink-muted">Total</th>
               {componentes.map((c) => (
-                <td key={c} className="px-3 py-2 text-center text-sm font-bold tabular text-ink">{quantidade(c)}</td>
+                <td key={c} className="px-3 py-2 text-center text-sm font-medium tabular text-ink">{quantidade(c)}</td>
               ))}
-              <td className="px-3 py-2 text-center text-sm font-bold tabular text-ink">{totalGeral}</td>
+              <td className="px-3 py-2 text-center text-sm font-medium tabular text-ink">{totalGeral}</td>
             </tr>
           </tbody>
         </table>
       </div>
       <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-ink-muted">
         <span className="flex items-center gap-1.5">
-          <i className="size-3 rounded-sm" style={{ border: "1.5px solid var(--color-emergencia)" }} />
+          <i className="size-3 rounded-sm" style={{ boxShadow: "inset 0 0 0 1.5px var(--color-emergencia)" }} />
           Sem estoque
         </span>
         <span className="flex items-center gap-1.5">
-          <i className="size-3 rounded-sm" style={{ background: "color-mix(in srgb, var(--color-ok) 20%, var(--color-surface))" }} />
+          <i className="size-3 rounded-sm" style={{ background: "color-mix(in srgb, var(--color-brand) 20%, var(--color-surface))" }} />
           Baixo (1–2)
         </span>
         <span className="flex items-center gap-1.5">
           Mais bolsas
           {[30, 55, 75, 95].map((p) => (
-            <i key={p} className="size-3 rounded-sm" style={{ background: `color-mix(in srgb, var(--color-ok) ${p}%, var(--color-surface))` }} />
+            <i key={p} className="size-3 rounded-sm" style={{ background: `color-mix(in srgb, var(--color-brand) ${p}%, var(--color-surface))` }} />
           ))}
-          3 → 30+
+          3 → 10+
         </span>
       </div>
     </div>

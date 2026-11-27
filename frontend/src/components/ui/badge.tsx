@@ -3,16 +3,16 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 /**
- * Selo de status. Nunca usar só a cor: o conteúdo (ícone + texto) é que
- * carrega o significado — a cor apenas reforça.
+ * Selo de status em pílula. Nunca usar só a cor: o conteúdo (ícone + texto)
+ * é que carrega o significado — a cor apenas reforça.
  */
 const badgeVariants = cva(
-  "inline-flex items-center gap-1.5 rounded-control px-2 py-0.5 text-xs font-semibold tabular",
+  "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11.5px] font-medium leading-5 tabular",
   {
     variants: {
       tone: {
         neutral: "bg-surface-muted text-ink-muted",
-        brand: "bg-brand-soft text-brand",
+        brand: "bg-brand text-brand-foreground",
         ok: "bg-ok-soft text-ok",
         alerta: "bg-alerta-soft text-alerta",
         emergencia: "bg-emergencia-soft text-emergencia",
@@ -21,6 +21,7 @@ const badgeVariants = cva(
         pla: "bg-pla-soft text-pla",
         plq: "bg-plq-soft text-plq",
         st: "bg-st-soft text-st",
+        ink: "bg-ink text-background",
       },
     },
     defaultVariants: { tone: "neutral" },
